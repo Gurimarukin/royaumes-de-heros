@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  postgresql:
+    image:
+      postgres:11
+    container_name:
+      heros-postgresql
+    environment:
+      - POSTGRES_USER=elixir
+      - POSTGRES_PASSWORD=elixir
+    ports:
+      - 5432:5432
