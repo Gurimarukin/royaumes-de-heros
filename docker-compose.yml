@@ -9,5 +9,6 @@ services:
     environment:
       - POSTGRES_USER=elixir
       - POSTGRES_PASSWORD=elixir
+      - POSTGRES_DB=heros_dev
     ports:
       - 5432:5432
