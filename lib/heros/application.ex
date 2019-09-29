@@ -11,9 +11,9 @@ defmodule Heros.Application do
       # Start the Ecto repository
       Heros.Repo,
       # Start the endpoint when the application starts
-      HerosWeb.Endpoint
-      # Starts a worker by calling: Heros.Worker.start_link(arg)
-      # {Heros.Worker, arg},
+      HerosWeb.Endpoint,
+      # Heros
+      {Heros.GamesSupervisor, name: Heros.GamesSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

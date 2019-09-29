@@ -1,0 +1,24 @@
+<div>
+  <center>
+    <button phx-click="create_game">Créer une partie</button>
+  </center>
+
+  <hr>
+
+  <%= if length(@games) == 0 do %>
+    <center>Pas de partie en cours.</center>
+  <% else %>
+    <table>
+      <tr>
+        <th>joueurs</th>
+        <th></th>
+      </tr>
+      <%= for game <- @games do %>
+        <tr>
+          <td><%= game.n_players %> / <%= game.max_players %></td>
+          <td><%= link "rejoindre", to: Routes.game_path(@socket, :show, game.id) %></td>
+        </tr>
+      <% end %>
+    </table>
+  <% end %>
+</div>
