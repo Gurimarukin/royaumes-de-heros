@@ -1,0 +1,13 @@
+<div>
+  <h1><%= @game.name %></h1>
+  <table>
+    <tr>
+      <th>joueur</th>
+    </tr>
+    <%= for {id, _player} <- @game.players do %>
+      <tr>
+        <td><%= id %></td>
+      </tr>
+    <% end %>
+  </table>
+</div>

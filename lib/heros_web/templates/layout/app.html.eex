@@ -20,6 +20,10 @@
         </a>
       </section>
     </header> -->
+    <header>
+      session_id : <%= @session_id %>
+      <%= link "accueil", to: Routes.page_path(@conn, :index) %>
+    </header>
     <main role="main" class="container">
       <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
       <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>

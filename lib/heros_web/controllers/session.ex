@@ -5,6 +5,9 @@ defmodule HerosWeb.Session do
 
   def call(conn, _opts) do
     session_id = get_session(conn, :session_id) || UUID.uuid1(:hex)
-    assign(conn, :session_id, session_id)
+
+    conn
+    |> assign(:session_id, session_id)
+    |> put_session(:session_id, session_id)
   end
 end

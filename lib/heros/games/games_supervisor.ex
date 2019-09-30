@@ -5,7 +5,6 @@ defmodule Heros.GamesSupervisor do
     Supervisor.start_link(__MODULE__, :ok, opts)
   end
 
-  @impl true
   def init(:ok) do
     children = [
       {DynamicSupervisor, name: Heros.GameSupervisor, strategy: :one_for_one},

@@ -10,11 +10,13 @@
   <% else %>
     <table>
       <tr>
+        <th>nom</th>
         <th>joueurs</th>
         <th></th>
       </tr>
       <%= for game <- @games do %>
         <tr>
+          <td><%= game.name %></td>
           <td><%= game.n_players %> / <%= game.max_players %></td>
           <td><%= link "rejoindre", to: Routes.game_path(@socket, :show, game.id) %></td>
         </tr>
