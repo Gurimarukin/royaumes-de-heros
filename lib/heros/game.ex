@@ -13,6 +13,7 @@ defmodule Heros.Game do
   defp module_for_current_stage(stage) do
     case stage do
       :lobby -> Game.Lobby
+      :started -> Game.Match
     end
   end
 
@@ -63,12 +64,14 @@ defmodule Heros.Game do
       {:reply, reply, new_game} ->
         {:reply, reply, if_game_changed(new_game, game)}
 
-      # {:reply, reply, game, timeout} -> {{:reply, reply, game, timeout}, game}
-      # {:noreply, game} -> {{:noreply, game}, game}
-      # {:noreply, game, timeout} -> {{:noreply, game, timeout}, game}
+      # {:reply, reply, new_game, timeout} -> {:reply, reply, if_game_changed(new_game, game), timeout}
+      # {:noreply, new_game} -> {:noreply, if_game_changed(new_game, game)}
+      # {:noreply, new_game, timeout} -> {:noreply, if_game_changed(new_game, game), timeout}
+
       {:stop, reason, reply, new_game} ->
         {:stop, reason, reply, if_game_changed(new_game, game)}
-        # {:stop, reason, game} -> {{:stop, reason, game}, game}
+
+        # {:stop, reason, new_game} -> {:stop, reason, if_game_changed(new_game, game)}
     end
   end
 

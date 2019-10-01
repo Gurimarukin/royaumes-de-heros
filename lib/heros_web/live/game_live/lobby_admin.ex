@@ -31,4 +31,9 @@ defmodule HerosWeb.GameLive.LobbyAdmin do
   def handle_event("keyup_name", _params, socket) do
     {:noreply, socket}
   end
+
+  def handle_event("start", _params, socket) do
+    Game.Lobby.start(socket.assigns.game_pid)
+    {:noreply, socket}
+  end
 end

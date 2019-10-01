@@ -4,9 +4,10 @@ defmodule HerosWeb.GameLive do
   alias Heros.{Game, Games}
   alias HerosWeb.GameLive
 
-  defp module_for_current_stage(game) do
+  defp module_for_current_stage({:ok, game}) do
     case game.stage do
       :lobby -> GameLive.LobbyAdmin
+      :started -> GameLive.Match
     end
   end
 
@@ -37,13 +38,14 @@ defmodule HerosWeb.GameLive do
   end
 
   defp default_assigns do
-    GameLive.LobbyAdmin.default_assigns()
+    GameLive.LobbyAdmin.default_assigns() ++
+      GameLive.Match.default_assigns()
   end
 
   def render(assigns) do
     case assigns.game do
       {:ok, game} ->
-        render_stage(%{assigns | game: game})
+        module_for_current_stage({:ok, game}).render(%{assigns | game: game})
 
       :loading ->
         ~L"""
@@ -63,10 +65,6 @@ defmodule HerosWeb.GameLive do
     end
   end
 
-  defp render_stage(assigns) do
-    module_for_current_stage(assigns.game).render(assigns)
-  end
-
   def handle_info({:update, game}, socket) do
     {:noreply, assign(socket, game: {:ok, game})}
   end
@@ -75,9 +73,9 @@ defmodule HerosWeb.GameLive do
     redirect_home(socket)
   end
 
-  # def handle_info(info, socket) do
-  #   module_for_current_stage(assigns.game).handle_info(info, socket)
-  # end
+  def handle_info(info, socket) do
+    module_for_current_stage(socket.assigns.game).handle_info(info, socket)
+  end
 
   def handle_event("leave", _path, socket) do
     with_game(socket, fn game_pid, session_id ->
