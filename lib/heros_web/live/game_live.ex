@@ -1,21 +1,29 @@
 defmodule HerosWeb.GameLive do
   use Phoenix.LiveView
 
+  alias Heros.{Game, Games}
+  alias HerosWeb.GameLive
+
+  defp module_for_current_stage(game) do
+    case game.stage do
+      :lobby -> GameLive.LobbyAdmin
+    end
+  end
+
   def mount(session, socket) do
-    case Heros.Games.lookup(Heros.Games, session.game_id) do
+    case Games.lookup(Games, session.game_id) do
       {:ok, game_pid} ->
         if connected?(socket) do
-          game = Heros.Game.subscribe(game_pid, session.session_id, self())
+          game = Game.subscribe(game_pid, session.session_id, self())
 
           socket =
             assign(
               socket,
-              session_id: session.session_id,
-              game_pid: game_pid,
-              game: game,
-              lobby: %{
-                editable_name: false
-              }
+              [
+                session_id: session.session_id,
+                game_pid: game_pid,
+                game: game
+              ] ++ default_assigns()
             )
 
           {:ok, socket}
@@ -26,6 +34,10 @@ defmodule HerosWeb.GameLive do
       _ ->
         {:ok, assign(socket, game: {:error, :not_found})}
     end
+  end
+
+  defp default_assigns do
+    GameLive.LobbyAdmin.default_assigns()
   end
 
   def render(assigns) do
@@ -52,10 +64,7 @@ defmodule HerosWeb.GameLive do
   end
 
   defp render_stage(assigns) do
-    case assigns.game.stage do
-      :lobby ->
-        HerosWeb.GameView.render("lobby_admin.html", assigns)
-    end
+    module_for_current_stage(assigns.game).render(assigns)
   end
 
   def handle_info({:update, game}, socket) do
@@ -66,38 +75,25 @@ defmodule HerosWeb.GameLive do
     redirect_home(socket)
   end
 
-  def handle_event("editable_name_true", _params, socket) do
-    {:noreply, assign(socket, put_in(socket.assigns, [:lobby, :editable_name], true))}
-  end
-
-  def handle_event("submit_name", %{"value" => name}, socket) do
-    Heros.Game.rename(socket.assigns.game_pid, name)
-    {:noreply, assign(socket, put_in(socket.assigns, [:lobby, :editable_name], false))}
-  end
-
-  def handle_event("submit_name_key", %{"key" => "Enter", "value" => name}, socket) do
-    handle_event("submit_name", %{"value" => name}, socket)
-  end
-
-  def handle_event("submit_name_key", %{"key" => "Escape"}, socket) do
-    {:noreply, assign(socket, put_in(socket.assigns, [:lobby, :editable_name], false))}
-  end
-
-  def handle_event("submit_name_key", _params, socket) do
-    {:noreply, socket}
-  end
+  # def handle_info(info, socket) do
+  #   module_for_current_stage(assigns.game).handle_info(info, socket)
+  # end
 
   def handle_event("leave", _path, socket) do
     with_game(socket, fn game_pid, session_id ->
-      Heros.Game.leave(game_pid, session_id)
+      Game.leave(game_pid, session_id)
     end)
 
     redirect_home(socket)
   end
 
+  def handle_event(event, path, socket) do
+    module_for_current_stage(socket.assigns.game).handle_event(event, path, socket)
+  end
+
   def terminate(_reason, socket) do
     with_game(socket, fn game_pid, session_id ->
-      Heros.Game.unsubscribe(game_pid, session_id, self())
+      Game.unsubscribe(game_pid, session_id, self())
     end)
   end
 

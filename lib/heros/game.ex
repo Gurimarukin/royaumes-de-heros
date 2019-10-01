@@ -7,7 +7,14 @@ defmodule Heros.Game do
             players: [],
             max_players: 4,
             stage: :lobby,
-            name: "Nouvelle partie"
+            name: "Nouvelle partie",
+            ready: false
+
+  defp module_for_current_stage(stage) do
+    case stage do
+      :lobby -> Game.Lobby
+    end
+  end
 
   #  Client
   def start_link(opts) do
@@ -28,10 +35,6 @@ defmodule Heros.Game do
       stage: game.stage,
       name: game.name
     }
-  end
-
-  def rename(game, name) do
-    GenServer.call(game, {:update, {:rename, name}})
   end
 
   def subscribe(game, player_id, pid) do
@@ -56,21 +59,35 @@ defmodule Heros.Game do
   end
 
   def handle_call({:update, update}, from, game) do
-    {res, game} =
-      case handle_update(update, from, game) do
-        {:reply, reply, game} ->
-          {{:reply, reply, game}, game}
+    case handle_update(update, from, game) do
+      {:reply, reply, new_game} ->
+        {:reply, reply, if_game_changed(new_game, game)}
 
-        # {:reply, reply, game, timeout} -> {{:reply, reply, game, timeout}, game}
-        # {:noreply, game} -> {{:noreply, game}, game}
-        # {:noreply, game, timeout} -> {{:noreply, game, timeout}, game}
-        {:stop, reason, reply, game} ->
-          {{:stop, reason, reply, game}, game}
-          # {:stop, reason, game} -> {{:stop, reason, game}, game}
-      end
+      # {:reply, reply, game, timeout} -> {{:reply, reply, game, timeout}, game}
+      # {:noreply, game} -> {{:noreply, game}, game}
+      # {:noreply, game, timeout} -> {{:noreply, game, timeout}, game}
+      {:stop, reason, reply, new_game} ->
+        {:stop, reason, reply, if_game_changed(new_game, game)}
+        # {:stop, reason, game} -> {{:stop, reason, game}, game}
+    end
+  end
 
-    broadcast_update(game)
-    res
+  def handle_call(request, from, game) do
+    module_for_current_stage(game.stage).handle_call(request, from, game)
+  end
+
+  defp if_game_changed(new_game, game) do
+    if new_game != game do
+      new_game
+      |> update_ready()
+      |> broadcast_update()
+    else
+      new_game
+    end
+  end
+
+  defp update_ready(game) do
+    %{game | ready: length(game.players) >= 2}
   end
 
   defp broadcast_update(game) do
@@ -78,13 +95,11 @@ defmodule Heros.Game do
     |> Enum.map(fn {_id, player} ->
       player.subscribed |> Enum.map(fn pid -> send(pid, {:update, game}) end)
     end)
+
+    game
   end
 
-  defp handle_update({:rename, name}, _from, game) do
-    {:reply, :ok, %{game | name: name}}
-  end
-
-  defp handle_update({:subscribe, player_id, pid}, _from, game) do
+  def handle_update({:subscribe, player_id, pid}, _from, game) do
     if game.stage == :lobby do
       subscribe_lobby(game, player_id, pid)
     else
@@ -92,18 +107,22 @@ defmodule Heros.Game do
     end
   end
 
-  defp handle_update({:unsubscribe, player_id, pid}, _from, game) do
+  def handle_update({:unsubscribe, player_id, pid}, _from, game) do
     case List.keyfind(game.players, player_id, 0) do
       nil -> {:reply, :ok, game}
       player -> unsubscribe_player(game, player, pid)
     end
   end
 
-  defp handle_update({:leave, player_id}, _from, game) do
+  def handle_update({:leave, player_id}, _from, game) do
     case List.keyfind(game.players, player_id, 0) do
       nil -> {:reply, :ok, game}
       player -> player_leave(game, player)
     end
+  end
+
+  def handle_update(update, from, game) do
+    module_for_current_stage(game.stage).handle_update(update, from, game)
   end
 
   defp subscribe_lobby(game, player_id, pid) do
