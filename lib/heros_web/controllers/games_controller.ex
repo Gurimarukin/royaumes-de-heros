@@ -1,4 +1,4 @@
-defmodule HerosWeb.PageController do
+defmodule HerosWeb.GamesController do
   use HerosWeb, :controller
 
   alias Phoenix.LiveView

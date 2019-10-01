@@ -5,7 +5,7 @@
     <h1 phx-click="editable_name_true"><%= @game.name %></h1>
   <% end %>
 
-  <div><%= map_size(@game.players) %> / <%= @game.max_players %> joueurs</div>
+  <div><%= length(@game.players) %> / <%= @game.max_players %> joueurs</div>
 
   <table>
     <tr>

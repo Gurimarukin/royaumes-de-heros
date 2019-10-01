@@ -8,7 +8,7 @@ defmodule HerosWeb.GamesLive do
   end
 
   def render(assigns) do
-    HerosWeb.PageView.render("games.html", assigns)
+    HerosWeb.GamesView.render("index.html", assigns)
   end
 
   def handle_info(:update, socket) do

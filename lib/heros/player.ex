@@ -1,4 +1,4 @@
 defmodule Heros.Player do
   defstruct is_owner: false,
-            subscribed: %{}
+            subscribed: MapSet.new()
 end

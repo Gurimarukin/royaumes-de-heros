@@ -5,7 +5,7 @@ defmodule HerosWeb.GameLive do
     case Heros.Games.lookup(Heros.Games, session.game_id) do
       {:ok, game_pid} ->
         if connected?(socket) do
-          game = Heros.Game.subscribe(game_pid, session.session_id, {self(), update_callback()})
+          game = Heros.Game.subscribe(game_pid, session.session_id, self())
 
           socket =
             assign(
@@ -56,13 +56,12 @@ defmodule HerosWeb.GameLive do
     end
   end
 
-  defp update_callback do
-    game_view = self()
-    fn game -> send(game_view, {:update, game}) end
-  end
-
   def handle_info({:update, game}, socket) do
     {:noreply, assign(socket, game: {:ok, game})}
+  end
+
+  def handle_info(:leave, socket) do
+    redirect_home(socket)
   end
 
   def handle_event("editable_name_true", _params, socket) do
@@ -87,15 +86,26 @@ defmodule HerosWeb.GameLive do
   end
 
   def handle_event("leave", _path, socket) do
-    terminate(:normal, socket)
-    {:noreply, redirect(socket, to: HerosWeb.Router.Helpers.page_path(socket, :index))}
+    with_game(socket, fn game_pid, session_id ->
+      Heros.Game.leave(game_pid, session_id)
+    end)
+
+    redirect_home(socket)
   end
 
   def terminate(_reason, socket) do
+    with_game(socket, fn game_pid, session_id ->
+      Heros.Game.unsubscribe(game_pid, session_id, self())
+    end)
+  end
+
+  defp with_game(socket, f) do
     game_pid = Map.get(socket.assigns, :game_pid)
     session_id = Map.get(socket.assigns, :session_id)
+    game_pid && Process.alive?(game_pid) && session_id && f.(game_pid, session_id)
+  end
 
-    game_pid && Process.alive?(game_pid) && session_id &&
-      Heros.Game.unsubscribe(game_pid, session_id, self())
+  defp redirect_home(socket) do
+    {:noreply, redirect(socket, to: HerosWeb.Router.Helpers.games_path(socket, :index))}
   end
 end
