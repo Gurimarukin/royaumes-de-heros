@@ -4,10 +4,18 @@ defmodule HerosWeb.GameLive do
   alias Heros.{Game, Games}
   alias HerosWeb.GameLive
 
-  defp module_for_current_stage({:ok, game}) do
+  defp module_for_current_stage(assigns) do
+    {:ok, game} = assigns.game
+
     case game.stage do
-      :lobby -> GameLive.LobbyAdmin
-      :started -> GameLive.Match
+      :lobby ->
+        case List.keyfind(game.players, assigns.session_id, 0) do
+          nil -> nil
+          {_id, player} -> if player.is_admin, do: GameLive.LobbyAdmin, else: GameLive.Lobby
+        end
+
+      :started ->
+        GameLive.Match
     end
   end
 
@@ -38,19 +46,21 @@ defmodule HerosWeb.GameLive do
   end
 
   defp default_assigns do
-    GameLive.LobbyAdmin.default_assigns() ++
+    GameLive.Lobby.default_assigns() ++
+      GameLive.LobbyAdmin.default_assigns() ++
       GameLive.Match.default_assigns()
   end
 
   def render(assigns) do
     case assigns.game do
       {:ok, game} ->
-        module_for_current_stage({:ok, game}).render(%{assigns | game: game})
+        case module_for_current_stage(assigns) do
+          nil -> render_loading(assigns)
+          module -> module.render(%{assigns | game: game})
+        end
 
       :loading ->
-        ~L"""
-        <div>chargement...</div>
-        """
+        render_loading(assigns)
 
       {:error, error} ->
         error =
@@ -65,6 +75,12 @@ defmodule HerosWeb.GameLive do
     end
   end
 
+  defp render_loading(assigns) do
+    ~L"""
+    <div>chargement...</div>
+    """
+  end
+
   def handle_info({:update, game}, socket) do
     {:noreply, assign(socket, game: {:ok, game})}
   end
@@ -74,7 +90,7 @@ defmodule HerosWeb.GameLive do
   end
 
   def handle_info(info, socket) do
-    module_for_current_stage(socket.assigns.game).handle_info(info, socket)
+    module_for_current_stage(socket.assigns).handle_info(info, socket)
   end
 
   def handle_event("leave", _path, socket) do
@@ -86,7 +102,7 @@ defmodule HerosWeb.GameLive do
   end
 
   def handle_event(event, path, socket) do
-    module_for_current_stage(socket.assigns.game).handle_event(event, path, socket)
+    module_for_current_stage(socket.assigns).handle_event(event, path, socket)
   end
 
   def terminate(_reason, socket) do

@@ -14,7 +14,7 @@
         <td><%= id %></td>
         <td>
           <%= if @session_id != id do %>
-            <button phx-click="kick" phx-value-id=<%= id %>>renvoyer du salon</button>
+            <button phx-click="kick" phx-value-id=<%= id %>>exclure</button>
           <% end %>
         </td>
       </tr>

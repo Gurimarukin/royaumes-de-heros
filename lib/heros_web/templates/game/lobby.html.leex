@@ -1,0 +1,18 @@
+<div>
+  <h1><%= @game.name %></h1>
+
+  <div><%= length(@game.players) %> / <%= @game.max_players %> joueurs</div>
+
+  <table>
+    <%= for {id, player} <- @game.players do %>
+      <tr>
+        <td><%= if player.is_admin, do: "admin" %></td>
+        <td><%= id %></td>
+      </tr>
+    <% end %>
+  </table>
+
+  <center>
+    <button phx-click="leave">quitter</button>
+  </center>
+</div>
