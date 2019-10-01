@@ -30,6 +30,10 @@ defmodule Heros.Game do
     }
   end
 
+  def rename(game, name) do
+    GenServer.call(game, {:update, {:rename, name}})
+  end
+
   def subscribe(game, player_id, {id, callback}) do
     GenServer.call(game, {:update, {:subscribe, player_id, {id, callback}}})
   end

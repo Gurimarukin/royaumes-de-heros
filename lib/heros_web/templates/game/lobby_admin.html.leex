@@ -1,0 +1,24 @@
+<div>
+  <%= if @editable_name do %>
+    <input phx-blur="submit_name" phx-keyup="submit_name_key" value="<%= @game.name %>" autofocus>
+  <% else %>
+    <h1 phx-click="editable_name_true"><%= @game.name %></h1>
+  <% end %>
+
+  <div><%= map_size(@game.players) %> / <%= @game.max_players %> joueurs</div>
+
+  <table>
+    <tr>
+      <th>joueur</th>
+    </tr>
+    <%= for {id, _player} <- @game.players do %>
+      <tr>
+        <td><%= id %></td>
+      </tr>
+    <% end %>
+  </table>
+
+  <center>
+    <button phx-click="leave">quitter</button>
+  </center>
+</div>

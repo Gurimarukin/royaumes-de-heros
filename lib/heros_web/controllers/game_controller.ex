@@ -6,7 +6,7 @@ defmodule HerosWeb.GameController do
   def show(conn, %{"id" => id}) do
     LiveView.Controller.live_render(
       conn,
-      HerosWeb.GameView,
+      HerosWeb.GameLive,
       session: Map.put(conn.assigns, :game_id, id)
     )
   end

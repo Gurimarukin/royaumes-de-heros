@@ -1,4 +1,4 @@
-defmodule HerosWeb.GameView do
+defmodule HerosWeb.GameLive do
   use Phoenix.LiveView
 
   def mount(session, socket) do
@@ -6,7 +6,17 @@ defmodule HerosWeb.GameView do
       {:ok, game_pid} ->
         if connected?(socket) do
           game = Heros.Game.subscribe(game_pid, session.session_id, {self(), update_callback()})
-          {:ok, assign(socket, session_id: session.session_id, game_pid: game_pid, game: game)}
+
+          socket =
+            assign(
+              socket,
+              session_id: session.session_id,
+              game_pid: game_pid,
+              game: game,
+              editable_name: false
+            )
+
+          {:ok, socket}
         else
           {:ok, assign(socket, game: :loading)}
         end
@@ -35,16 +45,14 @@ defmodule HerosWeb.GameView do
             _ -> ""
           end
 
-        ~L"""
-        <div><%= error %></div>
-        """
+        HerosWeb.GameView.render("error.html", Map.put(assigns, :error, error))
     end
   end
 
   defp render_stage(assigns) do
     case assigns.game.stage do
       :lobby ->
-        HerosWeb.PageView.render("lobby_admin.html", assigns)
+        HerosWeb.GameView.render("lobby_admin.html", assigns)
     end
   end
 
@@ -57,9 +65,37 @@ defmodule HerosWeb.GameView do
     {:noreply, assign(socket, game: {:ok, game})}
   end
 
+  def handle_event("editable_name_true", _params, socket) do
+    {:noreply, assign(socket, editable_name: true)}
+  end
+
+  def handle_event("submit_name", %{"value" => name}, socket) do
+    Heros.Game.rename(socket.assigns.game_pid, name)
+    {:noreply, assign(socket, editable_name: false)}
+  end
+
+  def handle_event("submit_name_key", %{"key" => "Enter", "value" => name}, socket) do
+    handle_event("submit_name", %{"value" => name}, socket)
+  end
+
+  def handle_event("submit_name_key", %{"key" => "Escape"}, socket) do
+    {:noreply, assign(socket, editable_name: false)}
+  end
+
+  def handle_event("submit_name_key", _params, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("leave", _path, socket) do
+    terminate(:normal, socket)
+    {:noreply, redirect(socket, to: HerosWeb.Router.Helpers.page_path(socket, :index))}
+  end
+
   def terminate(_reason, socket) do
     game_pid = Map.get(socket.assigns, :game_pid)
     session_id = Map.get(socket.assigns, :session_id)
-    game_pid && session_id && Heros.Game.unsubscribe(game_pid, session_id, self())
+
+    game_pid && Process.alive?(game_pid) && session_id &&
+      Heros.Game.unsubscribe(game_pid, session_id, self())
   end
 end

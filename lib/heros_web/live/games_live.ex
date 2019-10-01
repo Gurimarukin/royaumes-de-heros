@@ -1,4 +1,4 @@
-defmodule HerosWeb.GamesView do
+defmodule HerosWeb.GamesLive do
   use Phoenix.LiveView
 
   def mount(_session, socket) do
