@@ -8,12 +8,15 @@
   <div><%= length(@game.players) %> / <%= @game.max_players %> joueurs</div>
 
   <table>
-    <tr>
-      <th>joueur</th>
-    </tr>
-    <%= for {id, _player} <- @game.players do %>
+    <%= for {id, player} <- @game.players do %>
       <tr>
+        <td><%= if player.is_admin, do: "admin" %></td>
         <td><%= id %></td>
+        <td>
+          <%= if @session_id != id do %>
+            <button phx-click="kick" phx-value-id=<%= id %>>renvoyer du salon</button>
+          <% end %>
+        </td>
       </tr>
     <% end %>
   </table>

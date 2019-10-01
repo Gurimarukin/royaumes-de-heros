@@ -139,7 +139,7 @@ defmodule Heros.Game do
     n_players = length(game.players)
 
     if n_players < game.max_players do
-      player = %Player{subscribed: MapSet.new([pid]), is_owner: n_players == 0}
+      player = %Player{subscribed: MapSet.new([pid]), is_admin: n_players == 0}
       players = game.players ++ [{player_id, player}]
       {:reply, {:ok, game}, %{game | players: players}}
     else
