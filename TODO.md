@@ -3,4 +3,5 @@
 * `Heros.Game`: don't send `:update` when nothing changed
 * `HerosWeb.Games`: show own private games
 * rename yourself
+* lobby not admin
 * define owner when player leaves

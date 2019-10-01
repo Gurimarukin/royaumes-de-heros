@@ -1,5 +1,5 @@
 <div>
-  <%= if @editable_name do %>
+  <%= if @lobby.editable_name do %>
     <input phx-blur="submit_name" phx-keyup="submit_name_key" value="<%= @game.name %>" autofocus>
   <% else %>
     <h1 phx-click="editable_name_true"><%= @game.name %></h1>
@@ -19,6 +19,7 @@
   </table>
 
   <center>
+    <button phx-click="start" disabled>commencer</button>
     <button phx-click="leave">quitter</button>
   </center>
 </div>

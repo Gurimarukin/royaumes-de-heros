@@ -13,7 +13,9 @@ defmodule HerosWeb.GameLive do
               session_id: session.session_id,
               game_pid: game_pid,
               game: game,
-              editable_name: false
+              lobby: %{
+                editable_name: false
+              }
             )
 
           {:ok, socket}
@@ -65,12 +67,12 @@ defmodule HerosWeb.GameLive do
   end
 
   def handle_event("editable_name_true", _params, socket) do
-    {:noreply, assign(socket, editable_name: true)}
+    {:noreply, assign(socket, put_in(socket.assigns, [:lobby, :editable_name], true))}
   end
 
   def handle_event("submit_name", %{"value" => name}, socket) do
     Heros.Game.rename(socket.assigns.game_pid, name)
-    {:noreply, assign(socket, editable_name: false)}
+    {:noreply, assign(socket, put_in(socket.assigns, [:lobby, :editable_name], false))}
   end
 
   def handle_event("submit_name_key", %{"key" => "Enter", "value" => name}, socket) do
@@ -78,7 +80,7 @@ defmodule HerosWeb.GameLive do
   end
 
   def handle_event("submit_name_key", %{"key" => "Escape"}, socket) do
-    {:noreply, assign(socket, editable_name: false)}
+    {:noreply, assign(socket, put_in(socket.assigns, [:lobby, :editable_name], false))}
   end
 
   def handle_event("submit_name_key", _params, socket) do
