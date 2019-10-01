@@ -5,6 +5,8 @@
     <h1 phx-click="edit_name"><%= @game.name %></h1>
   <% end %>
 
+  <label>Public : <input type="checkbox" phx-click="toggle_public" <%= if @game.is_public, do: "checked" %>></label>
+
   <div><%= length(@game.players) %> / <%= @game.max_players %> joueurs</div>
 
   <table>

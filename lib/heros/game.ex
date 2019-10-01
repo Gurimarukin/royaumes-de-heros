@@ -3,7 +3,7 @@ defmodule Heros.Game do
 
   alias Heros.{Game, Player}
 
-  defstruct public: true,
+  defstruct is_public: false,
             players: [],
             max_players: 4,
             stage: :lobby,
@@ -30,7 +30,7 @@ defmodule Heros.Game do
     game = get(game)
 
     %{
-      public: game.public,
+      is_public: game.is_public,
       n_players: length(game.players),
       max_players: game.max_players,
       stage: game.stage,

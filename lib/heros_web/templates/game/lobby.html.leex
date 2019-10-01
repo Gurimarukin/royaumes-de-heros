@@ -1,6 +1,8 @@
 <div>
   <h1><%= @game.name %></h1>
 
+  <label>Public : <input type="checkbox" <%= if @game.is_public, do: "checked" %> disabled></label>
+
   <div><%= length(@game.players) %> / <%= @game.max_players %> joueurs</div>
 
   <table>

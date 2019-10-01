@@ -27,7 +27,7 @@ defmodule HerosWeb.GamesLive do
       games:
         games
         |> Enum.filter(fn game ->
-          game.public and game.stage == :lobby
+          game.is_public and game.stage == :lobby
         end)
     )
   end

@@ -32,6 +32,11 @@ defmodule HerosWeb.GameLive.LobbyAdmin do
     {:noreply, socket}
   end
 
+  def handle_event("toggle_public", _params, socket) do
+    Game.Lobby.toggle_public(socket.assigns.game_pid)
+    {:noreply, socket}
+  end
+
   def handle_event("kick", %{"id" => id}, socket) do
     Game.leave(socket.assigns.game_pid, id)
     {:noreply, socket}
