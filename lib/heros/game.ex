@@ -62,16 +62,16 @@ defmodule Heros.Game do
   def handle_call({:update, update}, from, game) do
     case handle_update(update, from, game) do
       {:reply, reply, new_game} ->
-        {:reply, reply, if_game_changed(new_game, game)}
+        {:reply, reply, maybe_changed(new_game, game)}
 
-      # {:reply, reply, new_game, timeout} -> {:reply, reply, if_game_changed(new_game, game), timeout}
-      # {:noreply, new_game} -> {:noreply, if_game_changed(new_game, game)}
-      # {:noreply, new_game, timeout} -> {:noreply, if_game_changed(new_game, game), timeout}
+      # {:reply, reply, new_game, timeout} -> {:reply, reply, maybe_changed(new_game, game), timeout}
+      # {:noreply, new_game} -> {:noreply, maybe_changed(new_game, game)}
+      # {:noreply, new_game, timeout} -> {:noreply, maybe_changed(new_game, game), timeout}
 
       {:stop, reason, reply, new_game} ->
-        {:stop, reason, reply, if_game_changed(new_game, game)}
+        {:stop, reason, reply, maybe_changed(new_game, game)}
 
-        # {:stop, reason, new_game} -> {:stop, reason, if_game_changed(new_game, game)}
+        # {:stop, reason, new_game} -> {:stop, reason, maybe_changed(new_game, game)}
     end
   end
 
@@ -79,17 +79,17 @@ defmodule Heros.Game do
     module_for_current_stage(game.stage).handle_call(request, from, game)
   end
 
-  defp if_game_changed(new_game, game) do
+  defp maybe_changed(new_game, game) do
     if new_game != game do
       new_game
-      |> update_ready()
+      |> update_state_ready()
       |> broadcast_update()
     else
       new_game
     end
   end
 
-  defp update_ready(game) do
+  defp update_state_ready(game) do
     %{game | ready: length(game.players) >= 2}
   end
 
@@ -103,10 +103,9 @@ defmodule Heros.Game do
   end
 
   def handle_update({:subscribe, player_id, pid}, _from, game) do
-    if game.stage == :lobby do
-      subscribe_lobby(game, player_id, pid)
-    else
-      {:reply, {:error, :game_started}, game}
+    case List.keyfind(game.players, player_id, 0) do
+      nil -> subscribe_new_player(game, player_id, pid)
+      player -> subscribe_existing_player(game, player, pid)
     end
   end
 
@@ -128,26 +127,30 @@ defmodule Heros.Game do
     module_for_current_stage(game.stage).handle_update(update, from, game)
   end
 
+  defp subscribe_new_player(game, player_id, pid) do
+    if game.stage == :lobby do
+      subscribe_lobby(game, player_id, pid)
+    else
+      {:reply, {:error, :game_started}, game}
+    end
+  end
+
   defp subscribe_lobby(game, player_id, pid) do
     n_players = length(game.players)
 
     if n_players < game.max_players do
-      players =
-        case List.keyfind(game.players, player_id, 0) do
-          nil ->
-            player = if n_players == 0, do: %Player{is_owner: true}, else: %Player{}
-            player = %{player | subscribed: MapSet.new([pid])}
-            game.players ++ [{player_id, player}]
-
-          {_, player} ->
-            player = %{player | subscribed: MapSet.put(player.subscribed, pid)}
-            List.keyreplace(game.players, player_id, 0, {player_id, player})
-        end
-
+      player = %Player{subscribed: MapSet.new([pid]), is_owner: n_players == 0}
+      players = game.players ++ [{player_id, player}]
       {:reply, {:ok, game}, %{game | players: players}}
     else
       {:reply, {:error, :lobby_full}, game}
     end
+  end
+
+  defp subscribe_existing_player(game, {player_id, player}, pid) do
+    player = %{player | subscribed: MapSet.put(player.subscribed, pid)}
+    players = List.keyreplace(game.players, player_id, 0, {player_id, player})
+    {:reply, {:ok, game}, %{game | players: players}}
   end
 
   defp unsubscribe_player(game, {player_id, player}, pid) do
