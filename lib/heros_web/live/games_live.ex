@@ -21,14 +21,6 @@ defmodule HerosWeb.GamesLive do
   end
 
   defp get_games(socket) do
-    games = Heros.Games.list(Heros.Games)
-
-    assign(socket,
-      games:
-        games
-        |> Enum.filter(fn game ->
-          game.is_public and game.stage == :lobby
-        end)
-    )
+    assign(socket, games: Heros.Games.list(Heros.Games))
   end
 end

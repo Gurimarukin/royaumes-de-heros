@@ -17,6 +17,13 @@ defmodule Heros.Game do
     end
   end
 
+  def stage_label(stage) do
+    case stage do
+      :lobby -> "salon"
+      :started -> "en jeu"
+    end
+  end
+
   #  Client
   def start_link(opts) do
     GenServer.start_link(__MODULE__, :ok, opts)
