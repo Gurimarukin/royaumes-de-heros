@@ -56,7 +56,7 @@ defmodule HerosWeb.GameLive do
       {:ok, game} ->
         case module_for_current_stage(assigns) do
           nil -> render_loading(assigns)
-          module -> module.render(%{assigns | game: game})
+          module -> module.render(put_in(assigns.game, game))
         end
 
       :loading ->

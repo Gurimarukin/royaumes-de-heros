@@ -24,7 +24,7 @@
   </table>
 
   <center>
-    <button phx-click="start" <%= if not @game.ready, do: "disabled" %>>commencer</button>
+    <button phx-click="start" <%= if not @game.is_ready, do: "disabled" %>>commencer</button>
     <button phx-click="leave">quitter</button>
   </center>
 </div>
