@@ -3,3 +3,4 @@
 * `HerosWeb.Games`: show own private games
 * rename yourself
 * add message when kicked from lobby
+* remove game projection from `Game`

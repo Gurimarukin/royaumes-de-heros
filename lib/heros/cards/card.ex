@@ -1,6 +1,6 @@
 defmodule Heros.Cards.Card do
   defstruct name: nil,
-            img: nil,
+            image: nil,
             effect: nil
 
   def add_attack(game, amount) do

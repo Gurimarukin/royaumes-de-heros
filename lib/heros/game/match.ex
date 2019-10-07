@@ -23,7 +23,7 @@ defmodule Heros.Game.Match do
   end
 
   defp init_player do
-    %Player{deck: Cards.Decks.Default.shuffled()}
+    %Player{deck: Cards.Decks.Base.shuffled()}
   end
 
   defp set_current_player(game) do
