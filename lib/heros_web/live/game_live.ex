@@ -9,9 +9,9 @@ defmodule HerosWeb.GameLive do
 
     case game.stage do
       :lobby ->
-        case List.keyfind(game.players, assigns.session_id, 0) do
+        case Enum.find(game.players, &(&1.id == assigns.session_id)) do
           nil -> nil
-          {_id, player} -> if player.is_admin, do: GameLive.LobbyAdmin, else: GameLive.Lobby
+          player -> if player.is_admin, do: GameLive.LobbyAdmin, else: GameLive.Lobby
         end
 
       :started ->
@@ -23,13 +23,13 @@ defmodule HerosWeb.GameLive do
     case Games.lookup(Games, session.game_id) do
       {:ok, game_pid} ->
         if connected?(socket) do
-          game = Game.subscribe(game_pid, session.session_id, self())
+          game = Game.subscribe(game_pid, session, self())
 
           socket =
             assign(
               socket,
               [
-                session_id: session.session_id,
+                session_id: session.id,
                 game_pid: game_pid,
                 game: game
               ] ++ default_assigns()

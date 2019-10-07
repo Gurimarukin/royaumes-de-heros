@@ -6,10 +6,10 @@
   <div><%= length(@game.players) %> / <%= @game.max_players %> joueurs</div>
 
   <table>
-    <%= for {id, player} <- @game.players do %>
+    <%= for player <- @game.players do %>
       <tr>
         <td><%= if player.is_admin, do: "admin" %></td>
-        <td><%= id %></td>
+        <td><%= player.name %></td>
       </tr>
     <% end %>
   </table>

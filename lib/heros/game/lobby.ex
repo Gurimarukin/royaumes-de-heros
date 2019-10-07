@@ -1,6 +1,4 @@
 defmodule Heros.Game.Lobby do
-  use Heros.Game.Stage
-
   defstruct name: "Nouvelle partie",
             max_players: 4,
             is_public: false,
@@ -19,7 +17,7 @@ defmodule Heros.Game.Lobby do
     GenServer.call(game, {:update, :start})
   end
 
-  defp is_admin(player_id, game), do: game.lobby.admin == player_id
+  defp is_admin(session_id, game), do: game.lobby.admin == session_id
 
   def projection_for_session(_session_id, game) do
     %{
@@ -27,8 +25,12 @@ defmodule Heros.Game.Lobby do
       name: game.lobby.name,
       is_public: game.lobby.is_public,
       players:
-        Enum.map(game.subscribed_sessions, fn {id, _subscribed} ->
-          {id, %{is_admin: is_admin(id, game)}}
+        Enum.map(game.users, fn {id, session} ->
+          %{
+            id: id,
+            name: session.user_name,
+            is_admin: is_admin(id, game)
+          }
         end),
       max_players: game.lobby.max_players,
       is_ready: game.lobby.is_ready
@@ -47,7 +49,7 @@ defmodule Heros.Game.Lobby do
   end
 
   def handle_update(:start, _from, game) do
-    {:reply, :ok, put_in(game.stage, :started)}
+    {:reply, :ok, Heros.Game.Match.start_game(game)}
   end
 
   def on_update(game) do
@@ -58,8 +60,8 @@ defmodule Heros.Game.Lobby do
 
   defp update_admin(game) do
     admin =
-      case game.subscribed_sessions[game.lobby.admin] do
-        nil -> List.first(Map.keys(game.subscribed_sessions))
+      case game.users[game.lobby.admin] do
+        nil -> List.first(Map.keys(game.users))
         _ -> game.lobby.admin
       end
 
@@ -67,6 +69,6 @@ defmodule Heros.Game.Lobby do
   end
 
   defp update_is_ready(game) do
-    put_in(game.lobby.is_ready, map_size(game.subscribed_sessions) >= 2)
+    put_in(game.lobby.is_ready, map_size(game.users) >= 2)
   end
 end

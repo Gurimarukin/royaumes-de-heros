@@ -4,10 +4,26 @@ defmodule HerosWeb.Session do
   def init(opts), do: opts
 
   def call(conn, _opts) do
-    session_id = get_session(conn, :session_id) || UUID.uuid1(:hex)
+    id = get_session(conn, :id) || UUID.uuid1(:hex)
+
+    user_name =
+      get_session(conn, :user_name) ||
+        Enum.random([
+          "Varrick",
+          "Kraka",
+          "Ralyah",
+          "Kristov",
+          "Arkus",
+          "Lys",
+          "Shalyah",
+          "Borg",
+          "Parov"
+        ]) <> " (" <> String.slice(id, 0, 5) <> ")"
 
     conn
-    |> assign(:session_id, session_id)
-    |> put_session(:session_id, session_id)
+    |> assign(:id, id)
+    |> assign(:user_name, user_name)
+    |> put_session(:id, id)
+    |> put_session(:user_name, user_name)
   end
 end
