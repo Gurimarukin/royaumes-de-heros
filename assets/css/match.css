@@ -2,16 +2,27 @@
     --match-height: 100vh;
     --match-width: 100vw;
 
-    --card-width: 2.98vw;
-    --card-height: 4.17vh;
-
-    --market-bg-color: darkred;
-
+    --card-width: 4.47vw; /* 298px */
+    --card-height: 6.255vw; /* 417px */
     --card-margin: 0.5vw;
+
+    --market-bg: darkred;
+
+    --fight-zone-bg: beige;
+    --fight-zone-border-width: 3px;
+    --fight-zone-color: darkgoldenrod;
+
+    --resource-padding-top: 0.33em;
+    --resource-font-size: 1em;
+    --resource-bg: white;
+
+    --player-hand-border-width: 1px;
+    --player-hand-border-color: black;
 
     position: relative;
     height: var(--match-height);
     width: var(--match-width);
+    line-height: 1;
 }
 
 .match--2-players {
@@ -25,26 +36,85 @@
         1 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin)
     );
 
-    background-color: var(--market-bg-color);
+    background: var(--market-bg);
     width: var(--width);
     height: var(--height);
-
     position: absolute;
     top: calc(calc(var(--match-height) - var(--height)) / 2);
     left: calc(calc(var(--match-width) - var(--width)) / 2);
 }
 
-.match__player {
-    --separation-height: calc(1.66em + 6px);
-
+.player {
+    --resources-height: calc(
+        2 * var(--fight-zone-border-width) + 2 * var(--resource-padding-top) +
+            var(--resource-font-size)
+    );
     --width: calc(
         9 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
     );
     --height: calc(
         3 * calc(var(--card-height) + var(--card-margin)) +
-            calc(2 * var(--card-margin)) + var(--separation-height)
+            calc(2 * var(--card-margin)) + var(--resources-height)
     );
 
     width: var(--width);
     height: var(--height);
+}
+
+.player__fight-zone {
+    --height: calc(
+        2 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin)
+    );
+
+    height: var(--height);
+    padding: var(--card-margin);
+    display: flex;
+    align-items: flex-end;
+    background: var(--fight-zone-bg);
+}
+
+.player__hp {
+    width: var(--card-width);
+    height: var(--card-height);
+    border: 1px solid black;
+}
+
+.player__resources {
+    display: flex;
+    justify-content: center;
+    border-bottom: var(--fight-zone-border-width) solid var(--fight-zone-color);
+    background: var(--fight-zone-bg);
+}
+
+.player__resource {
+    font-size: var(--resource-font-size);
+    padding: var(--resource-padding-top) 0.67em;
+    border-top: var(--fight-zone-border-width) solid var(--fight-zone-color);
+    border-left: var(--fight-zone-border-width) solid var(--fight-zone-color);
+    background: var(--resource-bg);
+}
+
+.player__resource:last-of-type {
+    border-right: var(--fight-zone-border-width) solid var(--fight-zone-color);
+}
+
+.player__cards {
+    display: flex;
+}
+
+.player__cards-pile {
+    width: calc(var(--card-width));
+    height: calc(var(--card-height));
+    margin: var(--card-margin);
+}
+
+.player__hand {
+    flex-grow: 1;
+    height: var(--card-height);
+    margin: var(--card-margin) 0;
+    padding: 0 var(--card-margin);
+    border-left: var(--player-hand-border-width) solid
+        var(--player-hand-border-color);
+    border-right: var(--player-hand-border-width) solid
+        var(--player-hand-border-color);
 }
