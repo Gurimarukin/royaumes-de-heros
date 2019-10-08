@@ -8,7 +8,7 @@ defmodule Heros.Game do
             lobby: %Game.Lobby{},
             match: nil
 
-  defp module_for_current_stage(stage) do
+  def module_for_current_stage(stage) do
     case stage do
       :lobby -> Game.Lobby
       :started -> Game.Match

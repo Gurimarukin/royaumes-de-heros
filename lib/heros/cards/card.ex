@@ -1,7 +1,6 @@
 defmodule Heros.Cards.Card do
   defstruct name: nil,
-            image: nil,
-            effect: nil
+            image: nil
 
   def add_attack(game, amount) do
     case game.match.current_player do
@@ -16,7 +15,6 @@ defmodule Heros.Cards.Card do
     end
   end
 
-  @spec add_attack(any, any) :: any
   def add_gold(game, amount) do
     case game.match.current_player do
       nil ->

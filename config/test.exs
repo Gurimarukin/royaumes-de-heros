@@ -2,8 +2,8 @@ use Mix.Config
 
 # Configure your database
 config :heros, Heros.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: "elixir",
+  password: "elixir",
   database: "heros_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox

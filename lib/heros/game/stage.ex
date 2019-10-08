@@ -16,10 +16,4 @@ defmodule Heros.Game.Stage do
             when reply: term, new_state: term, reason: term
 
   @callback on_update(new_game :: term) :: term
-
-  defmacro __using__(opts) do
-    quote bind_quoted: [opts: opts] do
-      @behaviour Heros.Game.Stage
-    end
-  end
 end

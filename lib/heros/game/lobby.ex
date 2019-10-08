@@ -5,6 +5,10 @@ defmodule Heros.Game.Lobby do
             is_ready: false,
             admin: nil
 
+  alias Heros.Game.Stage
+
+  @behaviour Stage
+
   def rename(game, name) do
     GenServer.call(game, {:update, {:rename, name}})
   end
@@ -19,6 +23,7 @@ defmodule Heros.Game.Lobby do
 
   defp is_admin(session_id, game), do: game.lobby.admin == session_id
 
+  @impl Stage
   def projection_for_session(_session_id, game) do
     %{
       stage: game.stage,
@@ -37,9 +42,11 @@ defmodule Heros.Game.Lobby do
     }
   end
 
+  @impl Stage
   def handle_call(_request, _from, _game),
     do: raise(MatchError, message: "no match of handle_call/3")
 
+  @impl Stage
   def handle_update({:rename, name}, _from, game) do
     {:reply, :ok, put_in(game.name, name)}
   end
@@ -52,6 +59,7 @@ defmodule Heros.Game.Lobby do
     {:reply, :ok, Heros.Game.Match.start_game(game)}
   end
 
+  @impl Stage
   def on_update(game) do
     game
     |> update_admin()

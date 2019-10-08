@@ -1,9 +1,11 @@
 defmodule Heros.Game.Match do
-  alias Heros.Game.{Match, Player}
-  alias Heros.Cards
-
   defstruct players: [],
             current_player: nil
+
+  alias Heros.Game.{Match, Player, Stage}
+  alias Heros.Cards
+
+  @behaviour Stage
 
   def start_game(game) do
     put_in(game.match, %Match{})
@@ -32,16 +34,20 @@ defmodule Heros.Game.Match do
 
   defp set_started(game), do: put_in(game.stage, :started)
 
+  @impl Stage
   def handle_call(_request, _from, _game),
     do: raise(MatchError, message: "no match of handle_call/3")
 
+  @impl Stage
   def projection_for_session(_session_id, game) do
-    %{stage: game.stage}
+    game
   end
 
+  @impl Stage
   def handle_update(_update, _from, _game),
     do: raise(MatchError, message: "no match of handle_update/3")
 
+  @impl Stage
   def on_update(game) do
     game
   end

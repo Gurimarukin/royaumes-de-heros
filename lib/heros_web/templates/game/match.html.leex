@@ -1,1 +1,20 @@
-<div>Match</div>
+<div class="match match--<%= @n_players %>-players">
+  <div class="match__market"></div>
+
+  <%= for {_id, player} <- @players do %>
+    <div class="match__player">
+      <div class="match__player_inventory">HP : <%= player.hp %> / <%= player.max_hp %></div>
+
+      <div class="match__player_resources">
+        <div>PO : <%= player.gold %></div>
+        <div>ATK : <%= player.attack %></div>
+      </div>
+
+      <div class="match__player_cards">
+        <div>Défausse : <%= player.discard %></div>
+        <div>Main : <%= player.hand %></div>
+        <div>Pioche : <%= player.deck %></div>
+      </div>
+    </div>
+  <% end %>
+</div>

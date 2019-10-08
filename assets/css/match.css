@@ -1,0 +1,50 @@
+.match {
+    --match-height: 100vh;
+    --match-width: 100vw;
+
+    --card-width: 2.98vw;
+    --card-height: 4.17vh;
+
+    --market-bg-color: darkred;
+
+    --card-margin: 0.5vw;
+
+    position: relative;
+    height: var(--match-height);
+    width: var(--match-width);
+}
+
+.match--2-players {
+}
+
+.match__market {
+    --width: calc(
+        6 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
+    );
+    --height: calc(
+        1 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin)
+    );
+
+    background-color: var(--market-bg-color);
+    width: var(--width);
+    height: var(--height);
+
+    position: absolute;
+    top: calc(calc(var(--match-height) - var(--height)) / 2);
+    left: calc(calc(var(--match-width) - var(--width)) / 2);
+}
+
+.match__player {
+    --separation-height: calc(1.66em + 6px);
+
+    --width: calc(
+        9 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
+    );
+    --height: calc(
+        3 * calc(var(--card-height) + var(--card-margin)) +
+            calc(2 * var(--card-margin)) + var(--separation-height)
+    );
+
+    width: var(--width);
+    height: var(--height);
+}
