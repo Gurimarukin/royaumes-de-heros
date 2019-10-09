@@ -1,24 +1,33 @@
 <div class="match match--<%= @n_players %>-players">
-  <div class="match__market"></div>
-
-  <%= for {_id, player} <- @players do %>
+  <%= for {_id, player, name} <- @players do %>
     <div class="player">
       <div class="player__fight-zone">
-        <div class="player__hp">
+        <div class="player__hp player__rotate">
           HP : <%= player.hp %> / <%= player.max_hp %>
         </div>
       </div>
 
       <div class="player__resources">
-        <div class="player__resource">PO : <%= player.gold %></div>
-        <div class="player__resource">ATK : <%= player.attack %></div>
+        <div class="player__name player__rotate"><%= name %></div>
+        <div class="player__resource">
+          <div class="player__rotate">PO : <%= player.gold %></div>
+        </div>
+        <div class="player__resource">
+          <div class="player__rotate">ATK : <%= player.attack %></div>
+        </div>
       </div>
 
       <div class="player__cards">
-        <div class="player__cards-pile">Défausse : <%= player.discard %></div>
-        <div class="player__hand">Main : <%= player.hand %></div>
-        <div class="player__cards-pile">Pioche : <%= player.deck %></div>
+        <div class="player__cards-pile player__rotate">Défausse : <%= player.discard %></div>
+        <div class="player__hand player__rotate">Main : <%= player.hand %></div>
+        <div class="player__cards-pile player__rotate">Pioche : <%= player.deck %></div>
       </div>
     </div>
+  <% end %>
+
+  <div class="match__market"></div>
+
+  <%= for {id, card} <- @cards do %>
+    <img id="<%= id %>" class="<%= card.class %>" src="<%= card.card.image %>">
   <% end %>
 </div>

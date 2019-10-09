@@ -141,7 +141,7 @@ defmodule Heros.Game do
 
     if n_players < game.lobby.max_players do
       game =
-        put_in(game.users[session.id], %Game.Session{
+        put_in(game.users[session.id], %Game.User{
           connected_views: MapSet.new([pid]),
           user_name: session.user_name
         })

@@ -3,16 +3,16 @@ defmodule Heros.Cards.Decks.Base do
 
   def get do
     [
-      :shortsword,
-      :dagger,
-      :ruby,
-      :gold,
-      :gold,
-      :gold,
-      :gold,
-      :gold,
-      :gold,
-      :gold
+      {Card.random_id(), :shortsword},
+      {Card.random_id(), :dagger},
+      {Card.random_id(), :ruby},
+      {Card.random_id(), :gold},
+      {Card.random_id(), :gold},
+      {Card.random_id(), :gold},
+      {Card.random_id(), :gold},
+      {Card.random_id(), :gold},
+      {Card.random_id(), :gold},
+      {Card.random_id(), :gold}
     ]
   end
 

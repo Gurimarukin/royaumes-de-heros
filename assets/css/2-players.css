@@ -1,0 +1,32 @@
+.match--2-players .player:nth-of-type(1),
+.match--2-players .player:nth-of-type(2) {
+    position: absolute;
+    left: calc(calc(var(--match-width) - var(--player-width)) / 2);
+}
+
+.match--2-players .player:nth-of-type(1) {
+    bottom: 0;
+}
+
+.match--2-players .player:nth-of-type(2) {
+    top: 0;
+    transform: rotate(180deg);
+}
+
+.match--2-players .player:nth-of-type(2) .player__rotate {
+    transform: rotate(180deg);
+}
+
+.match--2-players .card--deck-0 {
+    right: calc(
+        calc(var(--match-width) - var(--player-width)) / 2 + var(--card-margin)
+    );
+    bottom: var(--card-margin);
+}
+
+.match--2-players .card--deck-1 {
+    left: calc(
+        calc(var(--match-width) - var(--player-width)) / 2 + var(--card-margin)
+    );
+    top: var(--card-margin);
+}

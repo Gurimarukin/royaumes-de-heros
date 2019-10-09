@@ -6,7 +6,17 @@
     --card-height: 6.255vw; /* 417px */
     --card-margin: 0.5vw;
 
-    --market-bg: darkred;
+    --resources-height: calc(
+        2 * var(--fight-zone-border-width) + 2 * var(--resource-padding-top) +
+            var(--resource-font-size)
+    );
+    --player-width: calc(
+        9 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
+    );
+    --player-height: calc(
+        3 * calc(var(--card-height) + var(--card-margin)) +
+            calc(2 * var(--card-margin)) + var(--resources-height)
+    );
 
     --fight-zone-bg: beige;
     --fight-zone-border-width: 3px;
@@ -19,13 +29,12 @@
     --player-hand-border-width: 1px;
     --player-hand-border-color: black;
 
+    --market-bg: darkred;
+
     position: relative;
     height: var(--match-height);
     width: var(--match-width);
     line-height: 1;
-}
-
-.match--2-players {
 }
 
 .match__market {
@@ -45,20 +54,8 @@
 }
 
 .player {
-    --resources-height: calc(
-        2 * var(--fight-zone-border-width) + 2 * var(--resource-padding-top) +
-            var(--resource-font-size)
-    );
-    --width: calc(
-        9 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
-    );
-    --height: calc(
-        3 * calc(var(--card-height) + var(--card-margin)) +
-            calc(2 * var(--card-margin)) + var(--resources-height)
-    );
-
-    width: var(--width);
-    height: var(--height);
+    width: var(--player-width);
+    height: var(--player-height);
 }
 
 .player__fight-zone {
@@ -84,6 +81,13 @@
     justify-content: center;
     border-bottom: var(--fight-zone-border-width) solid var(--fight-zone-color);
     background: var(--fight-zone-bg);
+    position: relative;
+}
+
+.player__name {
+    position: absolute;
+    left: var(--card-margin);
+    bottom: var(--card-margin);
 }
 
 .player__resource {
@@ -118,3 +122,11 @@
     border-right: var(--player-hand-border-width) solid
         var(--player-hand-border-color);
 }
+
+.card {
+    position: absolute;
+    width: var(--card-width);
+    height: var(--card-height);
+}
+
+@import './2-players.css';
