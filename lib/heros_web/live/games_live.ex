@@ -1,10 +1,13 @@
 defmodule HerosWeb.GamesLive do
   use Phoenix.LiveView
 
-  def mount(_session, socket) do
+  def mount(session, socket) do
     if connected?(socket), do: :timer.send_interval(1000, self(), :update)
 
-    {:ok, get_games(socket)}
+    {:ok,
+     socket
+     |> assign(session: session)
+     |> get_games()}
   end
 
   def render(assigns) do

@@ -1,4 +1,6 @@
 <div>
+  <%= live_render(@socket, HerosWeb.HeaderLive, id: "header", session: @session) %>
+
   <%= if @edit_name do %>
     <input phx-blur="submit_name" phx-keyup="keyup_name" value="<%= @game.name %>" autofocus>
   <% else %>
@@ -15,7 +17,7 @@
         <td><%= if player.is_admin, do: "admin" %></td>
         <td><%= player.name %></td>
         <td>
-          <%= if @session_id != player.id do %>
+          <%= if @session.id != player.id do %>
             <button phx-click="kick" phx-value-id=<%= player.id %>>exclure</button>
           <% end %>
         </td>

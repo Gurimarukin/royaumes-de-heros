@@ -2,9 +2,10 @@ defmodule HerosWeb.GameLive.Match do
   alias Heros.Cards.Card
 
   def render(assigns) do
-    players =
-      sorted_players(assigns.game.match.players, assigns.session_id)
-      |> Enum.map(fn {id, player} ->
+    players = sorted_players(assigns.game.match.players, assigns.session.id)
+
+    simple_players =
+      Enum.map(players, fn {id, player} ->
         player =
           update_in(player, [:deck], &length/1)
           |> update_in([:discard], &length/1)
@@ -16,53 +17,48 @@ defmodule HerosWeb.GameLive.Match do
       end)
 
     assigns = %{
-      players: players,
+      players: simple_players,
       n_players: length(players),
-      cards: cards(assigns.game.match.players, assigns.session_id)
+      cards: cards(players, assigns.session.id)
     }
 
     HerosWeb.GameView.render("match.html", assigns)
   end
 
-  def sorted_players(players, session_id) do
-    {current_player, others} = sorted_players(players, session_id, {nil, []})
+  defp sorted_players(players, session_id) do
+    {current_player, others} = Heros.Game.Match.sorted_players(players, session_id)
 
     (current_player && [current_player | others]) ||
       others
   end
 
-  defp sorted_players([], _session_id, acc), do: acc
-
-  defp sorted_players([{session_id, current_player} | tail], session_id, {_current_player, acc}) do
-    {{session_id, current_player}, tail ++ acc}
-  end
-
-  defp sorted_players([player | tail], session_id, {current_player, acc}) do
-    sorted_players(tail, session_id, {current_player, acc ++ [player]})
-  end
-
-  defp cards(players, _session_id) do
-    # {res, _} =
-    #   Enum.reduce(players, {%{deck: []}, 0}, fn {_id, player}, {acc, i} ->
-    #     acc =
-    #       acc
-    #       |> update_in(acc.deck, &(&1 ++ deck(player, i)))
-
-    #     {acc, i + 1}
-    #   end)
-
-    {res, _} =
-      Enum.flat_map_reduce(players, 0, fn {_id, player}, i ->
-        {deck(player, i), i + 1}
-      end)
-
-    res
+  defp cards(players, session_id) do
+    Enum.with_index(players)
+    |> Enum.flat_map(fn {{id, player}, i} ->
+      deck(player, i) ++
+        hand(player, id == session_id, i)
+    end)
   end
 
   defp deck(player, i) do
     Enum.map(player.deck, fn {id, _card} ->
       {id, %{card: Card.hidden(), class: ~s(card card--deck-#{i})}}
     end)
+  end
+
+  defp hand(player, visible, i) do
+    hand = Enum.with_index(player.hand)
+
+    if visible do
+      Enum.map(hand, fn {{id, card}, j} ->
+        {id,
+         %{card: Card.fetch(card), class: ~s(card card--hand card--hand-p#{i} card--hand-#{j})}}
+      end)
+    else
+      Enum.map(hand, fn {{id, _card}, j} ->
+        {id, %{card: Card.hidden(), class: ~s(card card--hand card--hand-p#{i} card--hand-#{j})}}
+      end)
+    end
   end
 
   def default_assigns do

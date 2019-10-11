@@ -30,3 +30,45 @@
     );
     top: var(--card-margin);
 }
+
+.match--2-players .card--hand-p0 {
+    bottom: var(--card-margin);
+}
+
+.match--2-players .card--hand-p1 {
+    top: var(--card-margin);
+}
+
+.match--2-players .card--hand {
+    --a: calc(var(--card-width) + var(--card-margin));
+    --b: calc(var(--match-width) - var(--player-width)) / 2 +
+        calc(2 * var(--card-margin));
+}
+
+.match--2-players .card--hand-0 {
+    left: calc(var(--a) * 4 + var(--b));
+}
+
+.match--2-players .card--hand-1 {
+    left: calc(var(--a) * 5 + var(--b));
+}
+
+.match--2-players .card--hand-2 {
+    left: calc(var(--a) * 3 + var(--b));
+}
+
+.match--2-players .card--hand-3 {
+    left: calc(var(--a) * 6 + var(--b));
+}
+
+.match--2-players .card--hand-4 {
+    left: calc(var(--a) * 2 + var(--b));
+}
+
+.match--2-players .card--hand-5 {
+    left: calc(var(--a) * 7 + var(--b));
+}
+
+.match--2-players .card--hand-6 {
+    left: calc(var(--a) * 1 + var(--b));
+}

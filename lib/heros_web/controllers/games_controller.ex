@@ -4,6 +4,6 @@ defmodule HerosWeb.GamesController do
   alias Phoenix.LiveView
 
   def index(conn, _params) do
-    LiveView.Controller.live_render(conn, HerosWeb.GamesLive, session: %{})
+    LiveView.Controller.live_render(conn, HerosWeb.GamesLive, session: conn.assigns)
   end
 end

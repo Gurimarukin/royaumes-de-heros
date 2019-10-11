@@ -1,4 +1,6 @@
 <div>
+  <%= live_render(@socket, HerosWeb.HeaderLive, id: "header", session: @session) %>
+
   <center>
     <button phx-click="create_game">Créer une partie</button>
   </center>

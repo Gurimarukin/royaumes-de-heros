@@ -2,7 +2,7 @@ defmodule Heros.Cards.Card do
   defstruct name: nil,
             image: nil
 
-  alias Heros.Cards.Card
+  alias Heros.Cards.{Card, Decks}
 
   def random_id, do: UUID.uuid1(:hex)
 
@@ -33,6 +33,18 @@ defmodule Heros.Cards.Card do
           game.match.players[player_id],
           fn player -> update_in(player.gold, &(&1 + amount)) end
         )
+    end
+  end
+
+  def fetch(card) do
+    try_apply(Decks.Base, :fetch, [card])
+  end
+
+  defp try_apply(module, fun, args) do
+    try do
+      apply(module, fun, args)
+    rescue
+      _ -> nil
     end
   end
 end

@@ -9,7 +9,7 @@ defmodule HerosWeb.GameLive do
 
     case game.stage do
       :lobby ->
-        case Enum.find(game.players, &(&1.id == assigns.session_id)) do
+        case Enum.find(game.players, &(&1.id == assigns.session.id)) do
           nil -> nil
           player -> if player.is_admin, do: GameLive.LobbyAdmin, else: GameLive.Lobby
         end
@@ -20,6 +20,8 @@ defmodule HerosWeb.GameLive do
   end
 
   def mount(session, socket) do
+    socket = assign(socket, session: session)
+
     case Games.lookup(Games, session.game_id) do
       {:ok, game_pid} ->
         if connected?(socket) do
@@ -29,7 +31,6 @@ defmodule HerosWeb.GameLive do
             assign(
               socket,
               [
-                session_id: session.id,
                 game_pid: game_pid,
                 game: game
               ] ++ default_assigns()
@@ -112,8 +113,8 @@ defmodule HerosWeb.GameLive do
   end
 
   defp with_game(socket, f) do
-    game_pid = Map.get(socket.assigns, :game_pid)
-    session_id = Map.get(socket.assigns, :session_id)
+    game_pid = socket.assigns.session[:game_pid]
+    session_id = socket.assigns.session[:id]
     game_pid && Process.alive?(game_pid) && session_id && f.(game_pid, session_id)
   end
 

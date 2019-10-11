@@ -92,7 +92,6 @@
 
 .player__resource {
     font-size: var(--resource-font-size);
-    padding: var(--resource-padding-top) 0.67em;
     border-top: var(--fight-zone-border-width) solid var(--fight-zone-color);
     border-left: var(--fight-zone-border-width) solid var(--fight-zone-color);
     background: var(--resource-bg);
@@ -102,14 +101,43 @@
     border-right: var(--fight-zone-border-width) solid var(--fight-zone-color);
 }
 
+.player__gold,
+.player__attack {
+    width: var(--card-width);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: var(--resource-padding-top);
+}
+
+.player__gold::before,
+.player__attack::before {
+    content: '';
+    display: block;
+    height: 1.1em;
+    margin-right: 0.33em;
+    background-size: 100% 100%;
+}
+
+.player__gold::before {
+    background-image: url('https://www.herorealms.com/wp-content/uploads/2017/12/gold0.jpg');
+    width: 1.1em;
+}
+
+.player__attack::before {
+    background-image: url('https://www.herorealms.com/wp-content/uploads/2017/12/combat0.jpg');
+    width: 1.21em;
+}
+
 .player__cards {
     display: flex;
 }
 
 .player__cards-pile {
-    width: calc(var(--card-width));
-    height: calc(var(--card-height));
-    margin: var(--card-margin);
+    width: calc(var(--card-width) + calc(2 * var(--card-margin)));
+    height: calc(var(--card-height) + calc(2 * var(--card-margin)));
+    text-align: center;
+    font-size: var(--card-margin);
 }
 
 .player__hand {
@@ -127,6 +155,7 @@
     position: absolute;
     width: var(--card-width);
     height: var(--card-height);
+    transition: top 1s, right 1s, bottom 1s, left 1s;
 }
 
 @import './2-players.css';

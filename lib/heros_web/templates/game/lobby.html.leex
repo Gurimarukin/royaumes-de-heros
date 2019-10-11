@@ -1,4 +1,6 @@
 <div>
+  <%= live_render(@socket, HerosWeb.HeaderLive, id: "header", session: @session) %>
+
   <h1><%= @game.name %></h1>
 
   <label>Public : <input type="checkbox" <%= if @game.is_public, do: "checked" %> disabled></label>

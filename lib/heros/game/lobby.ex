@@ -48,7 +48,7 @@ defmodule Heros.Game.Lobby do
 
   @impl Stage
   def handle_update({:rename, name}, _from, game) do
-    {:reply, :ok, put_in(game.name, name)}
+    {:reply, :ok, put_in(game.lobby.name, name)}
   end
 
   def handle_update(:toggle_public, _from, game) do
