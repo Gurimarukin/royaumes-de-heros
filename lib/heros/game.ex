@@ -68,8 +68,12 @@ defmodule Heros.Game do
 
     Utils.flat_map_call_response(response, fn new_game ->
       if new_game != game do
-        module_for_current_stage(game.stage).on_update(response)
-        |> Utils.map_call_response(&broadcast_update/1)
+        response =
+          module_for_current_stage(game.stage).on_update(response)
+          |> stop_if_no_users()
+
+        Utils.map_call_response(response, &broadcast_update/1)
+        response
       else
         response
       end
@@ -85,8 +89,6 @@ defmodule Heros.Game do
       projection = project(id, game)
       Enum.map(user.connected_views, fn pid -> send(pid, {:update, projection}) end)
     end)
-
-    game
   end
 
   def handle_info({:DOWN, _ref, :process, pid, _reason}, game) do
@@ -104,18 +106,13 @@ defmodule Heros.Game do
   end
 
   def handle_update({:unsubscribe, pid}, _from, game) do
-    users =
-      Enum.reduce(game.users, game.users, fn {id, user}, users ->
+    game =
+      Enum.reduce(game.users, game, fn {id, user}, game ->
         user = update_in(user.connected_views, &MapSet.delete(&1, pid))
-
-        if MapSet.size(user.connected_views) == 0 and game.stage == :lobby do
-          Map.delete(users, id)
-        else
-          Map.put(users, id, user)
-        end
+        put_in(game.users[id], user)
       end)
 
-    stop_if_no_users(put_in(game.users, users))
+    stop_if_no_users({:reply, :ok, game})
   end
 
   def handle_update({:leave, session_id}, _from, game) do
@@ -171,14 +168,16 @@ defmodule Heros.Game do
   defp player_leave(game, session_id, session) do
     session.connected_views |> Enum.map(fn pid -> send(pid, :leave) end)
 
-    stop_if_no_users(update_in(game.users, &Map.delete(&1, session_id)))
+    stop_if_no_users({:reply, :ok, update_in(game.users, &Map.delete(&1, session_id))})
   end
 
-  defp stop_if_no_users(game) do
-    if map_size(game.users) == 0 do
-      {:stop, :normal, :ok, game}
-    else
-      {:reply, :ok, game}
-    end
+  defp stop_if_no_users(response) do
+    Utils.flat_map_call_response(response, fn game ->
+      if map_size(game.users) == 0 do
+        {:stop, :normal, :ok, game}
+      else
+        response
+      end
+    end)
   end
 end
