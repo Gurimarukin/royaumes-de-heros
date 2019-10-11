@@ -39,8 +39,8 @@ defmodule Heros.Game do
     GenServer.call(game, {:update, {:subscribe, session, pid}})
   end
 
-  def unsubscribe(game, session_id, pid) do
-    GenServer.call(game, {:update, {:unsubscribe, session_id, pid}})
+  def unsubscribe(game, pid) do
+    GenServer.call(game, {:update, {:unsubscribe, pid}})
   end
 
   def leave(game, session_id) do
@@ -103,6 +103,13 @@ defmodule Heros.Game do
     game
   end
 
+  def handle_info({:DOWN, _ref, :process, pid, _reason}, game) do
+    case unsubscribe_pid(game, pid) do
+      {:stop, reason, _reply, game} -> {:stop, reason, game}
+      {:reply, _reply, game} -> {:noreply, game}
+    end
+  end
+
   def handle_update({:subscribe, session, pid}, _from, game) do
     case game.users[session.id] do
       nil -> subscribe_new_session(game, session, pid)
@@ -110,17 +117,14 @@ defmodule Heros.Game do
     end
   end
 
-  def handle_update({:unsubscribe, session_id, pid}, _from, game) do
-    case game.users[session_id] do
-      nil -> {:reply, :ok, game}
-      session -> unsubscribe_session(game, session_id, session, pid)
-    end
+  def handle_update({:unsubscribe, pid}, _from, game) do
+    unsubscribe_pid(game, pid)
   end
 
   def handle_update({:leave, session_id}, _from, game) do
     case game.users[session_id] do
       nil -> {:reply, :ok, game}
-      session -> player_leave(game, session_id, session)
+      user -> player_leave(game, session_id, user)
     end
   end
 
@@ -146,7 +150,7 @@ defmodule Heros.Game do
           user_name: session.user_name
         })
 
-      {:reply, {:ok, project(session.id, game)}, game}
+      with_pid_monitored(game, session.id, pid)
     else
       {:reply, {:error, :lobby_full}, game}
     end
@@ -159,29 +163,36 @@ defmodule Heros.Game do
         fn session -> update_in(session.connected_views, &MapSet.put(&1, pid)) end
       )
 
+    with_pid_monitored(game, session_id, pid)
+  end
+
+  defp with_pid_monitored(game, session_id, pid) do
+    Process.monitor(pid)
     {:reply, {:ok, project(session_id, game)}, game}
   end
 
-  defp unsubscribe_session(game, session_id, session, pid) do
-    session = update_in(session.connected_views, &MapSet.delete(&1, pid))
-
+  defp unsubscribe_pid(game, pid) do
     users =
-      if game.stage == :lobby and MapSet.size(session.connected_views) == 0 do
-        Map.delete(game.users, session_id)
-      else
-        Map.put(game.users, session_id, session)
-      end
+      Enum.reduce(game.users, game.users, fn {id, user}, users ->
+        user = update_in(user.connected_views, &MapSet.delete(&1, pid))
 
-    stop_if_no_sessions(put_in(game.users, users))
+        if MapSet.size(user.connected_views) == 0 and game.stage == :lobby do
+          Map.delete(users, id)
+        else
+          Map.put(users, id, user)
+        end
+      end)
+
+    stop_if_no_users(put_in(game.users, users))
   end
 
   defp player_leave(game, session_id, session) do
     session.connected_views |> Enum.map(fn pid -> send(pid, :leave) end)
 
-    stop_if_no_sessions(update_in(game.users, &Map.delete(&1, session_id)))
+    stop_if_no_users(update_in(game.users, &Map.delete(&1, session_id)))
   end
 
-  defp stop_if_no_sessions(game) do
+  defp stop_if_no_users(game) do
     if map_size(game.users) == 0 do
       {:stop, :normal, :ok, game}
     else

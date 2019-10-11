@@ -106,12 +106,6 @@ defmodule HerosWeb.GameLive do
     module_for_current_stage(socket.assigns).handle_event(event, path, socket)
   end
 
-  def terminate(_reason, socket) do
-    with_game(socket, fn game_pid, session_id ->
-      Game.unsubscribe(game_pid, session_id, self())
-    end)
-  end
-
   defp with_game(socket, f) do
     game_pid = socket.assigns.session[:game_pid]
     session_id = socket.assigns.session[:id]
