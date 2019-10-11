@@ -35,6 +35,7 @@
     height: var(--match-height);
     width: var(--match-width);
     line-height: 1;
+    overflow: hidden;
 }
 
 .match__market {

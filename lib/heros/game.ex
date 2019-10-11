@@ -1,7 +1,7 @@
 defmodule Heros.Game do
   use GenServer, restart: :temporary
 
-  alias Heros.Game
+  alias Heros.{Game, Utils}
 
   defstruct users: %{},
             stage: :lobby,
@@ -64,47 +64,33 @@ defmodule Heros.Game do
   end
 
   def handle_call({:update, update}, from, game) do
-    case handle_update(update, from, game) do
-      {:reply, reply, new_game} ->
-        {:reply, reply, maybe_changed(new_game, game)}
+    response = handle_update(update, from, game)
 
-      # {:reply, reply, new_game, timeout} -> {:reply, reply, maybe_changed(new_game, game), timeout}
-      # {:noreply, new_game} -> {:noreply, maybe_changed(new_game, game)}
-      # {:noreply, new_game, timeout} -> {:noreply, maybe_changed(new_game, game), timeout}
-
-      {:stop, reason, reply, new_game} ->
-        {:stop, reason, reply, maybe_changed(new_game, game)}
-
-        # {:stop, reason, new_game} -> {:stop, reason, maybe_changed(new_game, game)}
-    end
+    Utils.flat_map_call_response(response, fn new_game ->
+      if new_game != game do
+        module_for_current_stage(game.stage).on_update(response)
+        |> Utils.map_call_response(&broadcast_update/1)
+      else
+        response
+      end
+    end)
   end
 
   def handle_call(request, from, game) do
     module_for_current_stage(game.stage).handle_call(request, from, game)
   end
 
-  defp maybe_changed(new_game, game) do
-    if new_game != game do
-      new_game
-      |> module_for_current_stage(game.stage).on_update()
-      |> broadcast_update()
-    else
-      new_game
-    end
-  end
-
   defp broadcast_update(game) do
-    game.users
-    |> Enum.map(fn {id, session} ->
+    Enum.map(game.users, fn {id, user} ->
       projection = project(id, game)
-      session.connected_views |> Enum.map(fn pid -> send(pid, {:update, projection}) end)
+      Enum.map(user.connected_views, fn pid -> send(pid, {:update, projection}) end)
     end)
 
     game
   end
 
   def handle_info({:DOWN, _ref, :process, pid, _reason}, game) do
-    case unsubscribe_pid(game, pid) do
+    case handle_call({:update, {:unsubscribe, pid}}, nil, game) do
       {:stop, reason, _reply, game} -> {:stop, reason, game}
       {:reply, _reply, game} -> {:noreply, game}
     end
@@ -118,7 +104,18 @@ defmodule Heros.Game do
   end
 
   def handle_update({:unsubscribe, pid}, _from, game) do
-    unsubscribe_pid(game, pid)
+    users =
+      Enum.reduce(game.users, game.users, fn {id, user}, users ->
+        user = update_in(user.connected_views, &MapSet.delete(&1, pid))
+
+        if MapSet.size(user.connected_views) == 0 and game.stage == :lobby do
+          Map.delete(users, id)
+        else
+          Map.put(users, id, user)
+        end
+      end)
+
+    stop_if_no_users(put_in(game.users, users))
   end
 
   def handle_update({:leave, session_id}, _from, game) do
@@ -169,21 +166,6 @@ defmodule Heros.Game do
   defp with_pid_monitored(game, session_id, pid) do
     Process.monitor(pid)
     {:reply, {:ok, project(session_id, game)}, game}
-  end
-
-  defp unsubscribe_pid(game, pid) do
-    users =
-      Enum.reduce(game.users, game.users, fn {id, user}, users ->
-        user = update_in(user.connected_views, &MapSet.delete(&1, pid))
-
-        if MapSet.size(user.connected_views) == 0 and game.stage == :lobby do
-          Map.delete(users, id)
-        else
-          Map.put(users, id, user)
-        end
-      end)
-
-    stop_if_no_users(put_in(game.users, users))
   end
 
   defp player_leave(game, session_id, session) do

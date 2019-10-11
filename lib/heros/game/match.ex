@@ -68,7 +68,7 @@ defmodule Heros.Game.Match do
   end
 
   @impl Stage
-  def on_update(game), do: game
+  def on_update(response), do: response
 
   defp players_draw(game) do
     case sorted_players(game.match.players, game.match.current_player) do

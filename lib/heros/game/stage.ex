@@ -1,19 +1,13 @@
 defmodule Heros.Game.Stage do
+  alias Heros.Utils
+
   @callback projection_for_session(session_id :: String.t(), game :: term) :: term
 
   @callback handle_call(request :: term, from :: GenServer.from(), game :: term) ::
-              {:reply, reply, new_game}
-              | {:noreply, new_game}
-              | {:stop, reason, reply, new_game}
-              | {:stop, reason, new_game}
-            when reply: term, new_game: term, reason: term
+              Utils.call_response()
 
   @callback handle_update(update :: term, from :: GenServer.from(), game :: term) ::
-              {:reply, reply, new_game}
-              | {:noreply, new_game}
-              | {:stop, reason, reply, new_game}
-              | {:stop, reason, new_game}
-            when reply: term, new_game: term, reason: term
+              Utils.call_response()
 
-  @callback on_update(new_game :: term) :: term
+  @callback on_update(response :: Utils.call_response()) :: Utils.call_response()
 end

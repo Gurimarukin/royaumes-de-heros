@@ -5,6 +5,7 @@ defmodule Heros.Game.Lobby do
             is_ready: false,
             admin: nil
 
+  alias Heros.Utils
   alias Heros.Game.Stage
 
   @behaviour Stage
@@ -60,10 +61,8 @@ defmodule Heros.Game.Lobby do
   end
 
   @impl Stage
-  def on_update(game) do
-    game
-    |> update_admin()
-    |> update_is_ready()
+  def on_update(response) do
+    Utils.map_call_response(response, &(update_admin(&1) |> update_is_ready()))
   end
 
   defp update_admin(game) do
