@@ -95,10 +95,7 @@ defmodule HerosWeb.GameLive do
   end
 
   def handle_event("leave", _path, socket) do
-    with_game(socket, fn game_pid, session_id ->
-      Game.leave(game_pid, session_id)
-    end)
-
+    with_game(socket, fn game_pid, session_id -> Game.leave(game_pid, session_id) end)
     redirect_home(socket)
   end
 
@@ -107,7 +104,7 @@ defmodule HerosWeb.GameLive do
   end
 
   defp with_game(socket, f) do
-    game_pid = socket.assigns.session[:game_pid]
+    game_pid = socket.assigns[:game_pid]
     session_id = socket.assigns.session[:id]
     game_pid && Process.alive?(game_pid) && session_id && f.(game_pid, session_id)
   end
