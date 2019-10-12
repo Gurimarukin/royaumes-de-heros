@@ -1,7 +1,11 @@
 defmodule HerosWeb.GameLive.Match do
   alias Heros.Cards.Card
   alias Heros.Game
+  alias HerosWeb.GameLive.Stage
 
+  @behaviour Stage
+
+  @impl Stage
   def render(assigns) do
     players =
       Enum.with_index(assigns.game.match.players)
@@ -38,6 +42,17 @@ defmodule HerosWeb.GameLive.Match do
       others
   end
 
+  def player_classes(player) do
+    classes =
+      [
+        "player",
+        ~s"player--p#{player.index}"
+      ] ++
+        if player.is_current, do: ["player--current"], else: []
+
+    Enum.join(classes, " ")
+  end
+
   defp cards(players, session_id) do
     Enum.with_index(players)
     |> Enum.flat_map(fn {{id, player}, i} ->
@@ -67,7 +82,15 @@ defmodule HerosWeb.GameLive.Match do
     end
   end
 
-  def default_assigns do
-    []
+  @impl Stage
+  def default_assigns, do: []
+
+  @impl Stage
+  def handle_event("card-click", params, socket) do
+    IO.inspect(params, label: "params")
+    {:noreply, socket}
   end
+
+  @impl Stage
+  def handle_info(_msg, _socket), do: raise(MatchError, message: "no match of handle_info/2")
 end

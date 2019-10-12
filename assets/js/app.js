@@ -20,5 +20,27 @@ import 'phoenix_html'
 import { Socket } from 'phoenix'
 import LiveSocket from 'phoenix_live_view'
 
-let liveSocket = new LiveSocket('/live', Socket)
+const hooks = {
+    card: {
+        mounted() {
+            const onClick = button => {
+                const id = this.el.getAttribute(this.__view.binding('value-id'))
+                this.pushEvent('card-click', { button, id })
+            }
+
+            this.el.addEventListener('click', e => {
+                if (e.button === 0) {
+                    e.stopPropagation()
+                    onClick('left')
+                }
+            })
+            this.el.addEventListener('contextmenu', e => {
+                e.preventDefault()
+                onClick('right')
+            })
+        }
+    }
+}
+
+const liveSocket = new LiveSocket('/live', Socket, { hooks })
 liveSocket.connect()

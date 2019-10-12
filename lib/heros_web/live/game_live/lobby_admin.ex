@@ -2,15 +2,19 @@ defmodule HerosWeb.GameLive.LobbyAdmin do
   import Phoenix.LiveView
 
   alias Heros.Game
+  alias HerosWeb.GameLive.Stage
 
+  @behaviour Stage
+
+  @impl Stage
   def render(assigns) do
     HerosWeb.GameView.render("lobby_admin.html", assigns)
   end
 
-  def default_assigns do
-    [edit_name: false]
-  end
+  @impl Stage
+  def default_assigns, do: [edit_name: false]
 
+  @impl Stage
   def handle_event("edit_name", _params, socket) do
     {:noreply, assign(socket, edit_name: true)}
   end
@@ -46,4 +50,7 @@ defmodule HerosWeb.GameLive.LobbyAdmin do
     Game.Lobby.start(socket.assigns.game_pid)
     {:noreply, socket}
   end
+
+  @impl Stage
+  def handle_info(_msg, _socket), do: raise(MatchError, message: "no match of handle_info/2")
 end
