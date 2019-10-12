@@ -89,6 +89,10 @@
     position: relative;
 }
 
+.player__hp-bis {
+    position: absolute;
+}
+
 .player--p0 .player__hp {
     background-image: url('../images/counter_blue.png');
 }
@@ -103,6 +107,20 @@
 
 .player--p3 .player__hp {
     background-image: url('../images/counter_yellow.png');
+}
+
+.player--p-chara .player__hp::before {
+    --width: calc(0.5 * var(--card-width));
+    --height: calc(120 / 97 * var(--width));
+
+    content: '';
+    height: var(--height);
+    width: var(--width);
+    position: absolute;
+    left: calc(calc(var(--card-width) - var(--width)) / 2);
+    top: calc(calc(var(--card-height) - var(--height)) / 2);
+    background-image: url('../images/hp.png');
+    background-size: 100% 100%;
 }
 
 .player--current .player__hp::after {

@@ -4,6 +4,7 @@ defmodule Heros.Game.Player do
             deck: [],
             discard: [],
             hand: [],
+            fight_zone: [],
             gold: 0,
             attack: 0
 

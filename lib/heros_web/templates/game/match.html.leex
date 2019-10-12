@@ -3,7 +3,7 @@
     <div class="player player--p<%= player.index %><%= if player.is_current, do: " player--current", else: "" %>">
       <div class="player__fight-zone">
         <div class="player__hp player__rotate" title="<%= player.hp %> / <%= player.max_hp %>">
-          <%= player.hp %>
+          <div class="player__hp-bis"><%= player.hp %></div>
         </div>
       </div>
 
