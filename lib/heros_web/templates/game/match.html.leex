@@ -1,6 +1,6 @@
 <div class="match match--<%= @n_players %>-players">
   <%= for {_id, player} <- @players do %>
-    <div class="player player--p<%= player.index %><%= if player.is_current, do: " player--curent", else: "" %>">
+    <div class="player player--p<%= player.index %><%= if player.is_current, do: " player--current", else: "" %>">
       <div class="player__fight-zone">
         <div class="player__hp player__rotate" title="<%= player.hp %> / <%= player.max_hp %>">
           <%= player.hp %>

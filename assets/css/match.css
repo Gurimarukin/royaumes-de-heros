@@ -4,8 +4,8 @@
 
     --card-width: 4.47vw; /* 298px */
     --card-height: calc(417 / 298 * var(--card-width)); /* 417px */
-    --card-margin: calc(18 / 298 * var(--card-width));
-    --card-border-radius: 8px;
+    --card-margin: calc(0.06 * var(--card-width));
+    --card-border-radius: calc(0.06 * var(--card-width));
 
     --resources-height: calc(
         2 * var(--fight-zone-border-width) + 2 * var(--resource-padding-top) +
@@ -18,10 +18,11 @@
         3 * calc(var(--card-height) + var(--card-margin)) +
             calc(2 * var(--card-margin)) + var(--resources-height)
     );
+    --current-player-color: mediumorchid;
 
     --fight-zone-bg: beige;
     --fight-zone-border-width: 3px;
-    --fight-zone-color: darkgoldenrod;
+    --fight-zone-border-color: darkgoldenrod;
 
     --resource-padding-top: 0.33em;
     --resource-font-size: 1em;
@@ -85,6 +86,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
 .player--p0 .player__hp {
@@ -103,10 +105,22 @@
     background-image: url('../images/counter_yellow.png');
 }
 
+.player--current .player__hp::after {
+    --border-width: calc(0.06 * var(--card-width));
+
+    content: '';
+    position: absolute;
+    width: calc(100% + 2 * var(--border-width));
+    height: calc(100% + 2 * var(--border-width));
+    border-radius: calc(1.8 * var(--card-border-radius));
+    border: var(--border-width) dashed var(--current-player-color);
+}
+
 .player__resources {
     display: flex;
     justify-content: center;
-    border-bottom: var(--fight-zone-border-width) solid var(--fight-zone-color);
+    border-bottom: var(--fight-zone-border-width) solid
+        var(--fight-zone-border-color);
     background: var(--fight-zone-bg);
     position: relative;
 }
@@ -119,13 +133,16 @@
 
 .player__resource {
     font-size: var(--resource-font-size);
-    border-top: var(--fight-zone-border-width) solid var(--fight-zone-color);
-    border-left: var(--fight-zone-border-width) solid var(--fight-zone-color);
+    border-top: var(--fight-zone-border-width) solid
+        var(--fight-zone-border-color);
+    border-left: var(--fight-zone-border-width) solid
+        var(--fight-zone-border-color);
     background: var(--resource-bg);
 }
 
 .player__resource:last-of-type {
-    border-right: var(--fight-zone-border-width) solid var(--fight-zone-color);
+    border-right: var(--fight-zone-border-width) solid
+        var(--fight-zone-border-color);
 }
 
 .player__gold,
