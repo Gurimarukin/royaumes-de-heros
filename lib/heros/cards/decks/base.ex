@@ -46,11 +46,11 @@ defmodule Heros.Cards.Decks.Base do
     }
   end
 
-  def effect(:shortsword, game), do: Card.add_attack(game, 2)
+  def primary_effect(game, :shortsword), do: Card.add_attack(game, 2)
 
-  def effect(:dagger, game), do: Card.add_attack(game, 1)
+  def primary_effect(game, :dagger), do: Card.add_attack(game, 1)
 
-  def effect(:ruby, game), do: Card.add_gold(game, 2)
+  def primary_effect(game, :ruby), do: Card.add_gold(game, 2)
 
-  def effect(:gold, game), do: Card.add_gold(game, 1)
+  def primary_effect(game, :gold), do: Card.add_gold(game, 1)
 end

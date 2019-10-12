@@ -4,6 +4,7 @@ defmodule Heros.Game.Match do
 
   alias Heros.Game.{Match, Player, Stage}
   alias Heros.Cards
+  alias Heros.Cards.Card
 
   @behaviour Stage
 
@@ -32,7 +33,7 @@ defmodule Heros.Game.Match do
   end
 
   defp init_player do
-    %Player{deck: Cards.Decks.Base.shuffled()}
+    put_in(%Player{}.cards.deck, Cards.Decks.Base.shuffled())
   end
 
   defp set_current_player(game) do
@@ -40,6 +41,10 @@ defmodule Heros.Game.Match do
   end
 
   defp set_started(game), do: put_in(game.stage, :started)
+
+  def play_card(game, id_player, id_card) do
+    GenServer.call(game, {:update, {:play_card, id_player, id_card}})
+  end
 
   def sorted_players(players, player_id), do: sorted_players(players, player_id, {nil, []})
 
@@ -66,27 +71,44 @@ defmodule Heros.Game.Match do
 
   @impl Stage
   def handle_update(:players_draw, _from, game) do
-    {:reply, :ok, players_draw(game)}
+    game =
+      case sorted_players(game.match.players, game.match.current_player) do
+        {{id_first, _}, others} ->
+          game = player_draw(game, id_first, 3)
+
+          case others do
+            [{id_other, _}] ->
+              player_draw(game, id_other, 5)
+
+            [{id_second, _} | others] ->
+              game = player_draw(game, id_second, 4)
+              Enum.reduce(others, game, fn {id, _}, game -> player_draw(game, id, 5) end)
+          end
+      end
+
+    {:reply, :ok, game}
+  end
+
+  def handle_update({:play_card, id_player, id_card}, _from, game) do
+    if is_current_player(game.match, id_player) do
+      case find_card(game.match.players, id_card) do
+        nil ->
+          {:reply, {:error, :not_found}, game}
+
+        {player_id, zone, card} ->
+          if player_id == id_player do
+            play_card(game, id_player, zone, card)
+          else
+            {:reply, {:error, :forbidden}, game}
+          end
+      end
+    else
+      {:reply, {:error, :forbidden}, game}
+    end
   end
 
   @impl Stage
   def on_update(response), do: response
-
-  defp players_draw(game) do
-    case sorted_players(game.match.players, game.match.current_player) do
-      {{id_first, _}, others} ->
-        game = player_draw(game, id_first, 3)
-
-        case others do
-          [{id_other, _}] ->
-            player_draw(game, id_other, 5)
-
-          [{id_second, _} | others] ->
-            game = player_draw(game, id_second, 4)
-            Enum.reduce(others, game, fn {id, _}, game -> player_draw(game, id, 5) end)
-        end
-    end
-  end
 
   defp player_draw(game, player_id, n) do
     {^player_id, player} = List.keyfind(game.match.players, player_id, 0)
@@ -100,16 +122,43 @@ defmodule Heros.Game.Match do
   defp player_draw(player, 0), do: player
 
   defp player_draw(player, n) do
-    if length(player.deck) == 0 do
-      put_in(player.deck, Enum.shuffle(player.discard))
-      |> put_in([:discard], [])
+    if length(player.cards.deck) == 0 do
+      put_in(player.cards.deck, Enum.shuffle(player.cards.discard))
+      |> put_in([:cards, :discard], [])
       |> player_draw(n)
     else
-      [head | tail] = player.deck
+      [head | tail] = player.cards.deck
 
-      update_in(player.hand, &(&1 ++ [head]))
-      |> put_in([:deck], tail)
+      update_in(player.cards.hand, &(&1 ++ [head]))
+      |> put_in([:cards, :deck], tail)
       |> player_draw(n - 1)
     end
   end
+
+  defp find_card(players, id) do
+    Enum.find_value(players, fn {id_player, player} ->
+      Enum.find_value(player.cards, fn {zone, cards} ->
+        Enum.find_value(cards, fn {id_card, card} ->
+          if id == id_card, do: {id_player, zone, {id_card, card}}, else: nil
+        end)
+      end)
+    end)
+  end
+
+  defp play_card(game, id_player, :hand, card) do
+    {^id_player, player} = List.keyfind(game.match.players, id_player, 0)
+
+    player =
+      player
+      |> update_in([:cards, :hand], &Enum.filter(&1, fn c -> c != card end))
+      |> update_in([:cards, :fight_zone], &(&1 ++ [card]))
+
+    game =
+      update_in(game.match.players, &List.keyreplace(&1, id_player, 0, {id_player, player}))
+      |> Card.primary_effect(elem(card, 1))
+
+    {:reply, :ok, game}
+  end
+
+  defp play_card(game, _id_player, _zone, _card), do: {:reply, {:error, :forbidden}, game}
 end

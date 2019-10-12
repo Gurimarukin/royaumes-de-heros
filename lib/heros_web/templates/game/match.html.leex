@@ -24,7 +24,7 @@
   <% end %>
   <div class="match__market"></div>
   <%= for {id, card} <- @cards do %>
-    <img phx-hook="card" phx-value-id="<%= id %>" phx-throttle="1000"
+    <img phx-hook="card" phx-value-id="<%= id %>" phx-throttle="500"
          class="<%= card.class %>" src="<%= card.card.image %>" >
   <% end %>
 </div>

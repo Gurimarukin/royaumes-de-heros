@@ -19,9 +19,9 @@ defmodule HerosWeb.GameLive.Match do
            max_hp: player.max_hp,
            gold: player.gold,
            attack: player.attack,
-           discard: player.discard,
-           hand: player.hand,
-           deck: player.deck
+           discard: player.cards.discard,
+           hand: player.cards.hand,
+           deck: player.cards.deck
          }}
       end)
       |> sorted_players(assigns.session.id)
@@ -86,8 +86,12 @@ defmodule HerosWeb.GameLive.Match do
   def default_assigns, do: []
 
   @impl Stage
-  def handle_event("card-click", params, socket) do
-    IO.inspect(params, label: "params")
+  def handle_event("card-click", %{"button" => "right", "id" => _id}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("card-click", %{"button" => "left", "id" => id_card}, socket) do
+    Heros.Game.Match.play_card(socket.assigns.game_pid, socket.assigns.session.id, id_card)
     {:noreply, socket}
   end
 

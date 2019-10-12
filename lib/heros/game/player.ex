@@ -1,12 +1,14 @@
 defmodule Heros.Game.Player do
   defstruct hp: 50,
             max_hp: 50,
-            deck: [],
-            discard: [],
-            hand: [],
-            fight_zone: [],
             gold: 0,
-            attack: 0
+            attack: 0,
+            cards: %{
+              deck: [],
+              discard: [],
+              hand: [],
+              fight_zone: []
+            }
 
   @behaviour Access
 
