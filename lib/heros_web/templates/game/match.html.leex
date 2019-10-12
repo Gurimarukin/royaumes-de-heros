@@ -1,14 +1,14 @@
 <div class="match match--<%= @n_players %>-players">
-  <%= for {_id, player, name} <- @players do %>
-    <div class="player">
+  <%= for {_id, player} <- @players do %>
+    <div class="player player--p<%= player.index %><%= if player.is_current, do: " player--curent", else: "" %>">
       <div class="player__fight-zone">
-        <div class="player__hp player__rotate">
-          HP : <%= player.hp %> / <%= player.max_hp %>
+        <div class="player__hp player__rotate" title="<%= player.hp %> / <%= player.max_hp %>">
+          <%= player.hp %>
         </div>
       </div>
 
       <div class="player__resources">
-        <div class="player__name player__rotate"><%= name %></div>
+        <div class="player__name player__rotate"><%= player.name %></div>
         <div class="player__resource">
           <div class="player__gold player__rotate"><%= player.gold %></div>
         </div>
@@ -20,7 +20,7 @@
       <div class="player__cards">
         <div class="player__cards-pile player__rotate"><%#= player.discard %></div>
         <div class="player__hand player__rotate"><%#= player.hand %></div>
-        <div class="player__cards-pile player__rotate"><%= player.deck %></div>
+        <div class="player__cards-pile player__rotate"><%#= player.deck %></div>
       </div>
     </div>
   <% end %>

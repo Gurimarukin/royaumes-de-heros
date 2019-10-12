@@ -1,23 +1,29 @@
 defmodule HerosWeb.GameLive.Match do
   alias Heros.Cards.Card
+  alias Heros.Game
 
   def render(assigns) do
-    players = sorted_players(assigns.game.match.players, assigns.session.id)
-
-    simple_players =
-      Enum.map(players, fn {id, player} ->
-        player =
-          update_in(player, [:deck], &length/1)
-          |> update_in([:discard], &length/1)
-          |> update_in([:hand], &length/1)
-
-        name = Map.get(assigns.game.users, id)[:user_name]
-
-        {id, player, name}
+    players =
+      Enum.with_index(assigns.game.match.players)
+      |> Enum.map(fn {{id, player}, i} ->
+        {id,
+         %{
+           index: i,
+           name: Map.get(assigns.game.users, id)[:user_name],
+           is_current: Game.Match.is_current_player(assigns.game.match, id),
+           hp: player.hp,
+           max_hp: player.max_hp,
+           gold: player.gold,
+           attack: player.attack,
+           discard: player.discard,
+           hand: player.hand,
+           deck: player.deck
+         }}
       end)
+      |> sorted_players(assigns.session.id)
 
     assigns = %{
-      players: simple_players,
+      players: players,
       n_players: length(players),
       cards: cards(players, assigns.session.id)
     }
@@ -26,7 +32,7 @@ defmodule HerosWeb.GameLive.Match do
   end
 
   defp sorted_players(players, session_id) do
-    {current_player, others} = Heros.Game.Match.sorted_players(players, session_id)
+    {current_player, others} = Game.Match.sorted_players(players, session_id)
 
     (current_player && [current_player | others]) ||
       others

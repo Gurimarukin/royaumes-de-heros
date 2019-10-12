@@ -53,6 +53,8 @@ defmodule Heros.Game.Match do
     sorted_players(tail, player_id, {current_player, acc ++ [player]})
   end
 
+  def is_current_player(match, id_player), do: match.current_player == id_player
+
   @impl Stage
   def handle_call(_request, _from, _game),
     do: raise(MatchError, message: "no match of handle_call/3")
