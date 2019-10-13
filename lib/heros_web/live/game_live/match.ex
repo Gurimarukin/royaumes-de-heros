@@ -21,7 +21,8 @@ defmodule HerosWeb.GameLive.Match do
            attack: player.attack,
            discard: player.cards.discard,
            hand: player.cards.hand,
-           deck: player.cards.deck
+           deck: player.cards.deck,
+           fight_zone: player.cards.fight_zone
          }}
       end)
       |> sorted_players(assigns.session.id)
@@ -57,7 +58,8 @@ defmodule HerosWeb.GameLive.Match do
     Enum.with_index(players)
     |> Enum.flat_map(fn {{id, player}, i} ->
       deck(player, i) ++
-        hand(player, id == session_id, i)
+        hand(player, id == session_id, i) ++
+        fight_zone(player, i)
     end)
   end
 
@@ -80,6 +82,17 @@ defmodule HerosWeb.GameLive.Match do
         {id, %{card: Card.hidden(), class: ~s(card card--hand card--hand-p#{i} card--hand-#{j})}}
       end)
     end
+  end
+
+  defp fight_zone(player, i) do
+    Enum.with_index(player.fight_zone)
+    |> Enum.map(fn {{id, card}, j} ->
+      {id,
+       %{
+         card: Card.fetch(card),
+         class: ~s(card card--fight-zone card--fight-zone-p#{i} card--fight-zone-#{j})
+       }}
+    end)
   end
 
   @impl Stage

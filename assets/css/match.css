@@ -12,7 +12,8 @@
             var(--resource-font-size)
     );
     --player-width: calc(
-        9 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
+        9 * calc(var(--card-width) + var(--card-margin)) +
+            calc(3 * var(--card-margin))
     );
     --player-height: calc(
         3 * calc(var(--card-height) + var(--card-margin)) +

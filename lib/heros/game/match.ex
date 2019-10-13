@@ -123,9 +123,13 @@ defmodule Heros.Game.Match do
 
   defp player_draw(player, n) do
     if length(player.cards.deck) == 0 do
-      put_in(player.cards.deck, Enum.shuffle(player.cards.discard))
-      |> put_in([:cards, :discard], [])
-      |> player_draw(n)
+      if length(player.cards.discard) == 0 do
+        player
+      else
+        put_in(player.cards.deck, Enum.shuffle(player.cards.discard))
+        |> put_in([:cards, :discard], [])
+        |> player_draw(n)
+      end
     else
       [head | tail] = player.cards.deck
 
