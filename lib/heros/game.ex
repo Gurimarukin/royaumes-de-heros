@@ -98,6 +98,10 @@ defmodule Heros.Game do
     end
   end
 
+  def handle_info(msg, game) do
+    module_for_current_stage(game.stage).handle_info(msg, game)
+  end
+
   def handle_update({:subscribe, session, pid}, _from, game) do
     case game.users[session.id] do
       nil -> subscribe_new_session(game, session, pid)

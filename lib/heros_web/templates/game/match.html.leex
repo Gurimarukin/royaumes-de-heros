@@ -1,5 +1,5 @@
 <div class="match match--<%= @n_players %>-players">
-  <%= for {_id, player} <- @players do %>
+  <%= for {{_id, player}, i} <- Enum.with_index(@players) do %>
     <div class="<%= HerosWeb.GameLive.Match.player_classes(player) %>">
       <div class="player__fight-zone">
         <div class="player__hp player__rotate" title="<%= player.hp %> / <%= player.max_hp %>">
@@ -14,6 +14,12 @@
         <div class="player__resource">
           <div class="player__attack player__rotate"><%= player.attack %></div>
         </div>
+        <%= if i == 0 and player.is_current do %>
+          <button phx-click="end-turn" phx-throttle="500"
+                  class="match__button match__button--outline match__button--end-turn">
+            Fin du tour
+          </button>
+        <% end %>
       </div>
       <div class="player__cards">
         <div class="player__cards-pile player__rotate"></div>

@@ -40,4 +40,13 @@ defmodule Heros.Utils do
       {^key, previous} -> List.keyreplace(list, key, 0, {key, f.(previous)})
     end
   end
+
+  def update_self_after(time, update) do
+    slef = self()
+
+    Task.start(fn ->
+      Process.sleep(time)
+      GenServer.call(slef, {:update, update})
+    end)
+  end
 end

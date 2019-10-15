@@ -13,16 +13,11 @@ defmodule Heros.Game.Match do
   @behaviour Stage
 
   def start_game(game) do
-    slef = self()
-
-    Task.start(fn ->
-      Process.sleep(1000)
-      GenServer.call(slef, {:update, :players_draw})
-    end)
+    Utils.update_self_after(1000, :players_draw)
 
     put_in(game.match, %Match{})
     |> init_players()
-    |> set_current_player()
+    |> set_current_player(List.first(Map.keys(game.users)))
     |> set_started()
   end
 
@@ -40,14 +35,18 @@ defmodule Heros.Game.Match do
     put_in(%Player{}.cards.deck, Cards.Decks.Base.shuffled())
   end
 
-  defp set_current_player(game) do
-    put_in(game.match.current_player, List.first(Map.keys(game.users)))
+  defp set_current_player(game, player_id) do
+    put_in(game.match.current_player, player_id)
   end
 
   defp set_started(game), do: put_in(game.stage, :started)
 
   def play_card(game, id_player, id_card) do
     GenServer.call(game, {:update, {:play_card, id_player, id_card}})
+  end
+
+  def end_turn(game, id_player) do
+    GenServer.call(game, {:update, {:end_turn, id_player}})
   end
 
   def sorted_players(players, player_id), do: sorted_players(players, player_id, {nil, []})
@@ -62,7 +61,23 @@ defmodule Heros.Game.Match do
     sorted_players(tail, player_id, {current_player, acc ++ [player]})
   end
 
+  defp next_player(players, id_player) do
+    case sorted_players(players, id_player) do
+      {_, others} ->
+        Enum.filter(others, fn {_id, player} -> is_alive(player) end)
+        |> List.first()
+        |> elem(0)
+    end
+  end
+
   def is_current_player(match, id_player), do: match.current_player == id_player
+
+  defp is_alive(player), do: player.hp > 0
+
+  # defp is_alive(players, id_player) do
+  #   {_id, player} = List.keyfind(players, id_player, 0)
+  #   is_alive(player)
+  # end
 
   @impl Stage
   def handle_call(_request, _from, _game),
@@ -93,6 +108,10 @@ defmodule Heros.Game.Match do
     {:reply, :ok, game}
   end
 
+  def handle_update({:player_draw, id_player, n}, _from, game) do
+    {:reply, :ok, player_draw(game, id_player, n)}
+  end
+
   def handle_update({:play_card, id_player, id_card}, _from, game) do
     if is_current_player(game.match, id_player) do
       case find_card(game.match.players, id_card) do
@@ -106,6 +125,20 @@ defmodule Heros.Game.Match do
             {:reply, {:error, :forbidden}, game}
           end
       end
+    else
+      {:reply, {:error, :forbidden}, game}
+    end
+  end
+
+  def handle_update({:end_turn, id_player}, _from, game) do
+    if is_current_player(game.match, id_player) do
+      game =
+        clear_cards(game, id_player)
+        |> set_current_player(next_player(game.match.players, id_player))
+
+      Utils.update_self_after(1000, {:player_draw, id_player, 5})
+
+      {:reply, :ok, game}
     else
       {:reply, {:error, :forbidden}, game}
     end
@@ -167,4 +200,27 @@ defmodule Heros.Game.Match do
   end
 
   defp play_card(game, _id_player, _zone, _card), do: {:reply, {:error, :forbidden}, game}
+
+  defp clear_cards(game, id_player) do
+    update_player(game, id_player, fn player ->
+      clear_fight_zone(player)
+      # clear_hand
+      |> update_in([:cards, :discard], &(player.cards.hand ++ &1))
+      |> put_in([:cards, :hand], [])
+      # clear_resources
+      |> put_in([:gold], 0)
+      |> put_in([:attack], 0)
+    end)
+  end
+
+  defp clear_fight_zone(player) do
+    partition =
+      Enum.group_by(player.cards.fight_zone, fn {_id, card} -> Card.stays_on_board(card) end)
+
+    fight_zone = partition[true] || []
+    discard = partition[false] || []
+
+    put_in(player.cards.fight_zone, fight_zone)
+    |> update_in([:cards, :discard], &(discard ++ &1))
+  end
 end

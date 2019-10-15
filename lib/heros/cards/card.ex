@@ -1,6 +1,7 @@
 defmodule Heros.Cards.Card do
   defstruct name: nil,
-            image: nil
+            image: nil,
+            is_champion: false
 
   alias Heros.Utils
   alias Heros.Cards.{Card, Decks}
@@ -26,6 +27,13 @@ defmodule Heros.Cards.Card do
             update_in(player, [resource], &(&1 + amount))
           end)
         end)
+    end
+  end
+
+  def stays_on_board(card) do
+    case fetch(card) do
+      nil -> false
+      card -> card.is_champion
     end
   end
 

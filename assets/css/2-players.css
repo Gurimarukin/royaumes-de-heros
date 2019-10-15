@@ -155,3 +155,18 @@
 .match--2-players .card--fight-zone-9 {
     left: calc(var(--a) * 5 + var(--b));
 }
+
+/* discard */
+.match--2-players .card--discard-0 {
+    left: calc(
+        calc(var(--match-width) - var(--player-width)) / 2 + var(--card-margin)
+    );
+    bottom: var(--card-margin);
+}
+
+.match--2-players .card--discard-1 {
+    right: calc(
+        calc(var(--match-width) - var(--player-width)) / 2 + var(--card-margin)
+    );
+    top: var(--card-margin);
+}
