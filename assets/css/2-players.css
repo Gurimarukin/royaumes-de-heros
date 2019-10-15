@@ -96,11 +96,10 @@
         calc(2 * var(--card-margin));
 
     --first-row: calc(
-        3 * var(--card-margin) + var(--card-height) + var(--resources-height)
+        3 * var(--card-margin) + var(--card-height) + var(--bar-height)
     );
     --second-row: calc(
-        4 * var(--card-margin) + 2 * var(--card-height) +
-            var(--resources-height)
+        4 * var(--card-margin) + 2 * var(--card-height) + var(--bar-height)
     );
 }
 

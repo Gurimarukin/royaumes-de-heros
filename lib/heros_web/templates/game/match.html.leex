@@ -33,10 +33,6 @@
     </div>
   <% end %>
   <div class="match__market"></div>
-  <div>
-    <%= for {id, card} <- @cards do %>
-      <img phx-hook="card" phx-throttle="500"
-           id="<%= id %>" class="<%= card.class %>" src="<%= card.card.image %>" >
-    <% end %>
-  </div>
+  <div phx-update="ignore" id="cards"></div>
+  <div phx-hook="cards" phx-value-cards="<%= Phoenix.json_library().encode!(@cards) %>"></div>
 </div>

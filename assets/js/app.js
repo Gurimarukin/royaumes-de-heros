@@ -21,22 +21,50 @@ import { Socket } from 'phoenix'
 import LiveSocket from 'phoenix_live_view'
 
 const hooks = {
-    card: {
+    cards: {
+        mapCards(f) {
+            const cards = JSON.parse(
+                this.el.getAttribute(this.__view.binding('value-cards'))
+            )
+            cards.map(([id, card]) => f(id, card))
+        },
+        onClick(button, id) {
+            this.pushEvent('card-click', { button, id })
+        },
         mounted() {
-            const onClick = button => {
-                const id = this.el.id
-                this.pushEvent('card-click', { button, id })
-            }
+            const cardsElt = document.getElementById('cards')
 
-            this.el.addEventListener('click', e => {
-                if (e.button === 0) {
-                    e.stopPropagation()
-                    onClick('left')
-                }
+            this.mapCards((id, card) => {
+                const img = document.createElement('img')
+
+                img.id = id
+                img.className = card.class
+                img.src = card.card.image
+                img.setAttribute('phx-throttle', '500')
+
+                img.addEventListener('click', e => {
+                    if (e.button === 0) {
+                        e.stopPropagation()
+                        this.onClick('left', id)
+                    }
+                })
+                img.addEventListener('contextmenu', e => {
+                    e.preventDefault()
+                    this.onClick('right', id)
+                })
+
+                cardsElt.appendChild(img)
             })
-            this.el.addEventListener('contextmenu', e => {
-                e.preventDefault()
-                onClick('right')
+        },
+        updated() {
+            this.mapCards((id, card) => {
+                const img = document.getElementById(id)
+                if (img === null) {
+                    console.error(`getElementById(${id}) was null`)
+                } else {
+                    img.className = card.class
+                    img.src = card.card.image
+                }
             })
         }
     }
