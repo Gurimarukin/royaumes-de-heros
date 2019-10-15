@@ -26,6 +26,7 @@
     --current-player-color: mediumorchid;
 
     --fight-zone-bg: url('../images/quartz_block_bottom.png');
+    --fight-zone-bg: url('../images/hardened_clay_stained_purple.png');
     --fight-zone-border-width: calc(0.05 * var(--card-width));
     --fight-zone-border-color: darkgoldenrod;
     --fight-zone-border-radius: calc(0.06 * var(--card-width));
