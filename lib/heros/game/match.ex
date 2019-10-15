@@ -154,27 +154,31 @@ defmodule Heros.Game.Match do
     )
   end
 
-  defp player_draw(game, player_id, n) do
-    update_player(game, player_id, &player_draw(&1, n))
+  defp player_draw(game, id_player, n) do
+    update_player(game, id_player, &player_draw_rec(&1, id_player, n))
   end
 
-  defp player_draw(player, 0), do: player
+  defp player_draw_rec(player, _id_player, 0), do: player
 
-  defp player_draw(player, n) do
+  defp player_draw_rec(player, id_player, n) do
     if length(player.cards.deck) == 0 do
       if length(player.cards.discard) == 0 do
         player
       else
-        put_in(player.cards.deck, Enum.shuffle(player.cards.discard))
-        |> put_in([:cards, :discard], [])
-        |> player_draw(n)
+        player =
+          put_in(player.cards.deck, Enum.shuffle(player.cards.discard))
+          |> put_in([:cards, :discard], [])
+
+        Utils.update_self_after(1000, {:player_draw, id_player, n})
+
+        player
       end
     else
       [head | tail] = player.cards.deck
 
       update_in(player.cards.hand, &(&1 ++ [head]))
       |> put_in([:cards, :deck], tail)
-      |> player_draw(n - 1)
+      |> player_draw_rec(id_player, n - 1)
     end
   end
 

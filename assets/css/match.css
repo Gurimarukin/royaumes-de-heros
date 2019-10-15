@@ -288,7 +288,7 @@
     height: var(--card-height);
     border-radius: var(--card-border-radius);
     box-shadow: 0 0 2px black;
-    transition: top 1s, right 1s, bottom 1s, left 1s;
+    transition: top 1s, left 1s;
 }
 
 @import './2-players.css';
