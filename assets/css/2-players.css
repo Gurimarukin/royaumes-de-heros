@@ -1,8 +1,21 @@
+.match--2-players {
+    --player-left: calc(calc(var(--match-width) - var(--player-width)) / 2);
+}
+
+.match--2-players::before {
+    --left: calc(var(--player-left) / 2);
+
+    left: var(--left);
+    right: var(--left);
+    top: var(--cards-height);
+    bottom: var(--cards-height);
+}
+
 /* player */
 .match--2-players .player:nth-of-type(1),
 .match--2-players .player:nth-of-type(2) {
     position: absolute;
-    left: calc(calc(var(--match-width) - var(--player-width)) / 2);
+    left: var(--player-left);
 }
 
 .match--2-players .player:nth-of-type(1) {

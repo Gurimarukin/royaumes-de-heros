@@ -6,20 +6,24 @@
           <div class="player__hp-bis"><%= player.hp %></div>
         </div>
       </div>
-      <div class="player__resources">
+      <div class="player__bar">
         <div class="player__name player__rotate"><%= player.name %></div>
-        <div class="player__resource">
-          <div class="player__gold player__rotate"><%= player.gold %></div>
+        <div class="player__resources">
+          <div class="player__resource">
+            <div class="player__gold player__rotate"><%= player.gold %></div>
+          </div>
+          <div class="player__resource">
+            <div class="player__attack player__rotate"><%= player.attack %></div>
+          </div>
         </div>
-        <div class="player__resource">
-          <div class="player__attack player__rotate"><%= player.attack %></div>
-        </div>
-        <%= if i == 0 and player.is_current do %>
-          <button phx-click="end-turn" phx-throttle="500"
+        <div class="player__menu">
+          <%= if i == 0 and player.is_current do %>
+            <button phx-click="end-turn" phx-throttle="500"
                   class="match__button match__button--outline match__button--end-turn">
-            Fin du tour
-          </button>
-        <% end %>
+              Fin du tour
+            </button>
+          <% end %>
+        </div>
       </div>
       <div class="player__cards">
         <div class="player__cards-pile player__rotate"></div>

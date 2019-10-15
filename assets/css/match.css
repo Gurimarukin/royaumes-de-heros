@@ -11,7 +11,7 @@
     --card-margin: calc(0.06 * var(--card-width));
     --card-border-radius: calc(0.06 * var(--card-width));
 
-    --resources-height: calc(
+    --bar-height: calc(
         2 * var(--fight-zone-border-width) + 2 * var(--resource-padding-top) +
             var(--resource-font-size)
     );
@@ -21,22 +21,26 @@
     );
     --player-height: calc(
         3 * calc(var(--card-height) + var(--card-margin)) +
-            calc(2 * var(--card-margin)) + var(--resources-height)
+            calc(2 * var(--card-margin)) + var(--bar-height)
     );
     --current-player-color: mediumorchid;
 
-    --fight-zone-bg: beige;
-    --fight-zone-border-width: 3px;
+    --fight-zone-bg: url('../images/quartz_block_bottom.png');
+    --fight-zone-border-width: calc(0.05 * var(--card-width));
     --fight-zone-border-color: darkgoldenrod;
+    --fight-zone-border-radius: calc(0.06 * var(--card-width));
 
-    --resource-padding-top: 0.33em;
+    --resource-padding-top: calc(0.05 * var(--card-width));
     --resource-font-size: 1em;
     --resource-bg: white;
 
-    --player-hand-border-width: 1px;
-    --player-hand-border-color: black;
+    --cards-height: calc(var(--card-height) + 2 * var(--card-margin));
+    /* --player-pile-bg: url('../images/mycelium_top.png'); */
+    /* --player-hand-bg: url('../images/mycelium_top.png'); */
 
-    --market-bg: darkred;
+    --market-bg: url('../images/wool_colored_red.png');
+    --market-border-width: calc(0.04 * var(--card-width));
+    --market-border-color: darkred;
 
     position: relative;
     height: var(--match-height);
@@ -44,6 +48,16 @@
     font-size: calc(0.2 * var(--card-width));
     line-height: 1;
     overflow: hidden;
+    background-image: url('../images/planks_oak.png');
+}
+
+.match::before {
+    content: '';
+    position: absolute;
+    background: var(--fight-zone-bg);
+    border: var(--fight-zone-border-width) solid var(--fight-zone-border-color);
+    border-radius: var(--fight-zone-border-radius);
+    box-shadow: 0 0 8px black;
 }
 
 .match__button {
@@ -94,6 +108,7 @@
     position: absolute;
     top: calc(calc(var(--match-height) - var(--height)) / 2);
     left: calc(calc(var(--match-width) - var(--width)) / 2);
+    border: var(--market-border-width) solid var(--market-border-color);
 }
 
 .player {
@@ -110,7 +125,6 @@
     padding: var(--card-margin);
     display: flex;
     align-items: flex-end;
-    background: var(--fight-zone-bg);
 }
 
 .player__hp {
@@ -120,6 +134,7 @@
     color: wheat;
     font-size: 1.2em;
     text-shadow: 0 0 10px black;
+    box-shadow: 0 0 2px black;
     font-weight: bold;
     background-size: 100% 100%;
     display: flex;
@@ -134,18 +149,22 @@
 }
 
 .player--p0 .player__hp {
+    --current-player-color: darkblue;
     background-image: url('../images/counter_blue.png');
 }
 
 .player--p1 .player__hp {
+    --current-player-color: darkred;
     background-image: url('../images/counter_red.png');
 }
 
 .player--p2 .player__hp {
+    --current-player-color: darkgreen;
     background-image: url('../images/counter_green.png');
 }
 
 .player--p3 .player__hp {
+    --current-player-color: darkgoldenrod;
     background-image: url('../images/counter_yellow.png');
 }
 
@@ -164,23 +183,27 @@
 }
 
 .player--current .player__hp::after {
-    --border-width: calc(0.06 * var(--card-width));
-
     content: '';
     position: absolute;
-    width: calc(100% + 2 * var(--border-width));
-    height: calc(100% + 2 * var(--border-width));
+    width: 100%;
+    height: 100%;
     border-radius: calc(1.8 * var(--card-border-radius));
-    border: var(--border-width) dashed var(--current-player-color);
+    box-shadow: 0 0 10px calc(0.06 * var(--card-width))
+        var(--current-player-color);
+}
+
+.player__bar {
+    display: flex;
+    justify-content: center;
+    height: var(--bar-height);
+    border-bottom: var(--fight-zone-border-width) solid
+        var(--fight-zone-border-color);
+    position: relative;
 }
 
 .player__resources {
     display: flex;
     justify-content: center;
-    border-bottom: var(--fight-zone-border-width) solid
-        var(--fight-zone-border-color);
-    background: var(--fight-zone-bg);
-    position: relative;
 }
 
 .player__name {
@@ -189,7 +212,7 @@
     bottom: var(--card-margin);
 }
 
-.match__button--end-turn {
+.player__menu {
     position: absolute;
     right: var(--card-margin);
     bottom: var(--card-margin);
@@ -204,7 +227,12 @@
     background: var(--resource-bg);
 }
 
+.player__resource:first-of-type {
+    border-top-left-radius: var(--fight-zone-border-radius);
+}
+
 .player__resource:last-of-type {
+    border-top-right-radius: var(--fight-zone-border-radius);
     border-right: var(--fight-zone-border-width) solid
         var(--fight-zone-border-color);
 }
@@ -239,22 +267,19 @@
 
 .player__cards {
     display: flex;
+    height: var(--cards-height);
 }
 
 .player__cards-pile {
-    width: calc(var(--card-width) + calc(2 * var(--card-margin)));
-    height: calc(var(--card-height) + calc(2 * var(--card-margin)));
+    width: calc(var(--card-width) + 2 * var(--card-margin));
+    height: 100%;
+    background: var(--player-pile-bg);
 }
 
 .player__hand {
     flex-grow: 1;
-    height: var(--card-height);
-    margin: var(--card-margin) 0;
-    padding: 0 var(--card-margin);
-    border-left: var(--player-hand-border-width) solid
-        var(--player-hand-border-color);
-    border-right: var(--player-hand-border-width) solid
-        var(--player-hand-border-color);
+    height: 100%;
+    background: var(--player-hand-bg);
 }
 
 .card {
@@ -262,6 +287,7 @@
     width: var(--card-width);
     height: var(--card-height);
     border-radius: var(--card-border-radius);
+    box-shadow: 0 0 2px black;
     transition: top 1s, right 1s, bottom 1s, left 1s;
 }
 
