@@ -33,7 +33,7 @@ defmodule HerosWeb.GameLive do
               [
                 game_pid: game_pid,
                 game: game
-              ] ++ default_assigns()
+              ] ++ default_assigns(game)
             )
 
           {:ok, socket}
@@ -46,10 +46,10 @@ defmodule HerosWeb.GameLive do
     end
   end
 
-  defp default_assigns do
-    GameLive.Lobby.default_assigns() ++
-      GameLive.LobbyAdmin.default_assigns() ++
-      GameLive.Match.default_assigns()
+  defp default_assigns(game) do
+    GameLive.Lobby.default_assigns(game) ++
+      GameLive.LobbyAdmin.default_assigns(game) ++
+      GameLive.Match.default_assigns(game)
   end
 
   def render(assigns) do
@@ -83,6 +83,19 @@ defmodule HerosWeb.GameLive do
   end
 
   def handle_info({:update, game}, socket) do
+    socket =
+      case socket.assigns.game do
+        {:ok, previous} ->
+          if previous.stage != game.stage and game.stage == :started do
+            GameLive.Match.on_start(socket, game)
+          else
+            socket
+          end
+
+        _ ->
+          socket
+      end
+
     {:noreply, assign(socket, game: {:ok, game})}
   end
 

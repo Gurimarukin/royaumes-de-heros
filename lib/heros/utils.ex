@@ -31,4 +31,13 @@ defmodule Heros.Utils do
   def flat_map_call_response({:noreply, new_state, _timeout}, f), do: f.(new_state)
   def flat_map_call_response({:stop, _reason, _reply, new_state}, f), do: f.(new_state)
   def flat_map_call_response({:stop, _reason, new_state}, f), do: f.(new_state)
+
+  def keyreplace(list, key, value), do: List.keyreplace(list, key, 0, {key, value})
+
+  def keyupdate(list, key, f) do
+    case List.keyfind(list, key, 0) do
+      nil -> list
+      {^key, previous} -> List.keyreplace(list, key, 0, {key, f.(previous)})
+    end
+  end
 end

@@ -2,6 +2,7 @@ defmodule Heros.Cards.Card do
   defstruct name: nil,
             image: nil
 
+  alias Heros.Utils
   alias Heros.Cards.{Card, Decks}
 
   def random_id, do: UUID.uuid1(:hex)
@@ -20,10 +21,11 @@ defmodule Heros.Cards.Card do
         game
 
       player_id ->
-        {^player_id, player} = List.keyfind(game.match.players, player_id, 0)
-        player = update_in(player, [resource], &(&1 + amount))
-        players = List.keyreplace(game.match.players, player_id, 0, {player_id, player})
-        put_in(game.match.players, players)
+        update_in(game.match.players, fn players ->
+          Utils.keyupdate(players, player_id, fn player ->
+            update_in(player, [resource], &(&1 + amount))
+          end)
+        end)
     end
   end
 

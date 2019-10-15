@@ -1,9 +1,13 @@
 defmodule Heros.Game.Match do
   defstruct players: [],
-            current_player: nil
+            current_player: nil,
+            gems: [],
+            market: [],
+            market_deck: [],
+            sacrifice: []
 
   alias Heros.Game.{Match, Player, Stage}
-  alias Heros.Cards
+  alias Heros.{Cards, Utils}
   alias Heros.Cards.Card
 
   @behaviour Stage
@@ -110,13 +114,15 @@ defmodule Heros.Game.Match do
   @impl Stage
   def on_update(response), do: response
 
-  defp player_draw(game, player_id, n) do
-    {^player_id, player} = List.keyfind(game.match.players, player_id, 0)
-
+  defp update_player(game, player_id, f) do
     update_in(
       game.match.players,
-      &List.keyreplace(&1, player_id, 0, {player_id, player_draw(player, n)})
+      &Utils.keyupdate(&1, player_id, fn player -> f.(player) end)
     )
+  end
+
+  defp player_draw(game, player_id, n) do
+    update_player(game, player_id, &player_draw(&1, n))
   end
 
   defp player_draw(player, 0), do: player
@@ -150,15 +156,11 @@ defmodule Heros.Game.Match do
   end
 
   defp play_card(game, id_player, :hand, card) do
-    {^id_player, player} = List.keyfind(game.match.players, id_player, 0)
-
-    player =
-      player
-      |> update_in([:cards, :hand], &Enum.filter(&1, fn c -> c != card end))
-      |> update_in([:cards, :fight_zone], &(&1 ++ [card]))
-
     game =
-      update_in(game.match.players, &List.keyreplace(&1, id_player, 0, {id_player, player}))
+      update_player(game, id_player, fn player ->
+        update_in(player.cards.hand, &Enum.filter(&1, fn c -> c != card end))
+        |> update_in([:cards, :fight_zone], &(&1 ++ [card]))
+      end)
       |> Card.primary_effect(elem(card, 1))
 
     {:reply, :ok, game}

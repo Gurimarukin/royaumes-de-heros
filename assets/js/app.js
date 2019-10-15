@@ -24,7 +24,7 @@ const hooks = {
     card: {
         mounted() {
             const onClick = button => {
-                const id = this.el.getAttribute(this.__view.binding('value-id'))
+                const id = this.el.id
                 this.pushEvent('card-click', { button, id })
             }
 

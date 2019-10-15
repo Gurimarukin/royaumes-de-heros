@@ -79,6 +79,8 @@
 /* fight-zone */
 .match--2-players .card--fight-zone {
     --a: calc(var(--card-width) + var(--card-margin));
+    --b: calc(var(--match-width) - var(--player-width)) / 2 +
+        calc(2 * var(--card-margin));
 
     --first-row: calc(
         3 * var(--card-margin) + var(--card-height) + var(--resources-height)
@@ -90,16 +92,10 @@
 }
 
 .match--2-players .card--fight-zone-p0 {
-    --b: calc(var(--match-width) - var(--player-width)) / 2 +
-        calc(2 * var(--card-margin));
-
     bottom: var(--first-row);
 }
 
 .match--2-players .card--fight-zone-p1 {
-    --b: calc(var(--match-width) - var(--player-width)) / 2 + var(--card-margin) -
-        var(--card-width);
-
     top: var(--first-row);
 }
 
@@ -145,8 +141,11 @@
     left: calc(var(--a) * 1 + var(--b));
 }
 
-.match--2-players .card--fight-zone-7 {
+.match--2-players .card--fight-zone-p0.card--fight-zone-7 {
     left: calc(var(--a) * 8 + var(--b));
+}
+.match--2-players .card--fight-zone-p0.card--fight-zone-7 {
+    left: calc(var(--a) * 0 + var(--b));
 }
 
 .match--2-players .card--fight-zone-8 {

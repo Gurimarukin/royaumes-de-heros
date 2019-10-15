@@ -1,9 +1,33 @@
 defmodule HerosWeb.GameLive.Match do
+  import Phoenix.LiveView, only: [assign: 2]
+
   alias Heros.Cards.Card
-  alias Heros.Game
+  alias Heros.{Game, Utils}
   alias HerosWeb.GameLive.Stage
 
   @behaviour Stage
+
+  @impl Stage
+  def default_assigns(game), do: [cards: maybe_cards(game)]
+
+  def maybe_cards({:ok, game}), do: if(game.stage == :started, do: default_cards(game), else: [])
+
+  def maybe_cards(_), do: []
+
+  defp default_cards(game) do
+    Enum.flat_map(game.match.players, fn {_id, player} ->
+      nil_cards(player.cards.deck) ++
+        nil_cards(player.cards.discard) ++
+        nil_cards(player.cards.hand) ++
+        nil_cards(player.cards.fight_zone)
+    end) ++
+      nil_cards(game.match.gems) ++
+      nil_cards(game.match.market) ++
+      nil_cards(game.match.market_deck) ++
+      nil_cards(game.match.sacrifice)
+  end
+
+  defp nil_cards(cards), do: Enum.map(cards, fn {id, _} -> {id, nil} end)
 
   @impl Stage
   def render(assigns) do
@@ -30,7 +54,7 @@ defmodule HerosWeb.GameLive.Match do
     assigns = %{
       players: players,
       n_players: length(players),
-      cards: cards(players, assigns.session.id)
+      cards: cards(assigns.cards, players, assigns.session.id)
     }
 
     HerosWeb.GameView.render("match.html", assigns)
@@ -54,49 +78,50 @@ defmodule HerosWeb.GameLive.Match do
     Enum.join(classes, " ")
   end
 
-  defp cards(players, session_id) do
+  defp cards(cards, players, session_id) do
     Enum.with_index(players)
-    |> Enum.flat_map(fn {{id, player}, i} ->
-      deck(player, i) ++
-        hand(player, id == session_id, i) ++
-        fight_zone(player, i)
+    |> Enum.reduce(cards, fn {{id, player}, i}, cards ->
+      deck(cards, player, i)
+      |> hand(player, id == session_id, i)
+      |> fight_zone(player, i)
     end)
   end
 
-  defp deck(player, i) do
-    Enum.map(player.deck, fn {id, _card} ->
-      {id, %{card: Card.hidden(), class: ~s(card card--deck-#{i})}}
+  defp deck(cards, player, i) do
+    Enum.reduce(player.deck, cards, fn {id, _card}, cards ->
+      Utils.keyreplace(cards, id, %{card: Card.hidden(), class: ~s(card card--deck-#{i})})
     end)
   end
 
-  defp hand(player, visible, i) do
+  defp hand(cards, player, visible, i) do
     hand = Enum.with_index(player.hand)
 
     if visible do
-      Enum.map(hand, fn {{id, card}, j} ->
-        {id,
-         %{card: Card.fetch(card), class: ~s(card card--hand card--hand-p#{i} card--hand-#{j})}}
+      Enum.reduce(hand, cards, fn {{id, card}, j}, cards ->
+        Utils.keyreplace(cards, id, %{
+          card: Card.fetch(card),
+          class: ~s(card card--hand card--hand-p#{i} card--hand-#{j})
+        })
       end)
     else
-      Enum.map(hand, fn {{id, _card}, j} ->
-        {id, %{card: Card.hidden(), class: ~s(card card--hand card--hand-p#{i} card--hand-#{j})}}
+      Enum.reduce(hand, cards, fn {{id, _card}, j}, cards ->
+        Utils.keyreplace(cards, id, %{
+          card: Card.hidden(),
+          class: ~s(card card--hand card--hand-p#{i} card--hand-#{j})
+        })
       end)
     end
   end
 
-  defp fight_zone(player, i) do
+  defp fight_zone(cards, player, i) do
     Enum.with_index(player.fight_zone)
-    |> Enum.map(fn {{id, card}, j} ->
-      {id,
-       %{
-         card: Card.fetch(card),
-         class: ~s(card card--fight-zone card--fight-zone-p#{i} card--fight-zone-#{j})
-       }}
+    |> Enum.reduce(cards, fn {{id, card}, j}, cards ->
+      Utils.keyreplace(cards, id, %{
+        card: Card.fetch(card),
+        class: ~s(card card--fight-zone card--fight-zone-p#{i} card--fight-zone-#{j})
+      })
     end)
   end
-
-  @impl Stage
-  def default_assigns, do: []
 
   @impl Stage
   def handle_event("card-click", %{"button" => "right", "id" => _id}, socket) do
@@ -110,4 +135,6 @@ defmodule HerosWeb.GameLive.Match do
 
   @impl Stage
   def handle_info(_msg, _socket), do: raise(MatchError, message: "no match of handle_info/2")
+
+  def on_start(socket, game), do: assign(socket, cards: default_cards(game))
 end

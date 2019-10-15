@@ -4,12 +4,12 @@ defmodule HerosWeb.GameLive.Lobby do
   @behaviour Stage
 
   @impl Stage
+  def default_assigns(_game), do: []
+
+  @impl Stage
   def render(assigns) do
     HerosWeb.GameView.render("lobby.html", assigns)
   end
-
-  @impl Stage
-  def default_assigns, do: []
 
   @impl Stage
   def handle_event(_event, _params, _socket),

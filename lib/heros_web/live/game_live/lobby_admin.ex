@@ -7,12 +7,12 @@ defmodule HerosWeb.GameLive.LobbyAdmin do
   @behaviour Stage
 
   @impl Stage
+  def default_assigns(_game), do: [edit_name: false]
+
+  @impl Stage
   def render(assigns) do
     HerosWeb.GameView.render("lobby_admin.html", assigns)
   end
-
-  @impl Stage
-  def default_assigns, do: [edit_name: false]
 
   @impl Stage
   def handle_event("edit_name", _params, socket) do

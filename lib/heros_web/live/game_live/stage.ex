@@ -1,4 +1,6 @@
 defmodule HerosWeb.GameLive.Stage do
+  @callback default_assigns(game :: term) :: [{term, term}]
+
   @callback handle_info(msg :: term, socket :: Phoenix.LiveView.Socket.t()) ::
               {:noreply, Phoenix.LiveView.Socket.t()} | {:stop, Phoenix.LiveView.Socket.t()}
 
@@ -11,6 +13,4 @@ defmodule HerosWeb.GameLive.Stage do
 
   @callback render(assigns :: Phoenix.LiveView.Socket.assigns()) ::
               Phoenix.LiveView.Rendered.t()
-
-  @callback default_assigns() :: [{term, term}]
 end
