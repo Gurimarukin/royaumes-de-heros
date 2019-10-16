@@ -4,4 +4,3 @@
 * rename yourself
 * add message when kicked from lobby
 * remove game projection from `Game`
-* `GameLive` monitor `Game`

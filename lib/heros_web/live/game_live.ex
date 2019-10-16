@@ -25,6 +25,8 @@ defmodule HerosWeb.GameLive do
     case Games.lookup(Games, session.game_id) do
       {:ok, game_pid} ->
         if connected?(socket) do
+          Process.monitor(game_pid)
+
           game = Game.subscribe(game_pid, session, self())
 
           socket =
@@ -69,6 +71,7 @@ defmodule HerosWeb.GameLive do
             :not_found -> "Impossible de trouver la partie."
             :game_started -> "Impossible de rejoindre une partie commencée."
             :lobby_full -> "Impossible de rejoindre, le salon est plein."
+            :game_crashed -> "La partie a plantée."
             _ -> ""
           end
 
@@ -101,6 +104,10 @@ defmodule HerosWeb.GameLive do
 
   def handle_info(:leave, socket) do
     redirect_home(socket)
+  end
+
+  def handle_info({:DOWN, _ref, :process, _game_pid, _reason}, socket) do
+    {:noreply, assign(socket, game: {:error, :game_crashed})}
   end
 
   def handle_info(info, socket) do
