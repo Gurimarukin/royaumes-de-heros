@@ -8,6 +8,17 @@ defmodule Heros.Game do
             lobby: %Game.Lobby{},
             match: nil
 
+  @behaviour Access
+
+  @impl Access
+  def fetch(game, key), do: Map.fetch(game, key)
+
+  @impl Access
+  def get_and_update(game, key, fun), do: Map.get_and_update(game, key, fun)
+
+  @impl Access
+  def pop(game, key, default \\ nil), do: Map.pop(game, key, default)
+
   def module_for_current_stage(stage) do
     case stage do
       :lobby -> Game.Lobby
@@ -48,10 +59,12 @@ defmodule Heros.Game do
   end
 
   # Server
+  @impl true
   def init(:ok) do
     {:ok, %Game{}}
   end
 
+  @impl true
   def handle_call(:short, _from, game) do
     {:reply,
      %{
@@ -91,6 +104,7 @@ defmodule Heros.Game do
     end)
   end
 
+  @impl true
   def handle_info({:DOWN, _ref, :process, pid, _reason}, game) do
     case handle_call({:update, {:unsubscribe, pid}}, nil, game) do
       {:stop, reason, _reply, game} -> {:stop, reason, game}

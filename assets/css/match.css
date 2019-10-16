@@ -36,8 +36,17 @@
     --resource-bg: white;
 
     --cards-height: calc(var(--card-height) + 2 * var(--card-margin));
-    /* --player-pile-bg: url('../images/mycelium_top.png'); */
-    /* --player-hand-bg: url('../images/mycelium_top.png'); */
+    --player-pile-bg: transparent;
+    --player-hand-bg: transparent;
+
+    --market-width: calc(
+        6 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
+    );
+    --market-height: calc(
+        1 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin)
+    );
+    --market-top: calc(calc(var(--match-height) - var(--market-height)) / 2);
+    --market-left: calc(calc(var(--match-width) - var(--market-width)) / 2);
 
     --market-bg: url('../images/wool_colored_red.png');
     --market-border-width: calc(0.04 * var(--card-width));
@@ -96,20 +105,50 @@
 }
 
 .match__market {
-    --width: calc(
-        6 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
-    );
-    --height: calc(
-        1 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin)
-    );
-
     background: var(--market-bg);
-    width: var(--width);
-    height: var(--height);
+    width: var(--market-width);
+    height: var(--market-height);
     position: absolute;
-    top: calc(calc(var(--match-height) - var(--height)) / 2);
-    left: calc(calc(var(--match-width) - var(--width)) / 2);
+    top: var(--market-top);
+    left: var(--market-left);
     border: var(--market-border-width) solid var(--market-border-color);
+}
+
+.card--market-deck,
+.card--gem,
+.card--market {
+    --a: calc(var(--card-width) + var(--card-margin));
+    --b: calc(var(--market-left) + var(--card-margin));
+
+    top: calc(var(--market-top) + var(--card-margin));
+}
+
+.card--market-deck {
+    left: calc(var(--match-width) + var(--card-margin));
+}
+
+.card--gem {
+    left: var(--b);
+}
+
+.card--market-0 {
+    left: calc(var(--a) * 1 + var(--b));
+}
+
+.card--market-1 {
+    left: calc(var(--a) * 2 + var(--b));
+}
+
+.card--market-2 {
+    left: calc(var(--a) * 3 + var(--b));
+}
+
+.card--market-3 {
+    left: calc(var(--a) * 4 + var(--b));
+}
+
+.card--market-4 {
+    left: calc(var(--a) * 5 + var(--b));
 }
 
 .player {
@@ -288,7 +327,6 @@
     width: var(--card-width);
     height: var(--card-height);
     border-radius: var(--card-border-radius);
-    box-shadow: 0 0 2px black;
     transition: top 1s, left 1s;
 }
 

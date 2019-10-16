@@ -3,8 +3,10 @@ defmodule Heros.Cards.Card do
             image: nil,
             is_champion: false
 
+  require Logger
+
   alias Heros.Utils
-  alias Heros.Cards.{Card, Decks}
+  alias Heros.Cards.{Card, Decks, Guilds, Imperials, Necros, Wilds}
 
   def with_id(card, n \\ 1), do: List.duplicate(card, n) |> Enum.map(&{random_id(), &1})
 
@@ -15,6 +17,11 @@ defmodule Heros.Cards.Card do
   end
 
   def get_gems, do: with_id(:gem, 16)
+
+  def get_market do
+    (Guilds.get() ++ Imperials.get() ++ Necros.get() ++ Wilds.get())
+    |> Enum.shuffle()
+  end
 
   def add_attack(game, amount), do: add_resource(game, :attack, amount)
 
@@ -48,9 +55,23 @@ defmodule Heros.Cards.Card do
     }
   end
 
-  def fetch(card), do: try_apply(Decks.Base, :fetch, [card])
+  @cards_modules [Decks.Base, Guilds, Imperials, Necros, Wilds]
 
-  def primary_effect(game, card), do: try_apply(Decks.Base, :primary_effect, [game, card])
+  def fetch(card) do
+    Enum.find_value(@cards_modules, &try_apply(&1, :fetch, [card])) ||
+      (
+        Logger.warn(~s"tried to apply :fetch for card without success: #{inspect(card)}")
+        nil
+      )
+  end
+
+  def primary_effect(game, card) do
+    Enum.find_value(@cards_modules, &try_apply(&1, :primary_effect, [game, card])) ||
+      (
+        Logger.warn(~s"tried to apply :primary_effect for card without success: #{inspect(card)}")
+        nil
+      )
+  end
 
   defp try_apply(module, fun, args) do
     try do

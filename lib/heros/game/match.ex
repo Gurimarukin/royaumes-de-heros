@@ -10,15 +10,30 @@ defmodule Heros.Game.Match do
   alias Heros.Utils
   alias Heros.Cards.Card
 
+  @behaviour Access
+
+  @impl Access
+  def fetch(match, key), do: Map.fetch(match, key)
+
+  @impl Access
+  def get_and_update(match, key, fun), do: Map.get_and_update(match, key, fun)
+
+  @impl Access
+  def pop(match, key, default \\ nil), do: Map.pop(match, key, default)
+
   @behaviour Stage
 
   def start_game(game) do
     Utils.update_self_after(1000, :players_draw)
+    Utils.update_self_after(1000, :refill_market)
 
     put_in(game.match, %Match{})
     |> init_players()
+    |> put_in([:match, :gems], Card.get_gems())
+    |> put_in([:match, :market], List.duplicate(nil, 5))
+    |> put_in([:match, :market_deck], Card.get_market())
     |> set_current_player(List.first(Map.keys(game.users)))
-    |> set_started()
+    |> put_in([:stage], :started)
   end
 
   defp init_players(game) do
@@ -29,11 +44,7 @@ defmodule Heros.Game.Match do
     put_in(game.match.players, players)
   end
 
-  defp set_current_player(game, player_id) do
-    put_in(game.match.current_player, player_id)
-  end
-
-  defp set_started(game), do: put_in(game.stage, :started)
+  defp set_current_player(game, player_id), do: put_in(game.match.current_player, player_id)
 
   def play_card(game, id_player, id_card) do
     GenServer.call(game, {:update, {:play_card, id_player, id_card}})
@@ -59,6 +70,25 @@ defmodule Heros.Game.Match do
   end
 
   @impl Stage
+  def handle_update(:refill_market, _from, game) do
+    match =
+      Enum.with_index(game.match.market)
+      |> Enum.reduce(game.match, fn {slot, i}, match ->
+        case slot do
+          nil ->
+            [head | tail] = match.market_deck
+
+            update_in(match.market, &List.replace_at(&1, i, head))
+            |> put_in([:market_deck], tail)
+
+          _ ->
+            match
+        end
+      end)
+
+    {:reply, :ok, put_in(game.match, match)}
+  end
+
   def handle_update(:players_draw, _from, game) do
     game =
       case Player.sorted(game.match.players, game.match.current_player) do
