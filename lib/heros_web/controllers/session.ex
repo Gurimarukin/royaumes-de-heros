@@ -8,17 +8,32 @@ defmodule HerosWeb.Session do
 
     user_name =
       get_session(conn, :user_name) ||
-        Enum.random([
-          "Varrick",
-          "Kraka",
-          "Ralyah",
-          "Kristov",
-          "Arkus",
-          "Lys",
-          "Shalyah",
-          "Borg",
-          "Parov"
-        ]) <> " (" <> String.slice(id, 0, 5) <> ")"
+        (
+          champion =
+            Enum.random([
+              "Arkus",
+              "Borg",
+              "Broelyn",
+              "Cristov",
+              "Cron",
+              "Darian",
+              "Grak",
+              "Kraka",
+              "Krythos",
+              "Lys",
+              "Myros",
+              "Parov",
+              "Rake",
+              "Rasmus",
+              "Rayla",
+              "Torgen",
+              "Tyrannor",
+              "Varrick",
+              "Weyan"
+            ])
+
+          ~s"#{champion} (#{String.slice(id, 0, 5)})"
+        )
 
     conn
     |> assign(:id, id)
