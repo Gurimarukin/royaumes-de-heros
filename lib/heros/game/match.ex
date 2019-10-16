@@ -7,7 +7,7 @@ defmodule Heros.Game.Match do
             sacrifice: []
 
   alias Heros.Game.{Match, Player, Stage}
-  alias Heros.{Cards, Utils}
+  alias Heros.Utils
   alias Heros.Cards.Card
 
   @behaviour Stage
@@ -24,15 +24,9 @@ defmodule Heros.Game.Match do
   defp init_players(game) do
     players =
       game.users
-      |> Enum.map(fn {session_id, _session} ->
-        {session_id, init_player()}
-      end)
+      |> Enum.map(fn {session_id, _session} -> {session_id, Player.init()} end)
 
     put_in(game.match.players, players)
-  end
-
-  defp init_player do
-    put_in(%Player{}.cards.deck, Cards.Decks.Base.shuffled())
   end
 
   defp set_current_player(game, player_id) do
@@ -53,27 +47,6 @@ defmodule Heros.Game.Match do
     GenServer.call(game, {:update, {:end_turn, id_player}})
   end
 
-  def sorted_players(players, player_id), do: sorted_players(players, player_id, {nil, []})
-
-  defp sorted_players([], _player_id, acc), do: acc
-
-  defp sorted_players([{player_id, current_player} | tail], player_id, {_current_player, acc}) do
-    {{player_id, current_player}, tail ++ acc}
-  end
-
-  defp sorted_players([player | tail], player_id, {current_player, acc}) do
-    sorted_players(tail, player_id, {current_player, acc ++ [player]})
-  end
-
-  defp next_player(players, id_player) do
-    case sorted_players(players, id_player) do
-      {_, others} ->
-        Enum.filter(others, fn {_id, player} -> Player.is_alive(player) end)
-        |> List.first()
-        |> elem(0)
-    end
-  end
-
   def is_current_player(match, id_player), do: match.current_player == id_player
 
   @impl Stage
@@ -88,7 +61,7 @@ defmodule Heros.Game.Match do
   @impl Stage
   def handle_update(:players_draw, _from, game) do
     game =
-      case sorted_players(game.match.players, game.match.current_player) do
+      case Player.sorted(game.match.players, game.match.current_player) do
         {{id_first, _}, others} ->
           game = player_draw(game, id_first, 3)
 
@@ -128,11 +101,11 @@ defmodule Heros.Game.Match do
   end
 
   def handle_update({:attack_hero, id_attacker, id_defender}, _from, game) do
-    defender = find_player(game, id_defender)
+    defender = Utils.keyfind(game.match.players, id_defender)
 
     if id_attacker != id_defender and is_current_player(game.match, id_attacker) and
          Player.is_exposed(defender) do
-      attacker = find_player(game, id_attacker)
+      attacker = Utils.keyfind(game.match.players, id_attacker)
       amount = min(attacker.attack, defender.hp)
 
       game =
@@ -149,7 +122,7 @@ defmodule Heros.Game.Match do
     if is_current_player(game.match, id_player) do
       game =
         clear_cards(game, id_player)
-        |> set_current_player(next_player(game.match.players, id_player))
+        |> set_current_player(Player.next(game.match.players, id_player))
 
       Utils.update_self_after(1000, {:player_draw, id_player, 5})
 
@@ -162,13 +135,6 @@ defmodule Heros.Game.Match do
   @impl Stage
   def on_update(response), do: response
 
-  defp find_player(game, player_id) do
-    case List.keyfind(game.match.players, player_id, 0) do
-      nil -> nil
-      {^player_id, player} -> player
-    end
-  end
-
   defp update_player(game, player_id, f) do
     update_in(
       game.match.players,
@@ -177,31 +143,8 @@ defmodule Heros.Game.Match do
   end
 
   defp player_draw(game, id_player, n) do
-    update_player(game, id_player, &player_draw_rec(&1, id_player, n))
-  end
-
-  defp player_draw_rec(player, _id_player, 0), do: player
-
-  defp player_draw_rec(player, id_player, n) do
-    if length(player.cards.deck) == 0 do
-      if length(player.cards.discard) == 0 do
-        player
-      else
-        player =
-          put_in(player.cards.deck, Enum.shuffle(player.cards.discard))
-          |> put_in([:cards, :discard], [])
-
-        Utils.update_self_after(1000, {:player_draw, id_player, n})
-
-        player
-      end
-    else
-      [head | tail] = player.cards.deck
-
-      update_in(player.cards.hand, &(&1 ++ [head]))
-      |> put_in([:cards, :deck], tail)
-      |> player_draw_rec(id_player, n - 1)
-    end
+    on_shuffle_discard = fn -> Utils.update_self_after(1000, {:player_draw, id_player, n}) end
+    update_player(game, id_player, &Player.draw_cards(&1, id_player, n, on_shuffle_discard))
   end
 
   defp find_card(players, id) do

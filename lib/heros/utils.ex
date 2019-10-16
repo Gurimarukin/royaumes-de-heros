@@ -32,14 +32,23 @@ defmodule Heros.Utils do
   def flat_map_call_response({:stop, _reason, _reply, new_state}, f), do: f.(new_state)
   def flat_map_call_response({:stop, _reason, new_state}, f), do: f.(new_state)
 
-  def keyreplace(list, key, value), do: List.keyreplace(list, key, 0, {key, value})
-
-  def keyupdate(list, key, f) do
-    case List.keyfind(list, key, 0) do
-      nil -> list
-      {^key, previous} -> List.keyreplace(list, key, 0, {key, f.(previous)})
+  def keyfind(list, key, default \\ nil) do
+    case List.keyfind(list, key, 0, default) do
+      nil -> nil
+      {^key, elt} -> elt
     end
   end
+
+  def keyreplace(list, key, value), do: List.keyreplace(list, key, 0, {key, value})
+
+  def keyupdate(list, key, f, default \\ nil) do
+    case keyfind(list, key) do
+      ^default -> list
+      previous -> List.keyreplace(list, key, 0, {key, f.(previous)})
+    end
+  end
+
+  def keydelete(list, key), do: List.keydelete(list, key, 0)
 
   def update_self_after(time, update) do
     slef = self()

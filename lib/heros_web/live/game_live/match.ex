@@ -63,7 +63,7 @@ defmodule HerosWeb.GameLive.Match do
   end
 
   defp sorted_players(players, session_id) do
-    {current_player, others} = Game.Match.sorted_players(players, session_id)
+    {current_player, others} = Game.Player.sorted(players, session_id)
 
     (current_player && [current_player | others]) ||
       others
