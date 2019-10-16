@@ -2,18 +2,10 @@ defmodule Heros.Cards.Decks.Base do
   alias Heros.Cards.Card
 
   def get do
-    [
-      {Card.random_id(), :shortsword},
-      {Card.random_id(), :dagger},
-      {Card.random_id(), :ruby},
-      {Card.random_id(), :gold},
-      {Card.random_id(), :gold},
-      {Card.random_id(), :gold},
-      {Card.random_id(), :gold},
-      {Card.random_id(), :gold},
-      {Card.random_id(), :gold},
-      {Card.random_id(), :gold}
-    ]
+    Card.with_id(:shortsword) ++
+      Card.with_id(:dagger) ++
+      Card.with_id(:ruby) ++
+      Card.with_id(:gold, 7)
   end
 
   def shuffled, do: Enum.shuffle(get())

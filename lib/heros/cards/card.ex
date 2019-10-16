@@ -6,11 +6,15 @@ defmodule Heros.Cards.Card do
   alias Heros.Utils
   alias Heros.Cards.{Card, Decks}
 
-  def random_id, do: UUID.uuid1(:hex)
+  def with_id(card, n \\ 1), do: List.duplicate(card, n) |> Enum.map(&{random_id(), &1})
+
+  defp random_id, do: UUID.uuid1(:hex)
 
   def hidden do
     %Card{image: "https://www.herorealms.com/wp-content/uploads/2017/09/hero_realms_back.jpg"}
   end
+
+  def get_gems, do: with_id(:gem, 16)
 
   def add_attack(game, amount), do: add_resource(game, :attack, amount)
 
@@ -37,13 +41,16 @@ defmodule Heros.Cards.Card do
     end
   end
 
-  def fetch(card) do
-    try_apply(Decks.Base, :fetch, [card])
+  def fetch(:gem) do
+    %Card{
+      name: "Gemme de feu",
+      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-081-fire-gem.jpg"
+    }
   end
 
-  def primary_effect(game, card) do
-    try_apply(Decks.Base, :primary_effect, [game, card])
-  end
+  def fetch(card), do: try_apply(Decks.Base, :fetch, [card])
+
+  def primary_effect(game, card), do: try_apply(Decks.Base, :primary_effect, [game, card])
 
   defp try_apply(module, fun, args) do
     try do
