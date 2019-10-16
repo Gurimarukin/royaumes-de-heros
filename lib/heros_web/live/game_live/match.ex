@@ -58,7 +58,12 @@ defmodule HerosWeb.GameLive.Match do
       n_players: length(players),
       cards:
         cards(assigns.cards, assigns.game.match, assigns.session.id)
-        |> Enum.map(fn {id, card} -> [id, update_in(card.card, &Map.from_struct/1)] end)
+        |> Enum.map(fn {id, card} ->
+          case card do
+            nil -> nil
+            card -> %{id: id, image: card.card.image, class: card.class}
+          end
+        end)
     }
 
     HerosWeb.GameView.render("match.html", assigns)

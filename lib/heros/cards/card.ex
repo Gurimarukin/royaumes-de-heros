@@ -1,12 +1,14 @@
 defmodule Heros.Cards.Card do
   defstruct name: nil,
             image: nil,
-            is_champion: false
+            cost: nil,
+            champion: nil,
+            faction: nil
 
   require Logger
 
   alias Heros.Utils
-  alias Heros.Cards.{Card, Decks, Guilds, Imperials, Necros, Wilds}
+  alias Heros.Cards.{Card, Decks, Guild, Imperial, Necros, Wild}
 
   def with_id(card, n \\ 1), do: List.duplicate(card, n) |> Enum.map(&{random_id(), &1})
 
@@ -19,7 +21,7 @@ defmodule Heros.Cards.Card do
   def get_gems, do: with_id(:gem, 16)
 
   def get_market do
-    (Guilds.get() ++ Imperials.get() ++ Necros.get() ++ Wilds.get())
+    (Guild.get() ++ Imperial.get() ++ Necros.get() ++ Wild.get())
     |> Enum.shuffle()
   end
 
@@ -41,21 +43,29 @@ defmodule Heros.Cards.Card do
     end
   end
 
+  def is_champion(card) do
+    case card.champion do
+      nil -> false
+      _ -> true
+    end
+  end
+
   def stays_on_board(card) do
     case fetch(card) do
       nil -> false
-      card -> card.is_champion
+      card -> Card.is_champion(card)
     end
   end
 
   def fetch(:gem) do
     %Card{
       name: "Gemme de feu",
-      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-081-fire-gem.jpg"
+      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-081-fire-gem.jpg",
+      cost: 2
     }
   end
 
-  @cards_modules [Decks.Base, Guilds, Imperials, Necros, Wilds]
+  @cards_modules [Decks.Base, Guild, Imperial, Necros, Wild]
 
   def fetch(card) do
     Enum.find_value(@cards_modules, &try_apply(&1, :fetch, [card])) ||

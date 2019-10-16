@@ -5,3 +5,4 @@
 * add message when kicked from lobby
 * remove game projection from `Game`
 * handle empty market
+* bug: card go to enemy deck too when buying it

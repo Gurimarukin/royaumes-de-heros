@@ -114,16 +114,18 @@ defmodule Heros.Game.Match do
 
   def handle_update({:play_card, id_player, id_card}, _from, game) do
     if is_current_player(game.match, id_player) do
-      case find_card(game.match.players, id_card) do
+      case find_card(game.match, id_card) do
         nil ->
           {:reply, {:error, :not_found}, game}
 
-        {player_id, zone, card} ->
-          if player_id == id_player do
-            play_card(game, id_player, zone, card)
-          else
-            {:reply, {:error, :forbidden}, game}
-          end
+        {nil, zone, card} ->
+          buy_card(game, id_player, zone, card)
+
+        {^id_player, zone, card} ->
+          play_own_card(game, id_player, zone, card)
+
+        _ ->
+          {:reply, {:error, :forbidden}, game}
       end
     else
       {:reply, {:error, :forbidden}, game}
@@ -177,17 +179,53 @@ defmodule Heros.Game.Match do
     update_player(game, id_player, &Player.draw_cards(&1, id_player, n, on_shuffle_discard))
   end
 
-  defp find_card(players, id) do
-    Enum.find_value(players, fn {id_player, player} ->
+  defp find_card(match, id_card) do
+    Enum.find_value(match.players, fn {id_player, player} ->
       Enum.find_value(player.cards, fn {zone, cards} ->
-        Enum.find_value(cards, fn {id_card, card} ->
-          if id == id_card, do: {id_player, zone, {id_card, card}}, else: nil
-        end)
+        find_card(cards, id_card, zone, id_player)
       end)
+    end) ||
+      find_card(match.gems, id_card, :gems) ||
+      find_card(match.market, id_card, :market)
+  end
+
+  defp find_card(enum, id_card, zone, id_player \\ nil) do
+    Enum.find_value(enum, fn {id, card} ->
+      if id == id_card, do: {id_player, zone, {id_card, card}}, else: nil
     end)
   end
 
-  defp play_card(game, id_player, :hand, card) do
+  defp buy_card(game, id_player, zone, {id_card, card}) do
+    case Card.fetch(card).cost do
+      cost when is_integer(cost) ->
+        if Utils.keyfind(game.match.players, id_player).gold >= cost do
+          {:reply, :ok, buy_card(game, id_player, zone, {id_card, card}, cost)}
+        else
+          {:reply, {:error, :forbidden}, game}
+        end
+    end
+  end
+
+  defp buy_card(game, id_player, zone, card, cost) do
+    case zone do
+      :market ->
+        Utils.update_self_after(1000, :refill_market)
+
+        update_in(game.match.market, fn market ->
+          i = Enum.find_index(market, fn c -> c == card end)
+          List.replace_at(market, i, nil)
+        end)
+
+      :gems ->
+        update_in(game.match.gems, &tl/1)
+    end
+    |> update_player(id_player, fn player ->
+      update_in(player.cards.discard, &([card] ++ &1))
+      |> update_in([:gold], &(&1 - cost))
+    end)
+  end
+
+  defp play_own_card(game, id_player, :hand, card) do
     game =
       update_player(game, id_player, fn player ->
         update_in(player.cards.hand, &Enum.filter(&1, fn c -> c != card end))
@@ -198,7 +236,7 @@ defmodule Heros.Game.Match do
     {:reply, :ok, game}
   end
 
-  defp play_card(game, _id_player, _zone, _card), do: {:reply, {:error, :forbidden}, game}
+  defp play_own_card(game, _id_player, _zone, _card), do: {:reply, {:error, :forbidden}, game}
 
   defp clear_cards(game, id_player) do
     update_player(game, id_player, fn player ->
