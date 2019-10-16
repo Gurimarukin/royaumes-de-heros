@@ -20,4 +20,10 @@ defmodule Heros.Game.Player do
 
   @impl Access
   def pop(player, key, default \\ nil), do: Map.pop(player, key, default)
+
+  def is_alive(player), do: player.hp > 0
+
+  def is_exposed(_player) do
+    true
+  end
 end

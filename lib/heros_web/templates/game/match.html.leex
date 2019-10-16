@@ -1,8 +1,9 @@
 <div class="match match--<%= @n_players %>-players">
-  <%= for {{_id, player}, i} <- Enum.with_index(@players) do %>
+  <%= for {{id, player}, i} <- Enum.with_index(@players) do %>
     <div class="<%= HerosWeb.GameLive.Match.player_classes(player) %>">
       <div class="player__fight-zone">
-        <div class="player__hp player__rotate" title="<%= player.hp %> / <%= player.max_hp %>">
+        <div phx-click="attack-hero" phx-value-id="<%= id %>"
+             class="player__hp player__rotate" title="<%= player.hp %> / <%= player.max_hp %>">
           <div class="player__hp-bis"><%= player.hp %></div>
         </div>
       </div>

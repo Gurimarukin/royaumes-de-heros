@@ -45,6 +45,10 @@ defmodule Heros.Game.Match do
     GenServer.call(game, {:update, {:play_card, id_player, id_card}})
   end
 
+  def attack_hero(game, id_attacker, id_defender) do
+    GenServer.call(game, {:update, {:attack_hero, id_attacker, id_defender}})
+  end
+
   def end_turn(game, id_player) do
     GenServer.call(game, {:update, {:end_turn, id_player}})
   end
@@ -64,20 +68,13 @@ defmodule Heros.Game.Match do
   defp next_player(players, id_player) do
     case sorted_players(players, id_player) do
       {_, others} ->
-        Enum.filter(others, fn {_id, player} -> is_alive(player) end)
+        Enum.filter(others, fn {_id, player} -> Player.is_alive(player) end)
         |> List.first()
         |> elem(0)
     end
   end
 
   def is_current_player(match, id_player), do: match.current_player == id_player
-
-  defp is_alive(player), do: player.hp > 0
-
-  # defp is_alive(players, id_player) do
-  #   {_id, player} = List.keyfind(players, id_player, 0)
-  #   is_alive(player)
-  # end
 
   @impl Stage
   def handle_call(_request, _from, _game),
@@ -130,6 +127,24 @@ defmodule Heros.Game.Match do
     end
   end
 
+  def handle_update({:attack_hero, id_attacker, id_defender}, _from, game) do
+    defender = find_player(game, id_defender)
+
+    if id_attacker != id_defender and is_current_player(game.match, id_attacker) and
+         Player.is_exposed(defender) do
+      attacker = find_player(game, id_attacker)
+      amount = min(attacker.attack, defender.hp)
+
+      game =
+        update_player(game, id_attacker, fn player -> update_in(player.attack, &(&1 - amount)) end)
+        |> update_player(id_defender, fn player -> update_in(player.hp, &(&1 - amount)) end)
+
+      {:reply, :ok, game}
+    else
+      {:reply, {:error, :forbidden}, game}
+    end
+  end
+
   def handle_update({:end_turn, id_player}, _from, game) do
     if is_current_player(game.match, id_player) do
       game =
@@ -146,6 +161,13 @@ defmodule Heros.Game.Match do
 
   @impl Stage
   def on_update(response), do: response
+
+  defp find_player(game, player_id) do
+    case List.keyfind(game.match.players, player_id, 0) do
+      nil -> nil
+      {^player_id, player} -> player
+    end
+  end
 
   defp update_player(game, player_id, f) do
     update_in(

@@ -142,6 +142,11 @@ defmodule HerosWeb.GameLive.Match do
     {:noreply, socket}
   end
 
+  def handle_event("attack-hero", %{"id" => id}, socket) do
+    Heros.Game.Match.attack_hero(socket.assigns.game_pid, socket.assigns.session.id, id)
+    {:noreply, socket}
+  end
+
   def handle_event("end-turn", _params, socket) do
     Heros.Game.Match.end_turn(socket.assigns.game_pid, socket.assigns.session.id)
     {:noreply, socket}
