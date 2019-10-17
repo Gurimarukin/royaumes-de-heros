@@ -93,8 +93,6 @@
 /* fight-zone */
 .match--2-players .card--fight-zone {
     --a: calc(var(--card-width) + var(--card-margin));
-    --b: calc(var(--match-width) - var(--player-width)) / 2 +
-        calc(2 * var(--card-margin));
 
     --first-row: calc(
         3 * var(--card-margin) + var(--card-height) + var(--bar-height)
@@ -105,20 +103,42 @@
 }
 
 .match--2-players .card--fight-zone-p0 {
+    --b: calc(
+        calc(var(--match-width) - var(--player-width)) / 2 + 2 *
+            var(--card-margin)
+    );
+
     top: calc(var(--match-height) - var(--card-height) - var(--first-row));
 }
 
 .match--2-players .card--fight-zone-p1 {
+    --b: calc(
+        calc(var(--match-width) - var(--player-width)) / 2 +
+            calc(2 * var(--card-margin)) - var(--a)
+    );
+
     top: var(--first-row);
 }
 
 .match--2-players .card--fight-zone-p0.card--fight-zone-8,
-.match--2-players .card--fight-zone-p0.card--fight-zone-9 {
+.match--2-players .card--fight-zone-p0.card--fight-zone-9,
+.match--2-players .card--fight-zone-p0.card--fight-zone-10,
+.match--2-players .card--fight-zone-p0.card--fight-zone-11,
+.match--2-players .card--fight-zone-p0.card--fight-zone-12,
+.match--2-players .card--fight-zone-p0.card--fight-zone-13,
+.match--2-players .card--fight-zone-p0.card--fight-zone-14,
+.match--2-players .card--fight-zone-p0.card--fight-zone-15 {
     top: calc(var(--match-height) - var(--card-height) - var(--second-row));
 }
 
 .match--2-players .card--fight-zone-p1.card--fight-zone-8,
-.match--2-players .card--fight-zone-p1.card--fight-zone-9 {
+.match--2-players .card--fight-zone-p1.card--fight-zone-9,
+.match--2-players .card--fight-zone-p1.card--fight-zone-10,
+.match--2-players .card--fight-zone-p1.card--fight-zone-11,
+.match--2-players .card--fight-zone-p1.card--fight-zone-12,
+.match--2-players .card--fight-zone-p1.card--fight-zone-13,
+.match--2-players .card--fight-zone-p1.card--fight-zone-14,
+.match--2-players .card--fight-zone-p1.card--fight-zone-15 {
     top: var(--second-row);
 }
 
@@ -150,15 +170,8 @@
     left: calc(var(--a) * 1 + var(--b));
 }
 
-.match--2-players .card--fight-zone-6 {
-    left: calc(var(--a) * 1 + var(--b));
-}
-
-.match--2-players .card--fight-zone-p0.card--fight-zone-7 {
+.match--2-players .card--fight-zone-7 {
     left: calc(var(--a) * 8 + var(--b));
-}
-.match--2-players .card--fight-zone-p0.card--fight-zone-7 {
-    left: calc(var(--a) * 0 + var(--b));
 }
 
 .match--2-players .card--fight-zone-8 {
@@ -167,6 +180,30 @@
 
 .match--2-players .card--fight-zone-9 {
     left: calc(var(--a) * 5 + var(--b));
+}
+
+.match--2-players .card--fight-zone-10 {
+    left: calc(var(--a) * 3 + var(--b));
+}
+
+.match--2-players .card--fight-zone-11 {
+    left: calc(var(--a) * 6 + var(--b));
+}
+
+.match--2-players .card--fight-zone-12 {
+    left: calc(var(--a) * 2 + var(--b));
+}
+
+.match--2-players .card--fight-zone-13 {
+    left: calc(var(--a) * 7 + var(--b));
+}
+
+.match--2-players .card--fight-zone-14 {
+    left: calc(var(--a) * 1 + var(--b));
+}
+
+.match--2-players .card--fight-zone-15 {
+    left: calc(var(--a) * 8 + var(--b));
 }
 
 /* discard */

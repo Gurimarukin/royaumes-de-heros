@@ -25,8 +25,7 @@ defmodule HerosWeb.TestGameLive do
            {"card-0-24", :lys},
            {"card-0-25", :lys},
            {"card-0-26", :lys},
-           {"card-0-27", :lys},
-           {"card-0-28", :lys}
+           {"card-0-27", :lys}
          ],
          fight_zone: [
            {"card-0-30", :gold},
@@ -65,8 +64,7 @@ defmodule HerosWeb.TestGameLive do
            {"card-1-24", :lys},
            {"card-1-25", :lys},
            {"card-1-26", :lys},
-           {"card-1-27", :lys},
-           {"card-1-28", :lys}
+           {"card-1-27", :lys}
          ],
          fight_zone: [
            {"card-1-30", :arkus},
