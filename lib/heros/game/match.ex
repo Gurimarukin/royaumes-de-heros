@@ -217,7 +217,7 @@ defmodule Heros.Game.Match do
         end)
 
       :gems ->
-        update_in(game.match.gems, &tl/1)
+        update_in(game.match.gems, fn gems -> Enum.reject(gems, &(&1 == card)) end)
     end
     |> update_player(id_player, fn player ->
       update_in(player.cards.discard, &([card] ++ &1))
