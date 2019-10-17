@@ -104,13 +104,13 @@ defmodule HerosWeb.GameLive.Match do
     |> market_deck(match)
   end
 
-  defp deck(cards, player, i) do
+  def deck(cards, player, i) do
     Enum.reduce(player.deck, cards, fn {id, _card}, cards ->
       Utils.keyreplace(cards, id, %{card: Card.hidden(), class: "card card--deck-#{i}"})
     end)
   end
 
-  defp hand(cards, player, visible, i) do
+  def hand(cards, player, visible, i) do
     hand = Enum.with_index(player.hand)
 
     if visible do
@@ -130,7 +130,7 @@ defmodule HerosWeb.GameLive.Match do
     end
   end
 
-  defp fight_zone(cards, player, i) do
+  def fight_zone(cards, player, i) do
     Enum.with_index(player.fight_zone)
     |> Enum.reduce(cards, fn {{id, card}, j}, cards ->
       Utils.keyreplace(cards, id, %{
@@ -140,19 +140,19 @@ defmodule HerosWeb.GameLive.Match do
     end)
   end
 
-  defp discard(cards, player, i) do
+  def discard(cards, player, i) do
     Enum.reduce(player.discard, cards, fn {id, card}, cards ->
       Utils.keyreplace(cards, id, %{card: Card.fetch(card), class: ~s"card card--discard-#{i}"})
     end)
   end
 
-  defp gems(cards, match) do
+  def gems(cards, match) do
     Enum.reduce(match.gems, cards, fn {id, card}, cards ->
       Utils.keyreplace(cards, id, %{card: Card.fetch(card), class: "card card--gem"})
     end)
   end
 
-  defp market(cards, match) do
+  def market(cards, match) do
     Enum.with_index(match.market)
     |> Enum.reduce(cards, fn {card, i}, cards ->
       case card do

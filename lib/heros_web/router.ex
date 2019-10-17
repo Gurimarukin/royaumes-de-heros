@@ -19,6 +19,7 @@ defmodule HerosWeb.Router do
     pipe_through :browser
 
     get "/", GamesController, :index
+    get "/game/test", TestGameController, :show
     get "/game/:id", GameController, :show
   end
 
