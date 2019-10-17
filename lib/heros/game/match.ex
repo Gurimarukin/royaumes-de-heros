@@ -175,7 +175,7 @@ defmodule Heros.Game.Match do
   end
 
   defp player_draw(game, id_player, n) do
-    on_shuffle_discard = fn -> Utils.update_self_after(1000, {:player_draw, id_player, n}) end
+    on_shuffle_discard = fn n -> Utils.update_self_after(1000, {:player_draw, id_player, n}) end
     update_player(game, id_player, &Player.draw_cards(&1, id_player, n, on_shuffle_discard))
   end
 

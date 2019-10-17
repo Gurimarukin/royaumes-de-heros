@@ -34,8 +34,6 @@ defmodule Heros.Game.Player do
     true
   end
 
-  def draw_cards(player, id_player, n, on_shuffle_discard \\ fn -> nil end)
-
   def draw_cards(player, _id_player, 0, _on_shuffle_discard), do: player
 
   def draw_cards(player, id_player, n, on_shuffle_discard) do
@@ -47,7 +45,7 @@ defmodule Heros.Game.Player do
           put_in(player.cards.deck, Enum.shuffle(player.cards.discard))
           |> put_in([:cards, :discard], [])
 
-        on_shuffle_discard.()
+        on_shuffle_discard.(n)
 
         player
       end
@@ -56,7 +54,7 @@ defmodule Heros.Game.Player do
 
       update_in(player.cards.hand, &(&1 ++ [head]))
       |> put_in([:cards, :deck], tail)
-      |> draw_cards(id_player, n - 1)
+      |> draw_cards(id_player, n - 1, on_shuffle_discard)
     end
   end
 
