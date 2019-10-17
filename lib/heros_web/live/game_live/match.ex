@@ -48,7 +48,11 @@ defmodule HerosWeb.GameLive.Match do
            hp: player.hp,
            max_hp: player.max_hp,
            gold: player.gold,
-           attack: player.attack
+           attack: player.attack,
+           deck: player.cards.deck,
+           discard: player.cards.discard,
+           hand: player.cards.hand,
+           fight_zone: player.cards.fight_zone
          }}
       end)
       |> sorted_players(assigns.session.id)
@@ -57,7 +61,7 @@ defmodule HerosWeb.GameLive.Match do
       players: players,
       n_players: length(players),
       cards:
-        cards(assigns.cards, assigns.game.match, assigns.session.id)
+        cards(assigns.cards, players, assigns.game.match, assigns.session.id)
         |> Enum.map(fn {id, card} ->
           case card do
             nil -> nil
@@ -87,8 +91,8 @@ defmodule HerosWeb.GameLive.Match do
     Enum.join(classes, " ")
   end
 
-  defp cards(cards, match, session_id) do
-    Enum.with_index(match.players)
+  defp cards(cards, sorted_players, match, session_id) do
+    Enum.with_index(sorted_players)
     |> Enum.reduce(cards, fn {{id, player}, i}, cards ->
       deck(cards, player, i)
       |> discard(player, i)
@@ -101,13 +105,13 @@ defmodule HerosWeb.GameLive.Match do
   end
 
   defp deck(cards, player, i) do
-    Enum.reduce(player.cards.deck, cards, fn {id, _card}, cards ->
+    Enum.reduce(player.deck, cards, fn {id, _card}, cards ->
       Utils.keyreplace(cards, id, %{card: Card.hidden(), class: "card card--deck-#{i}"})
     end)
   end
 
   defp hand(cards, player, visible, i) do
-    hand = Enum.with_index(player.cards.hand)
+    hand = Enum.with_index(player.hand)
 
     if visible do
       Enum.reduce(hand, cards, fn {{id, card}, j}, cards ->
@@ -127,7 +131,7 @@ defmodule HerosWeb.GameLive.Match do
   end
 
   defp fight_zone(cards, player, i) do
-    Enum.with_index(player.cards.fight_zone)
+    Enum.with_index(player.fight_zone)
     |> Enum.reduce(cards, fn {{id, card}, j}, cards ->
       Utils.keyreplace(cards, id, %{
         card: Card.fetch(card),
@@ -137,7 +141,7 @@ defmodule HerosWeb.GameLive.Match do
   end
 
   defp discard(cards, player, i) do
-    Enum.reduce(player.cards.discard, cards, fn {id, card}, cards ->
+    Enum.reduce(player.discard, cards, fn {id, card}, cards ->
       Utils.keyreplace(cards, id, %{card: Card.fetch(card), class: ~s"card card--discard-#{i}"})
     end)
   end

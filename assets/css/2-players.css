@@ -34,7 +34,8 @@
 /* deck */
 .match--2-players .card--deck-0 {
     left: calc(
-        var(--match-width) - calc(var(--match-width) - var(--player-width)) / 2
+        var(--match-width) - calc(var(--match-width) - var(--player-width)) / 2 -
+            var(--card-width) - var(--card-margin)
     );
     top: calc(var(--match-height) - var(--card-height) - var(--card-margin));
 }
