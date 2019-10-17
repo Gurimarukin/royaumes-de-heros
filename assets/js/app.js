@@ -21,6 +21,14 @@ import { Socket } from 'phoenix'
 import LiveSocket from 'phoenix_live_view'
 
 const hooks = {
+    fullscreenBtn: {
+        mounted() {
+            this.el.addEventListener('click', _ => {
+                document.body.requestFullscreen()
+            })
+        }
+    },
+
     cards: {
         mapCards(f) {
             const cards = JSON.parse(

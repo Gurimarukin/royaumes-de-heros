@@ -19,6 +19,10 @@
         </div>
         <div class="player__menu">
           <%= if i == 0 and player.is_current do %>
+            <button phx-hook="fullscreenBtn"
+                  class="match__button match__button--outline">
+              Plein écran
+            </button>
             <button phx-click="end-turn" phx-throttle="500"
                   class="match__button match__button--outline match__button--end-turn">
               Fin du tour
