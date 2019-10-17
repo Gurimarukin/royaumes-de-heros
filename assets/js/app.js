@@ -21,6 +21,13 @@ import { Socket } from 'phoenix'
 import LiveSocket from 'phoenix_live_view'
 
 const hooks = {
+    autofocus: {
+        mounted() {
+            this.el.focus()
+            this.el.select()
+        }
+    },
+
     fullscreenBtn: {
         mounted() {
             this.el.addEventListener('click', _ => {

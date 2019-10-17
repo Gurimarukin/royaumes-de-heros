@@ -1,32 +1,27 @@
 <div>
   <%= live_render(@socket, HerosWeb.HeaderLive, id: "header", session: @session) %>
-
   <%= if @edit_name do %>
-    <input phx-blur="submit_name" phx-keyup="keyup_name" value="<%= @game.name %>" autofocus>
+    <input phx-blur="submit_name" phx-keyup="keyup_name" phx-hook="autofocus" value="<%= @game.name %>">
   <% else %>
     <h1 phx-click="edit_name"><%= @game.name %></h1>
   <% end %>
-
   <label>Public : <input type="checkbox" phx-click="toggle_public" <%= if @game.is_public, do: "checked" %>></label>
-
   <div><%= length(@game.players) %> / <%= @game.max_players %> joueurs</div>
-
   <table>
     <%= for player <- @game.players do %>
       <tr>
         <td><%= if player.is_admin, do: "admin" %></td>
-        <td><%= player.name %></td>
-        <td>
-          <%= if @session.id != player.id do %>
-            <button phx-click="kick" phx-value-id=<%= player.id %>>exclure</button>
-          <% end %>
-        </td>
-      </tr>
-    <% end %>
-  </table>
-
-  <center>
-    <button phx-click="start" <%= if not @game.is_ready, do: "disabled" %>>commencer</button>
-    <button phx-click="leave">quitter</button>
-  </center>
-</div>
+          <td><%= player.name %></td>
+          <td>
+            <%= if @session.id != player.id do %>
+              <button phx-click="kick" phx-value-id=<%= player.id %>>exclure</button>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+    <center>
+      <button phx-click="start" <%= if not @game.is_ready, do: "disabled" %>>commencer</button>
+      <button phx-click="leave">quitter</button>
+    </center>
+  </div>

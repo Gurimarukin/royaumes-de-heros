@@ -1,5 +1,19 @@
-<div>
-  session.id = <%= @session.id %>
-  <br>
-  session.user_name = <%= @session.user_name %>
+<div class="header">
+  <div class="header__nav">
+    <%= link "Royaumes de Héros", to: Routes.games_path(@socket, :index) %>
+    <div class="header__pseudo">
+      Pseudo :
+      <%= if @edit_name do %>
+        <input phx-blur="submit_name" phx-keyup="keyup_name" phx-hook="autofocus"
+               class="header__pseudo-input" value="<%= @user_name %>">
+        <i class="fas fa-check header__edit-icon"></i>
+      <% else %>
+        <span phx-click="edit_name" class="header__pseudo-span">
+          <%= @user_name %>
+          <i class="fas fa-pencil-alt header__edit-icon"></i>
+        </span>
+      <% end %>
+      <div phx-hook="playerName" phx-value-name="<%= @user_name %>"></div>
+    </div>
+  </div>
 </div>

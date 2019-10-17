@@ -32,7 +32,21 @@ defmodule HerosWeb.Session do
               "Weyan"
             ])
 
-          ~s"#{champion} (#{String.slice(id, 0, 5)})"
+          n =
+            Enum.random([
+              "I",
+              "II",
+              "III",
+              "IV",
+              "V",
+              "VI",
+              "VII",
+              "VIII",
+              "IX",
+              "X"
+            ])
+
+          ~s"#{champion} #{n}"
         )
 
     conn

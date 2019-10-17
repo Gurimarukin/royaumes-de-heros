@@ -10,8 +10,8 @@ defmodule Heros.Game.Lobby do
 
   @behaviour Stage
 
-  def rename(game, name) do
-    GenServer.call(game, {:update, {:rename, name}})
+  def rename_game(game, name) do
+    GenServer.call(game, {:update, {:rename_game, name}})
   end
 
   def toggle_public(game) do
@@ -48,7 +48,7 @@ defmodule Heros.Game.Lobby do
     do: raise(MatchError, message: "no match of handle_call/3")
 
   @impl Stage
-  def handle_update({:rename, name}, _from, game) do
+  def handle_update({:rename_game, name}, _from, game) do
     {:reply, :ok, put_in(game.lobby.name, name)}
   end
 

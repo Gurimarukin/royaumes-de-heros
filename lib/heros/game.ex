@@ -58,6 +58,10 @@ defmodule Heros.Game do
     GenServer.call(game, {:update, {:leave, session_id}})
   end
 
+  def player_rename(game, session_id, name) do
+    GenServer.call(game, {:update, {:user_rename, session_id, name}})
+  end
+
   # Server
   @impl true
   def init(:ok) do
@@ -138,6 +142,15 @@ defmodule Heros.Game do
       nil -> {:reply, :ok, game}
       user -> player_leave(game, session_id, user)
     end
+  end
+
+  def handle_update({:user_rename, session_id, name}, _from, game) do
+    game =
+      update_in(game.users, fn users ->
+        Utils.keyupdate(users, session_id, fn session -> put_in(session.user_name, name) end)
+      end)
+
+    {:reply, :ok, game}
   end
 
   def handle_update(update, from, game) do

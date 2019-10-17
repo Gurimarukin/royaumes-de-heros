@@ -1,0 +1,56 @@
+.header {
+    --color: goldenrod;
+
+    --pseudo-border-width: 1px;
+    --pseudo-padding: 0.33em;
+
+    padding: 0.67em 1.33em;
+    background: url('../images/hardened_clay_stained_blue.png');
+    border-bottom: 1px solid black;
+}
+
+.header a,
+.header a:hover,
+.header a:focus {
+    color: inherit;
+}
+
+.header__nav {
+    max-width: 80rem;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--color);
+    font-weight: 500;
+}
+
+.header__pseudo {
+    display: flex;
+    align-items: center;
+    height: 1.8em;
+    /* background-color: white; */
+}
+
+.header__pseudo-input {
+    margin: 0;
+    display: flex;
+    width: min-content;
+    font-size: inherit;
+    border: var(--pseudo-border-width) solid var(--color);
+    color: inherit;
+    padding: var(--pseudo-padding);
+    background: transparent;
+    border-radius: 0.1em;
+    font-weight: inherit;
+}
+
+.header__pseudo-input,
+.header__pseudo-span {
+    margin-left: 0.33em;
+    cursor: pointer;
+}
+
+.header__edit-icon {
+    margin-left: 0.33em;
+}

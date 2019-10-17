@@ -20,7 +20,14 @@ defmodule HerosWeb.GameLive.LobbyAdmin do
   end
 
   def handle_event("submit_name", %{"value" => name}, socket) do
-    Game.Lobby.rename(socket.assigns.game_pid, name)
+    name = String.trim(name)
+
+    if String.length(name) > 0 do
+      Game.Lobby.rename_game(socket.assigns.game_pid, name)
+    else
+      socket
+    end
+
     {:noreply, assign(socket, edit_name: false)}
   end
 
