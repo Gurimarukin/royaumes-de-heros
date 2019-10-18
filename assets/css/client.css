@@ -1,5 +1,6 @@
 .client {
     --container-max-width: 80rem;
+    --client-border-color: #a27709;
 
     min-height: 100vh;
     background: url('../images/minecraft/stone.png');
@@ -14,9 +15,17 @@
     margin: 0 auto;
 }
 
-.games {
-    --border-color: #a27709;
+.client__error {
+    border-bottom: 1px solid var(--client-border-color);
+}
 
+.client__error-back {
+    display: flex;
+    justify-content: center;
+    padding-top: 0.67em;
+}
+
+.games {
     background-color: rgba(0, 0, 0, 0.3);
     padding: 1em;
     box-shadow: 0 0 2px black;
@@ -29,7 +38,7 @@
     display: flex;
     justify-content: center;
     padding-bottom: 1em;
-    border-bottom: 6px double var(--border-color);
+    border-bottom: 6px double var(--client-border-color);
     margin-bottom: 1em;
 }
 
@@ -37,7 +46,7 @@
 .games__game-header {
     display: flex;
     padding: 0.67em 0.33em;
-    border-bottom: 1px double var(--border-color);
+    border-bottom: 1px double var(--client-border-color);
 }
 
 .games__game {

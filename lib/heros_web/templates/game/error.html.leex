@@ -1,2 +1,9 @@
-<div><%= @error %></div>
-<%= link "retour", to: Routes.games_path(@socket, :index) %>
+<div class="client">
+  <%= live_render(@socket, HerosWeb.HeaderLive, id: "header", session: @session) %>
+  <div class="client__content">
+    <div class="client__error"><%= @error %></div>
+    <div class="client__error-back">
+      <%= link "retour", class: "button heros__button", to: Routes.games_path(@socket, :index) %>
+    </div>
+  </div>
+</div>
