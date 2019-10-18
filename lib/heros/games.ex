@@ -10,11 +10,15 @@ defmodule Heros.Games do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 
-  def list_joinable(server) do
-    GenServer.call(server, :list)
+  def list(games) do
+    GenServer.call(games, :list)
     |> Enum.map(fn {id, game} ->
       Map.put(Heros.Game.short(game), :id, id)
     end)
+  end
+
+  def list_joinable(games) do
+    list(games)
     |> Enum.filter(fn game ->
       game.is_public and game.stage == :lobby
     end)
@@ -25,8 +29,8 @@ defmodule Heros.Games do
 
   Returns `{:ok, pid}` if the bucket exists, `:error` otherwise.
   """
-  def lookup(server, id) do
-    GenServer.call(server, {:lookup, id})
+  def lookup(games, id) do
+    GenServer.call(games, {:lookup, id})
   end
 
   @doc """
@@ -34,14 +38,14 @@ defmodule Heros.Games do
 
   Returns the id.
   """
-  def create(server) do
+  def create(games) do
     id = UUID.uuid1(:hex)
-    :ok = GenServer.call(server, {:create, id})
+    :ok = GenServer.call(games, {:create, id})
     id
   end
 
-  def delete(server, id) do
-    GenServer.call(server, {:delete, id})
+  def delete(games, id) do
+    GenServer.call(games, {:delete, id})
   end
 
   def init(:ok) do

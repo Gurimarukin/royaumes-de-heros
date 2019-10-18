@@ -1,6 +1,7 @@
 defmodule Heros.Game.User do
   defstruct connected_views: MapSet.new(),
-            user_name: nil
+            user_name: nil,
+            last_seen: nil
 
   @behaviour Access
 

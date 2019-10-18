@@ -64,19 +64,9 @@ defmodule Heros.Game.Lobby do
   def on_update(response) do
     Utils.map_call_response(
       response,
-      &(remove_disconnected_users(&1)
-        |> update_admin()
+      &(update_admin(&1)
         |> update_is_ready())
     )
-  end
-
-  defp remove_disconnected_users(game) do
-    users =
-      Enum.reduce(game.users, game.users, fn {id, user}, users ->
-        if MapSet.size(user.connected_views) == 0, do: Map.delete(users, id), else: users
-      end)
-
-    put_in(game.users, users)
   end
 
   defp update_admin(game) do
