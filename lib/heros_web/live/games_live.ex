@@ -24,6 +24,6 @@ defmodule HerosWeb.GamesLive do
   end
 
   defp get_games(socket) do
-    assign(socket, games: Heros.Games.list(Heros.Games))
+    assign(socket, games: Heros.Games.list_joinable(Heros.Games))
   end
 end

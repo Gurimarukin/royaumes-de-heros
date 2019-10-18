@@ -30,13 +30,6 @@ defmodule Heros.Game do
     module_for_current_stage(game.stage).projection_for_session(session_id, game)
   end
 
-  def stage_label(stage) do
-    case stage do
-      :lobby -> "salon"
-      :started -> "en jeu"
-    end
-  end
-
   #  Client
   def start_link(opts) do
     GenServer.start_link(__MODULE__, :ok, opts)

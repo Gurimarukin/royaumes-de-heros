@@ -1,36 +1,32 @@
-<div>
+<div class="client">
   <%= live_render(@socket, HerosWeb.HeaderLive, id: "header", session: @session) %>
-
-  <center>
-    <button phx-click="create_game">Créer une partie</button>
-  </center>
-
-  <hr>
-
-  <%= if length(@games) == 0 do %>
-    <center>Pas de partie en cours.</center>
-  <% else %>
-    <table>
-      <tr>
-        <th>nom</th>
-        <th>joueurs</th>
-        <th>visibilité</th>
-        <th>phase</th>
-        <th></th>
-      </tr>
-      <%= for game <- @games do %>
+  <div class="client__content games">
+    <div class="games__nav">
+      <button class="heros__button" phx-click="create_game">Créer une partie</button>
+    </div>
+    <%= if length(@games) == 0 do %>
+      <center>Pas de partie en cours.</center>
+    <% else %>
+      <table>
         <tr>
-          <td><%= game.name %></td>
-          <td><%= game.n_players %> / <%= game.max_players %></td>
-          <td><%= if game.is_public, do: "publique", else: "privée" %></td>
-          <td><%= Heros.Game.stage_label(game.stage) %></td>
-          <td>
-            <%= if game.is_public and game.stage == :lobby do
-              link "rejoindre", to: Routes.game_path(@socket, :show, game.id)
-            end %>
-          </td>
+          <th>partie</th>
+          <th>joueurs</th>
+          <th class="games__th-hidden"><i class="fas fa-sign-in-alt"></i></th>
         </tr>
-      <% end %>
-    </table>
-  <% end %>
+        <%= for game <- @games do %>
+          <tr>
+            <td><%= game.name %></td>
+            <td><%= game.n_players %> / <%= game.max_players %></td>
+            <td>
+              <%= if game.is_public and game.stage == :lobby do %>
+                <%= link to: Routes.game_path(@socket, :show, game.id) do %>
+                  <i class="fas fa-sign-in-alt"></i>
+                <%= end %>
+              <%= end %>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    <% end %>
+  </div>
 </div>

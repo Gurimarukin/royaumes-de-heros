@@ -2,10 +2,6 @@
     --match-height: 100vh;
     --match-width: 100vw;
 
-    --button-color: #ffffff;
-    --button-color-bg: #0069d9;
-    --button-color-bg-hover: #606c76;
-
     --card-width: 4.47vw; /* 298px */
     --card-height: calc(417 / 298 * var(--card-width)); /* 417px */
     --card-margin: calc(0.06 * var(--card-width));
@@ -68,40 +64,6 @@
     border: var(--fight-zone-border-width) solid var(--fight-zone-border-color);
     border-radius: var(--fight-zone-border-radius);
     box-shadow: 0 0 8px black;
-}
-
-.match__button {
-    background-color: var(--button-color-bg);
-    border: 0.1em solid var(--button-color-bg);
-    border-radius: 0.3em;
-    color: var(--button-color);
-    font-size: 0.75em;
-    height: auto;
-    font-weight: 500;
-    letter-spacing: inherit;
-    line-height: inherit;
-    margin-bottom: 0;
-    padding: 0.5em 0.8em;
-}
-
-.match__button:focus,
-.match__button:hover {
-    background-color: var(--button-color-bg-hover);
-    border-color: var(--button-color-bg-hover);
-    color: var(--button-color);
-}
-
-.match__button--outline {
-    background-color: transparent;
-    border-color: var(--button-color-bg);
-    color: var(--button-color-bg);
-}
-
-.match__button--outline:focus,
-.match__button--outline:hover {
-    background-color: transparent;
-    border-color: var(--button-color-bg-hover);
-    color: var(--button-color-bg-hover);
 }
 
 .match__market {

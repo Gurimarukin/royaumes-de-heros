@@ -1,0 +1,36 @@
+.client {
+    --container-max-width: 80rem;
+
+    min-height: 100vh;
+    background: url('../images/minecraft/stone.png');
+    background: url('../images/minecraft/coal_block.png');
+    background: url('../images/wool_colored_black.png');
+    background: url('../images/quartz_block_bottom.png');
+}
+
+.client__content {
+    padding: 1em 0;
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+}
+
+.games {
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 1em;
+    box-shadow: 0 0 2px black;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    color: white;
+}
+
+.games__nav {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 1em;
+    border-bottom: 6px double #a27709;
+    margin-bottom: 1em;
+}
+
+.games__th-hidden > * {
+    visibility: hidden;
+}

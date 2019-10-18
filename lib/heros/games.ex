@@ -10,10 +10,13 @@ defmodule Heros.Games do
     GenServer.start_link(__MODULE__, :ok, opts)
   end
 
-  def list(server) do
+  def list_joinable(server) do
     GenServer.call(server, :list)
     |> Enum.map(fn {id, game} ->
       Map.put(Heros.Game.short(game), :id, id)
+    end)
+    |> Enum.filter(fn game ->
+      game.is_public and game.stage == :lobby
     end)
   end
 
