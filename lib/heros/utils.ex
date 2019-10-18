@@ -55,7 +55,7 @@ defmodule Heros.Utils do
 
     Task.start(fn ->
       Process.sleep(time)
-      GenServer.call(slef, {:update, update})
+      if Process.alive?(slef), do: GenServer.call(slef, {:update, update})
     end)
   end
 end

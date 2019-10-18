@@ -1,6 +1,8 @@
 defmodule Heros.Game do
   use GenServer, restart: :temporary
 
+  require Logger
+
   alias Heros.{Game, Utils}
 
   defstruct users: %{},
@@ -122,7 +124,10 @@ defmodule Heros.Game do
           end)
 
         if MapSet.size(game.users[id].connected_views) == 0 do
-          game.users[id].user_name |> IO.inspect(label: "no more connections")
+          Logger.debug(
+            ~s"Game #{game.lobby.name}: no more connections for #{game.users[id].user_name}"
+          )
+
           Utils.update_self_after(10000, {:check_reconnected, id})
         end
 
@@ -141,10 +146,10 @@ defmodule Heros.Game do
       user ->
         game =
           if System.system_time(:millisecond) >= user.last_seen + 10000 do
-            user.user_name |> IO.inspect(label: "disconnected")
+            Logger.debug(~s"Game #{game.lobby.name}: #{user.user_name} disconnected")
             update_in(game.users, &Map.delete(&1, id_user))
           else
-            user.user_name |> IO.inspect(label: "reconnected in time")
+            Logger.debug(~s"Game #{game.lobby.name}: #{user.user_name} reconnected in time")
             game
           end
 
@@ -191,7 +196,7 @@ defmodule Heros.Game do
           last_seen: System.system_time(:millisecond)
         })
 
-      session.user_name |> IO.inspect(label: "joined")
+      Logger.debug(~s"Game #{game.lobby.name}: #{session.user_name} joined")
 
       with_pid_monitored(game, session.id, pid)
     else
@@ -219,7 +224,7 @@ defmodule Heros.Game do
 
   defp player_leave(game, id_user, user) do
     Enum.map(user.connected_views, fn pid -> send(pid, :leave) end)
-    user.user_name |> IO.inspect(label: "left")
+    Logger.debug(~s"Game #{game.lobby.name}: #{user.user_name} left")
 
     stop_if_no_users({:reply, :ok, update_in(game.users, &Map.delete(&1, id_user))})
   end
