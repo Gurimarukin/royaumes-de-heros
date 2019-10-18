@@ -32,14 +32,12 @@ defmodule Heros.Game.Match do
     |> put_in([:match, :gems], Card.get_gems())
     |> put_in([:match, :market], List.duplicate(nil, 5))
     |> put_in([:match, :market_deck], Card.get_market())
-    |> set_current_player(List.first(Map.keys(game.users)))
+    |> set_current_player(List.first(game.users) |> elem(0))
     |> put_in([:stage], :started)
   end
 
   defp init_players(game) do
-    players =
-      game.users
-      |> Enum.map(fn {session_id, _session} -> {session_id, Player.init()} end)
+    players = Enum.map(game.users, fn {session_id, _session} -> {session_id, Player.init()} end)
 
     put_in(game.match.players, players)
   end

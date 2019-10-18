@@ -71,8 +71,8 @@ defmodule Heros.Game.Lobby do
 
   defp update_admin(game) do
     admin =
-      case game.users[game.lobby.admin] do
-        nil -> List.first(Map.keys(game.users))
+      case Utils.keyfind(game.users, game.lobby.admin) do
+        nil -> List.first(game.users) |> elem(0)
         _ -> game.lobby.admin
       end
 
@@ -80,6 +80,6 @@ defmodule Heros.Game.Lobby do
   end
 
   defp update_is_ready(game) do
-    put_in(game.lobby.is_ready, map_size(game.users) >= 2)
+    put_in(game.lobby.is_ready, length(game.users) >= 2)
   end
 end

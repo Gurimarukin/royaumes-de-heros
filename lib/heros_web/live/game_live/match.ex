@@ -43,7 +43,7 @@ defmodule HerosWeb.GameLive.Match do
         {id,
          %{
            index: i,
-           name: Map.get(assigns.game.users, id)[:user_name],
+           name: Utils.keyfind(assigns.game.users, id)[:user_name],
            is_current: Game.Match.is_current_player(assigns.game.match, id),
            hp: player.hp,
            max_hp: player.max_hp,
