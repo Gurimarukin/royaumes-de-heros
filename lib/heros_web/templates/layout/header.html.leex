@@ -2,6 +2,10 @@
   <div class="header__nav">
     <%= link "Royaumes de Héros", to: Routes.games_path(@socket, :index) %>
     <div class="header__pseudo">
+      <div phx-hook="playerName"
+           phx-value-name="<%= @user_name %>"
+           phx-value-route="<%= Routes.name_path(@socket, :rename) %>"
+           phx-value-csrf-token="<%= Plug.CSRFProtection.get_csrf_token() %>"></div>
       Pseudo :
       <%= if @edit_name do %>
         <input phx-blur="submit_name" phx-keyup="keyup_name" phx-hook="autofocus"
@@ -13,7 +17,6 @@
           <i class="fas fa-pencil-alt header__edit-icon"></i>
         </span>
       <% end %>
-      <div phx-hook="playerName" phx-value-name="<%= @user_name %>"></div>
     </div>
   </div>
 </div>

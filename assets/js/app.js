@@ -28,6 +28,34 @@ const hooks = {
         }
     },
 
+    playerName: {
+        getValue(field) {
+            return this.el.getAttribute(this.__view.binding('value-' + field))
+        },
+        mounted() {
+            this.name = this.getValue('name')
+        },
+        updated() {
+            const newValue = this.getValue('name')
+            if (this.name !== newValue) {
+                this.name = newValue
+
+                const route = this.getValue('route')
+                const csrfToken = this.getValue('csrf-token')
+
+                fetch(location.origin + route, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify({ name: newValue })
+                })
+            }
+        }
+    },
+
     fullscreenBtn: {
         mounted() {
             this.el.addEventListener('click', _ => {

@@ -14,13 +14,10 @@ defmodule HerosWeb.HeaderLive do
   end
 
   def handle_event("submit_name", %{"value" => name}, socket) do
-    name = String.trim(name)
-
     socket =
-      if String.length(name) > 0 do
-        assign(socket, user_name: name)
-      else
-        socket
+      case validate_name(name) do
+        {:ok, name} -> assign(socket, user_name: name)
+        :error -> socket
       end
 
     {:noreply, assign(socket, edit_name: false)}
@@ -36,5 +33,15 @@ defmodule HerosWeb.HeaderLive do
 
   def handle_event("keyup_name", _params, socket) do
     {:noreply, socket}
+  end
+
+  def validate_name(name) do
+    name = String.trim(name)
+
+    if String.length(name) > 0 do
+      {:ok, name}
+    else
+      :error
+    end
   end
 end

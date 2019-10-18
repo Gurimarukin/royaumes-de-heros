@@ -13,6 +13,8 @@ defmodule HerosWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+
+    post "/name", HerosWeb.NameController, :rename
   end
 
   scope "/", HerosWeb do
