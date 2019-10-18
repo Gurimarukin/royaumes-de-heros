@@ -6,6 +6,7 @@
 
 @import './header.css';
 @import './client.css';
+@import './lobby.css';
 @import './match.css';
 
 body {

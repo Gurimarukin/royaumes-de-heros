@@ -54,7 +54,10 @@ defmodule HerosWeb.GameLive.LobbyAdmin do
   end
 
   def handle_event("start", _params, socket) do
-    Game.Lobby.start(socket.assigns.game_pid)
+    if socket.assigns.game.is_ready do
+      Game.Lobby.start(socket.assigns.game_pid)
+    end
+
     {:noreply, socket}
   end
 
