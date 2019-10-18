@@ -15,6 +15,8 @@
 }
 
 .games {
+    --border-color: #a27709;
+
     background-color: rgba(0, 0, 0, 0.3);
     padding: 1em;
     box-shadow: 0 0 2px black;
@@ -27,10 +29,35 @@
     display: flex;
     justify-content: center;
     padding-bottom: 1em;
-    border-bottom: 6px double #a27709;
+    border-bottom: 6px double var(--border-color);
     margin-bottom: 1em;
 }
 
-.games__th-hidden > * {
-    visibility: hidden;
+.games__game,
+.games__game-header {
+    display: flex;
+    padding: 0.67em 0.33em;
+    border-bottom: 1px double var(--border-color);
+}
+
+.games__game {
+    color: inherit;
+}
+
+.games__game-header {
+    padding: 0 0.33em 0.67em;
+}
+
+.games__game:hover,
+.games__game:focus {
+    color: inherit;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.games__game-header {
+    font-weight: 500;
+}
+
+.games__game-name {
+    flex-grow: 1;
 }

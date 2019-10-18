@@ -7,26 +7,18 @@
     <%= if length(@games) == 0 do %>
       <center>Pas de partie en cours.</center>
     <% else %>
-      <table>
-        <tr>
-          <th>partie</th>
-          <th>joueurs</th>
-          <th class="games__th-hidden"><i class="fas fa-sign-in-alt"></i></th>
-        </tr>
+      <div class="games__list">
+        <div class="games__game-header">
+          <div class="games__game-name">Partie</div>
+          <div>Joueurs</div>
+        </div>
         <%= for game <- @games do %>
-          <tr>
-            <td><%= game.name %></td>
-            <td><%= game.n_players %> / <%= game.max_players %></td>
-            <td>
-              <%= if game.is_public and game.stage == :lobby do %>
-                <%= link to: Routes.game_path(@socket, :show, game.id) do %>
-                  <i class="fas fa-sign-in-alt"></i>
-                <%= end %>
-              <%= end %>
-            </td>
-          </tr>
+          <%= link class: "games__game", to: Routes.game_path(@socket, :show, game.id) do %>
+            <div class="games__game-name"><%= game.name %></div>
+            <div><%= game.n_players %> / <%= game.max_players %></div>
+          <%= end %>
         <% end %>
-      </table>
+      </div>
     <% end %>
   </div>
 </div>
