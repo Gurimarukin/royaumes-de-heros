@@ -56,6 +56,14 @@ const hooks = {
         }
     },
 
+    publicCheckbox: {
+        mounted() {
+            this.el.addEventListener('change', _ => {
+                this.pushEvent('toggle_public')
+            })
+        }
+    },
+
     fullscreenBtn: {
         mounted() {
             this.el.addEventListener('click', _ => {

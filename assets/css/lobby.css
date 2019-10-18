@@ -1,0 +1,93 @@
+.lobby {
+    background: url('../images/bg.jpg');
+    padding: 1em;
+    box-shadow: 0 0 2px black;
+    margin-top: 2em;
+    margin-bottom: 2em;
+    color: wheat;
+}
+
+.lobby__name-public {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.lobby__name-public,
+.lobby__n-players,
+.lobby__players {
+    margin-bottom: 0.67em;
+}
+
+.lobby__name {
+    display: flex;
+    align-items: center;
+    height: 2em;
+}
+
+.lobby__name-input,
+.lobby__name-span {
+    font-weight: 500;
+}
+
+.lobby__name-input {
+    margin: 0;
+    display: flex;
+    width: min-content;
+    font-size: inherit;
+    border: 1px solid wheat;
+    color: inherit;
+    padding: 0.33em;
+    background: transparent;
+    border-radius: 0.1em;
+}
+
+.lobby__name-span,
+.lobby__icon--name {
+    cursor: pointer;
+}
+
+.lobby__icon {
+    margin-left: 0.67em;
+}
+
+.lobby__public-label {
+    display: flex;
+    align-items: center;
+}
+
+.lobby__public-checkbox {
+    margin-left: 0.33em;
+    font-size: 1.5em;
+}
+
+.lobby__n-players {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.lobby__players {
+    border-top: 1px solid var(--client-border-color);
+}
+
+.lobby__players td {
+    border-bottom: 1px solid var(--client-border-color);
+}
+
+.lobby__ban {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.lobby__ban-btn,
+.lobby__ban-btn:hover,
+.lobby__ban-btn:focus,
+.lobby__ban-btn:disabled:hover,
+.lobby__ban-btn:disabled:focus {
+    font-size: 1.5em;
+    height: 1em;
+    font-weight: 500;
+    color: #a72424;
+    display: flex;
+}

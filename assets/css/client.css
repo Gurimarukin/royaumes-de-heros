@@ -3,14 +3,11 @@
     --client-border-color: #a27709;
 
     min-height: 100vh;
-    background: url('../images/minecraft/stone.png');
-    background: url('../images/minecraft/coal_block.png');
-    background: url('../images/wool_colored_black.png');
     background: url('../images/quartz_block_bottom.png');
 }
 
 .client__content {
-    padding: 1em 0;
+    padding: 2em 0;
     max-width: var(--container-max-width);
     margin: 0 auto;
 }
@@ -26,12 +23,11 @@
 }
 
 .games {
-    background-color: black;
     background: url('../images/bg.jpg');
     padding: 1em;
     box-shadow: 0 0 2px black;
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin-top: 2em;
+    margin-bottom: 2em;
     color: wheat;
 }
 

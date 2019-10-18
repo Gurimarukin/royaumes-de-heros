@@ -29,7 +29,6 @@
     display: flex;
     align-items: center;
     height: 1.8em;
-    /* background-color: white; */
 }
 
 .header__pseudo-input {
@@ -46,11 +45,12 @@
 }
 
 .header__pseudo-input,
-.header__pseudo-span {
-    margin-left: 0.33em;
-    cursor: pointer;
-}
-
+.header__pseudo-span,
 .header__edit-icon {
     margin-left: 0.33em;
+}
+
+.header__pseudo-span,
+.header__edit-icon {
+    cursor: pointer;
 }

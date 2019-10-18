@@ -4,6 +4,7 @@
 @import './phoenix.css';
 @import '../../deps/phoenix_live_view/assets/css/live_view.css';
 
+@import './buttons.css';
 @import './header.css';
 @import './client.css';
 @import './lobby.css';
@@ -17,43 +18,48 @@ table {
     margin-bottom: 0;
 }
 
-.heros__button {
-    --button-color: white;
-    --button-color-bg: darkgoldenrod;
-    --button-color-bg-hover: #916b08;
-
-    background-color: var(--button-color-bg);
-    border: 4px double var(--button-color-bg);
-    border-style: ridge groove groove ridge;
-    border-radius: 0;
-    color: var(--button-color);
-    font-size: 0.75em;
-    height: auto;
-    font-weight: 500;
-    letter-spacing: inherit;
-    line-height: inherit;
+label {
+    font-weight: inherit;
     margin-bottom: 0;
-    padding: 0.5em 0.8em;
-    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.heros__button:focus,
-.heros__button:hover {
-    background-color: var(--button-color-bg-hover);
-    border-color: var(--button-color-bg-hover);
-    color: var(--button-color);
+input[type='checkbox'],
+input[type='radio'] {
+    display: inline-block;
 }
 
-.heros__button--outline {
-    background-color: transparent;
-    border-style: groove ridge ridge groove;
-    border-color: var(--button-color-bg);
-    color: var(--button-color-bg);
+label.heros-checkbox {
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
-.heros__button--outline:focus,
-.heros__button--outline:hover {
-    background-color: transparent;
-    border-color: var(--button-color-bg-hover);
-    color: var(--button-color-bg-hover);
+label.heros-checkbox > input {
+    display: none;
+}
+
+label.heros-checkbox > .checkmark {
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 400;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+
+label.heros-checkbox > input:disabled ~ .checkmark {
+    color: dimgray;
+}
+
+label.heros-checkbox > .checkmark::before {
+    content: '\f0c8';
+}
+
+label.heros-checkbox > input:checked ~ .checkmark::before {
+    content: '\f14a';
 }

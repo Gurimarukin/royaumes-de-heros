@@ -1,22 +1,36 @@
-<div>
+<div class="client">
   <%= live_render(@socket, HerosWeb.HeaderLive, id: "header", session: @session) %>
-
-  <h1><%= @game.name %></h1>
-
-  <label>Public : <input type="checkbox" <%= if @game.is_public, do: "checked" %> disabled></label>
-
-  <div><%= length(@game.players) %> / <%= @game.max_players %> joueurs</div>
-
-  <table>
-    <%= for player <- @game.players do %>
-      <tr>
-        <td><%= if player.is_admin, do: "admin" %></td>
-        <td><%= player.name %></td>
-      </tr>
-    <% end %>
-  </table>
-
-  <center>
-    <button phx-click="leave">quitter</button>
-  </center>
+  <div class="client__content lobby">
+    <div class="lobby__name-public">
+      <div class="lobby__name">
+        <span class="lobby__name-span">
+          <%= @game.name %>
+        </span>
+      </div>
+      <label class="heros-checkbox lobby__public-label">
+        Public :
+        <input type="checkbox" <%= if @game.is_public, do: "checked" %> disabled>
+        <div class="checkmark lobby__public-checkbox"></div>
+      </label>
+    </div>
+    <div class="lobby__n-players">
+      <%= length(@game.players) %> / <%= @game.max_players %>
+      <i class="fas fa-users lobby__icon"></i>
+    </div>
+    <table class="lobby__players">
+      <%= for player <- @game.players do %>
+        <tr>
+          <td>
+            <%= if player.is_admin do %>
+              <i class="fas fa-user-cog" title="Admin"></i>
+            <% end %>
+          </td>
+          <td><%= player.name %></td>
+        </tr>
+      <% end %>
+    </table>
+    <center>
+      <button class="heros-button" phx-click="leave">quitter</button>
+    </center>
+  </div>
 </div>

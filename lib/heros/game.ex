@@ -122,7 +122,7 @@ defmodule Heros.Game do
         game =
           update_in(game.users[id], fn user ->
             update_in(user.connected_views, &MapSet.delete(&1, pid))
-            |> put_in([:last_seen], System.system_time(:second))
+            |> put_in([:last_seen], System.system_time(:millisecond))
           end)
 
         if MapSet.size(game.users[id].connected_views) == 0 do
@@ -144,7 +144,7 @@ defmodule Heros.Game do
 
       user ->
         game =
-          if System.system_time(:second) >= user.last_seen + 10 do
+          if System.system_time(:millisecond) >= user.last_seen + 10000 do
             user.user_name |> IO.inspect(label: "disconnected")
             update_in(game.users, &Map.delete(&1, id_user))
           else
@@ -192,7 +192,7 @@ defmodule Heros.Game do
         put_in(game.users[session.id], %Game.User{
           connected_views: MapSet.new([pid]),
           user_name: session.user_name,
-          last_seen: System.system_time(:second)
+          last_seen: System.system_time(:millisecond)
         })
 
       session.user_name |> IO.inspect(label: "joined")
@@ -209,7 +209,7 @@ defmodule Heros.Game do
         game.users[session_id],
         fn user ->
           update_in(user.connected_views, &MapSet.put(&1, pid))
-          |> put_in([:last_seen], System.system_time(:second))
+          |> put_in([:last_seen], System.system_time(:millisecond))
         end
       )
 

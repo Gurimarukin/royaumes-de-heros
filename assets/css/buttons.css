@@ -1,0 +1,63 @@
+.button-no-style,
+.button-no-style:hover,
+.button-no-style:focus,
+.button-no-style:disabled:hover {
+    height: auto;
+    letter-spacing: inherit;
+    line-height: inherit;
+    font-weight: inherit;
+    margin-bottom: 0;
+    border: none;
+    border-radius: 0;
+    font-size: inherit;
+    padding: 0;
+    background: none;
+    color: inherit;
+}
+
+.heros-button {
+    --button-color: white;
+    --button-color-bg: darkgoldenrod;
+    --button-color-bg-hover: #916b08;
+
+    background-color: var(--button-color-bg);
+    border: 4px double var(--button-color-bg);
+    border-style: ridge groove groove ridge;
+    border-radius: 0;
+    color: var(--button-color);
+    font-size: 0.75em;
+    height: auto;
+    font-weight: 500;
+    letter-spacing: inherit;
+    line-height: inherit;
+    margin-bottom: 0;
+    padding: 0.5em 0.8em;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.heros-button:disabled:hover,
+.heros-button:disabled:focus {
+    background-color: var(--button-color-bg);
+    border-color: var(--button-color-bg);
+}
+
+.heros-button:focus,
+.heros-button:hover {
+    background-color: var(--button-color-bg-hover);
+    border-color: var(--button-color-bg-hover);
+    color: var(--button-color);
+}
+
+.heros-button--outline {
+    background-color: transparent;
+    border-style: groove ridge ridge groove;
+    border-color: var(--button-color-bg);
+    color: var(--button-color-bg);
+}
+
+.heros-button--outline:focus,
+.heros-button--outline:hover {
+    background-color: transparent;
+    border-color: var(--button-color-bg-hover);
+    color: var(--button-color-bg-hover);
+}

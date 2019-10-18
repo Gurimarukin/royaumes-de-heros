@@ -2,7 +2,7 @@
   <%= live_render(@socket, HerosWeb.HeaderLive, id: "header", session: @session) %>
   <div class="client__content games">
     <div class="games__nav">
-      <button class="heros__button" phx-click="create_game">Créer une partie</button>
+      <button class="heros-button" phx-click="create_game">Créer une partie</button>
     </div>
     <%= if length(@games) == 0 do %>
       <center>Pas de partie en cours.</center>

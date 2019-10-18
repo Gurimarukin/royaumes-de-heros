@@ -1,29 +1,54 @@
 <div class="client">
   <%= live_render(@socket, HerosWeb.HeaderLive, id: "header", session: @session) %>
-  <div class="client__content game">
-    <%= if @edit_name do %>
-      <input phx-blur="submit_name" phx-keyup="keyup_name" phx-hook="autofocus" value="<%= @game.name %>">
-    <% else %>
-      <h1 phx-click="edit_name"><%= @game.name %></h1>
-    <% end %>
-    <label>Public : <input type="checkbox" phx-click="toggle_public" <%= if @game.is_public, do: "checked" %>></label>
-    <div><%= length(@game.players) %> / <%= @game.max_players %> joueurs</div>
-    <table>
+  <div class="client__content lobby">
+    <div class="lobby__name-public">
+      <div class="lobby__name">
+        <%= if @edit_name do %>
+          <input phx-blur="submit_name" phx-keyup="keyup_name" phx-hook="autofocus"
+                 class="lobby__name-input" value="<%= @game.name %>">
+          <i class="fas fa-check lobby__icon lobby__icon--name"></i>
+        <% else %>
+          <span class="lobby__name-span" phx-click="edit_name">
+            <%= @game.name %>
+            <i class="fas fa-pencil-alt lobby__icon lobby__icon--name"></i>
+          </span>
+        <% end %>
+      </div>
+      <label class="heros-checkbox lobby__public-label">
+        Public :
+        <input phx-hook="publicCheckbox" type="checkbox" <%= if @game.is_public, do: "checked" %>>
+        <div class="checkmark lobby__public-checkbox"></div>
+      </label>
+    </div>
+    <div class="lobby__n-players">
+      <%= length(@game.players) %> / <%= @game.max_players %>
+      <i class="fas fa-users lobby__icon"></i>
+    </div>
+    <table class="lobby__players">
       <%= for player <- @game.players do %>
         <tr>
-          <td><%= if player.is_admin, do: "admin" %></td>
-            <td><%= player.name %></td>
-            <td>
+          <td>
+            <%= if player.is_admin do %>
+              <i class="fas fa-user-cog" title="Admin"></i>
+            <% end %>
+          </td>
+          <td><%= player.name %></td>
+          <td>
+            <div class="lobby__ban">
               <%= if @session.id != player.id do %>
-                <button phx-click="kick" phx-value-id=<%= player.id %>>exclure</button>
+                <button phx-click="kick" phx-value-id="<%= player.id %>"
+                        class="button-no-style lobby__ban-btn" title="Exclure">
+                  <i class="fas fa-ban"></i>
+                </button>
               <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </table>
-      <center>
-        <button phx-click="start" <%= if not @game.is_ready, do: "disabled" %>>commencer</button>
-        <button phx-click="leave">quitter</button>
-      </center>
-    </div>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+    <center>
+      <button class="heros-button" phx-click="start" <%= if not @game.is_ready, do: "disabled" %>>commencer</button>
+      <button class="heros-button" phx-click="leave">quitter</button>
+    </center>
   </div>
+</div>
