@@ -19,7 +19,8 @@ defmodule HerosWeb.GamesLive do
   end
 
   def handle_event("create_game", _path, socket) do
-    id = Heros.Games.create(Heros.Games)
+    name = ~s"Partie de #{socket.assigns.session.user_name}"
+    id = Heros.Games.create(Heros.Games, name)
     {:noreply, redirect(socket, to: HerosWeb.Router.Helpers.game_path(socket, :show, id))}
   end
 

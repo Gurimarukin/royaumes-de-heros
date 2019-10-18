@@ -31,8 +31,8 @@ defmodule Heros.Game do
   end
 
   #  Client
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, :ok, opts)
+  def start_link(name) do
+    GenServer.start_link(__MODULE__, name, [])
   end
 
   def short(game) do
@@ -47,14 +47,10 @@ defmodule Heros.Game do
     GenServer.call(game, {:update, {:leave, session_id}})
   end
 
-  def player_rename(game, session_id, name) do
-    GenServer.call(game, {:update, {:user_rename, session_id, name}})
-  end
-
   # Server
   @impl true
-  def init(:ok) do
-    {:ok, %Game{}}
+  def init(game_name) do
+    {:ok, put_in(%Game{}.lobby.name, game_name)}
   end
 
   @impl true

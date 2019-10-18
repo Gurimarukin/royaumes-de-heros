@@ -38,9 +38,9 @@ defmodule Heros.Games do
 
   Returns the id.
   """
-  def create(games) do
+  def create(games, game_name) do
     id = UUID.uuid1(:hex)
-    :ok = GenServer.call(games, {:create, id})
+    :ok = GenServer.call(games, {:create, id, game_name})
     id
   end
 
@@ -62,11 +62,11 @@ defmodule Heros.Games do
     {:reply, Map.fetch(ids, id), {ids, refs}}
   end
 
-  def handle_call({:create, id}, _from, {ids, refs}) do
+  def handle_call({:create, id, game_name}, _from, {ids, refs}) do
     if Map.has_key?(ids, id) do
       {:reply, {:error, :already_exists}, {ids, refs}}
     else
-      {:ok, game} = DynamicSupervisor.start_child(Heros.GameSupervisor, Heros.Game)
+      {:ok, game} = DynamicSupervisor.start_child(Heros.GameSupervisor, {Heros.Game, game_name})
       ref = Process.monitor(game)
 
       ids = Map.put(ids, id, game)

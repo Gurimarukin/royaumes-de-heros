@@ -1,5 +1,5 @@
 defmodule Heros.Game.Lobby do
-  defstruct name: "Nouvelle partie",
+  defstruct name: nil,
             max_players: 4,
             is_public: false,
             is_ready: false,
