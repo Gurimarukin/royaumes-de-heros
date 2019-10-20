@@ -244,27 +244,34 @@
     width: var(--card-width);
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: center;
     padding: var(--resource-padding-top);
 }
 
-.player__gold::before,
-.player__attack::before {
-    content: '';
+.player__gold {
+    background-color: goldenrod;
+}
+
+.player__attack {
+    background-color: darkred;
+}
+
+.player__gold > svg,
+.player__attack > svg {
     display: block;
-    height: 1.1em;
+    width: 1em;
+    height: 1em;
     margin-right: 0.33em;
-    background-size: 100% 100%;
 }
 
-.player__gold::before {
-    background-image: url('https://www.herorealms.com/wp-content/uploads/2017/12/gold0.jpg');
-    width: 1.1em;
+.player__gold > svg .fa-primary,
+.player__attack > svg .fa-primary {
+    fill: #fff;
 }
 
-.player__attack::before {
-    background-image: url('https://www.herorealms.com/wp-content/uploads/2017/12/combat0.jpg');
-    width: 1.21em;
+.player__gold > svg .fa-secondary,
+.player__attack > svg .fa-secondary {
+    fill: #ddd;
 }
 
 .player__cards {
