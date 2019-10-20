@@ -49,6 +49,10 @@ defmodule Heros.Game do
     GenServer.call(game, {:update, {:leave, session_id}})
   end
 
+  def user_rename(game, id_user, new_name) do
+    GenServer.call(game, {:update, {:user_rename, id_user, new_name}})
+  end
+
   # Server
   @impl true
   def init(game_name) do

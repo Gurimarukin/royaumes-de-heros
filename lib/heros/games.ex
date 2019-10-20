@@ -48,6 +48,11 @@ defmodule Heros.Games do
     GenServer.call(games, {:delete, id})
   end
 
+  def user_rename(games, id_user, new_name) do
+    GenServer.call(games, :list)
+    |> Enum.map(fn {_id, game} -> Heros.Game.user_rename(game, id_user, new_name) end)
+  end
+
   def init(:ok) do
     ids = %{}
     refs = %{}
