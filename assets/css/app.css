@@ -65,7 +65,7 @@ label.heros-checkbox > input:disabled ~ .checkmark {
     color: dimgray;
 }
 
-label.heros-checkbox > .checkmark::before {
+label.heros-checkbox > input ~ .checkmark::before {
     content: '\f0c8';
 }
 

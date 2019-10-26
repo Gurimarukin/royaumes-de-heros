@@ -56,14 +56,6 @@ const hooks = {
         }
     },
 
-    publicCheckbox: {
-        mounted() {
-            this.el.addEventListener('change', _ => {
-                this.pushEvent('toggle_public')
-            })
-        }
-    },
-
     fullscreenBtn: {
         mounted() {
             this.el.addEventListener('click', _ => {
@@ -123,3 +115,10 @@ const hooks = {
 
 const liveSocket = new LiveSocket('/live', Socket, { hooks })
 liveSocket.connect()
+
+window.togglePublic = target => {
+    const view = Object.values(liveSocket.views).find(
+        _ => _.view === 'GameLive'
+    )
+    view.pushEvent('change', target, 'toggle_public', {})
+}
