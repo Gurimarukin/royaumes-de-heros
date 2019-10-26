@@ -1,8 +1,9 @@
 /* This file is for your main application css. */
 
-@import './fa.min.css';
 @import './phoenix.css';
 @import '../../deps/phoenix_live_view/assets/css/live_view.css';
+@import './fa.min.css';
+@import './nunito.css';
 
 @import './buttons.css';
 @import './header.css';
@@ -12,20 +13,25 @@
 
 body {
     margin: 0;
+    font-family: 'Nunito';
+    letter-spacing: -0.01em;
 }
 
 table {
-    margin-bottom: 0;
+    border-spacing: 0;
+    width: 100%;
 }
 
 label {
-    font-weight: inherit;
     margin-bottom: 0;
 }
 
+button,
 input[type='checkbox'],
 input[type='radio'] {
     display: inline-block;
+    font-family: inherit;
+    cursor: pointer;
 }
 
 label.heros-checkbox {

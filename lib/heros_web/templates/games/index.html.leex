@@ -5,7 +5,7 @@
       <button class="heros-button" phx-click="create_game">Créer une partie</button>
     </div>
     <%= if length(@games) == 0 do %>
-      <center>Pas de partie en cours.</center>
+      <div class="games__no-game">Pas de partie en cours.</div>
     <% else %>
       <div class="games__list">
         <div class="games__game-header">
@@ -16,7 +16,7 @@
           <%= link class: "games__game", to: Routes.game_path(@socket, :show, game.id) do %>
             <div class="games__game-name"><%= game.name %></div>
             <div><%= game.n_players %> / <%= game.max_players %></div>
-          <%= end %>
+          <% end %>
         <% end %>
       </div>
     <% end %>

@@ -1,5 +1,5 @@
 .client {
-    --container-max-width: 80rem;
+    --container-max-width: 1100px;
     --client-border-color: #a27709;
 
     min-height: 100vh;
@@ -37,6 +37,10 @@
     padding-bottom: 1em;
     border-bottom: 6px double var(--client-border-color);
     margin-bottom: 1em;
+}
+
+.games__no-game {
+    text-align: center;
 }
 
 .games__game,

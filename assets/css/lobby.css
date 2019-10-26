@@ -68,16 +68,25 @@
 }
 
 .lobby__players {
+    width: 100%;
     border-top: 1px solid var(--client-border-color);
 }
 
-.lobby__players td {
+.lobby__player {
+    display: flex;
+    align-items: center;
+    width: 100%;
     border-bottom: 1px solid var(--client-border-color);
 }
 
-.lobby__ban {
-    display: flex;
-    justify-content: flex-end;
+.lobby__is-admin {
+    width: 2em;
+}
+
+.lobby__name {
+    flex-grow: 1;
+    padding: 0.7em 1.4em 0.8em;
+    height: 2.5em;
 }
 
 .lobby__ban-btn,
@@ -85,9 +94,16 @@
 .lobby__ban-btn:focus,
 .lobby__ban-btn:disabled:hover,
 .lobby__ban-btn:disabled:focus {
+    border: none;
+    padding: 0;
+    background: none;
     font-size: 1.5em;
     height: 1em;
     font-weight: 500;
     color: #a72424;
     display: flex;
+}
+
+.lobby__btns {
+    text-align: center;
 }
