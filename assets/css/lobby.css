@@ -83,10 +83,9 @@
     width: 2em;
 }
 
-.lobby__name {
+.lobby__player-name {
     flex-grow: 1;
     padding: 0.7em 1.4em 0.8em;
-    height: 2.5em;
 }
 
 .lobby__ban-btn,

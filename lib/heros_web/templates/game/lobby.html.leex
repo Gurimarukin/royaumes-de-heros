@@ -19,7 +19,7 @@
     </div>
     <table class="lobby__players">
       <%= for player <- @game.players do %>
-        <tr class="lobby__player">
+        <tr class="lobby__player-name">
           <td class="lobby__is-admin">
             <%= if player.is_admin do %>
               <i class="fas fa-user-cog" title="Admin"></i>
