@@ -135,7 +135,8 @@ defmodule HerosWeb.TestGameLive do
             nil -> nil
             card -> %{id: id, image: card.card.image, class: card.class}
           end
-        end)
+        end),
+      is_current: true
     }
 
     HerosWeb.GameView.render("match.html", assigns)
