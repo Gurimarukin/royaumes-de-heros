@@ -72,8 +72,14 @@ defmodule Heros.Game.Lobby do
   defp update_admin(game) do
     admin =
       case Utils.keyfind(game.users, game.lobby.admin) do
-        nil -> List.first(game.users) |> elem(0)
-        _ -> game.lobby.admin
+        nil ->
+          case List.first(game.users) do
+            nil -> nil
+            first -> elem(first, 0)
+          end
+
+        _ ->
+          game.lobby.admin
       end
 
     put_in(game.lobby.admin, admin)
