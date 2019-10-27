@@ -1,3 +1,13 @@
+.match-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background-image: url('../images/planks_oak.png');
+}
+
 .match {
     --card-margin: calc(0.06 * var(--card-width));
     --card-border-radius: calc(0.06 * var(--card-width));
@@ -42,8 +52,6 @@
     width: var(--match-width);
     font-size: calc(0.2 * var(--card-width));
     line-height: 1;
-    overflow: hidden;
-    background-image: url('../images/planks_oak.png');
 }
 
 .match::before {
@@ -53,7 +61,6 @@
     border: var(--fight-zone-border-width) solid var(--fight-zone-border-color);
     border-radius: var(--fight-zone-border-radius);
     box-shadow: var(--box-shadow-fight-zone);
-    display: none;
 }
 
 .match__market {
@@ -279,7 +286,6 @@
     height: var(--card-height);
     border-radius: var(--card-border-radius);
     transition: top 1s, left 1s;
-    display: none;
 }
 
 .player__menu {

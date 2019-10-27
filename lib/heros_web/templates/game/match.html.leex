@@ -1,43 +1,45 @@
-<div class="match match--<%= @n_players %>-players">
-  <%= for {id, player} <- @players do %>
-    <div class="<%= HerosWeb.GameLive.Match.player_classes(player) %>">
-      <div class="player__fight-zone">
-        <div phx-click="attack_hero" phx-value-id="<%= id %>"
+<div class="match-container">
+  <div class="match match--<%= @n_players %>-players">
+    <%= for {id, player} <- @players do %>
+      <div class="<%= HerosWeb.GameLive.Match.player_classes(player) %>">
+        <div class="player__fight-zone">
+          <div phx-click="attack_hero" phx-value-id="<%= id %>"
              class="player__hp player__rotate" title="<%= player.hp %> / <%= player.max_hp %>">
-          <div class="player__hp-bis"><%= player.hp %></div>
-          <div class="player__name"><%= player.name %></div>
-        </div>
-      </div>
-      <div class="player__bar">
-        <div class="player__bar-left">
-          <div class="player__cards-pile"></div>
-          <div class="player__resources">
-            <div class="player__resource player__attack player__rotate">
-              <%= HerosWeb.GameLive.Svg.attack(assigns) %>
-              <%= player.attack %>
-            </div>
-            <div class="player__resource player__gold player__rotate">
-              <%= HerosWeb.GameLive.Svg.gold(assigns) %>
-              <%= player.gold %>
-            </div>
+            <div class="player__hp-bis"><%= player.hp %></div>
+            <div class="player__name"><%= player.name %></div>
           </div>
         </div>
-        <div class="player__cards-pile"></div>
+        <div class="player__bar">
+          <div class="player__bar-left">
+            <div class="player__cards-pile"></div>
+            <div class="player__resources">
+              <div class="player__resource player__attack player__rotate">
+                <%= HerosWeb.GameLive.Svg.attack(assigns) %>
+                <%= player.attack %>
+              </div>
+              <div class="player__resource player__gold player__rotate">
+                <%= HerosWeb.GameLive.Svg.gold(assigns) %>
+                <%= player.gold %>
+              </div>
+            </div>
+          </div>
+          <div class="player__cards-pile"></div>
+        </div>
       </div>
-    </div>
-  <% end %>
-  <div class="match__market"></div>
-  <div phx-update="ignore" id="cards"></div>
-  <div phx-hook="cards" phx-value-cards="<%= Phoenix.json_library().encode!(@cards) %>"></div>
-  <div class="player__menu">
-    <button phx-hook="fullscreenBtn"
+    <% end %>
+    <div class="match__market"></div>
+    <div phx-update="ignore" id="cards"></div>
+    <div phx-hook="cards" phx-value-cards="<%= Phoenix.json_library().encode!(@cards) %>"></div>
+    <div class="player__menu">
+      <button phx-hook="fullscreenBtn"
             class="heros-button heros-button--outline">
-      Plein écran
-    </button>
-    <button phx-click="end_turn" phx-throttle="500"
+        Plein écran
+      </button>
+      <button phx-click="end_turn" phx-throttle="500"
             class="heros-button heros-button--outline heros-button--end-turn"
             <%= if not Utils.keyfind(@players, "player1").is_current, do: "disabled" %>>
-      Fin du tour
-    </button>
+        Fin du tour
+      </button>
+    </div>
   </div>
 </div>
