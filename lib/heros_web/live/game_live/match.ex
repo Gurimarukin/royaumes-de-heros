@@ -175,21 +175,21 @@ defmodule HerosWeb.GameLive.Match do
   end
 
   @impl Stage
-  def handle_event("card-click", %{"button" => "right", "id" => _id}, socket) do
+  def handle_event("card_click", %{"button" => "right", "id" => _id}, socket) do
     {:noreply, socket}
   end
 
-  def handle_event("card-click", %{"button" => "left", "id" => id_card}, socket) do
+  def handle_event("card_click", %{"button" => "left", "id" => id_card}, socket) do
     Heros.Game.Match.play_card(socket.assigns.game_pid, socket.assigns.session.id, id_card)
     {:noreply, socket}
   end
 
-  def handle_event("attack-hero", %{"id" => id}, socket) do
+  def handle_event("attack_hero", %{"id" => id}, socket) do
     Heros.Game.Match.attack_hero(socket.assigns.game_pid, socket.assigns.session.id, id)
     {:noreply, socket}
   end
 
-  def handle_event("end-turn", _params, socket) do
+  def handle_event("end_turn", _params, socket) do
     Heros.Game.Match.end_turn(socket.assigns.game_pid, socket.assigns.session.id)
     {:noreply, socket}
   end

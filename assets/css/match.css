@@ -1,52 +1,39 @@
 .match {
-    --match-height: 100vh;
-    --match-width: 100vw;
-
-    --card-width: 4.47vw; /* 298px */
-    --card-height: calc(417 / 298 * var(--card-width)); /* 417px */
     --card-margin: calc(0.06 * var(--card-width));
     --card-border-radius: calc(0.06 * var(--card-width));
 
-    --bar-height: calc(
-        2 * var(--fight-zone-border-width) + 2 * var(--resource-padding-top) +
-            var(--resource-font-size)
-    );
-    --player-width: calc(
-        9 * calc(var(--card-width) + var(--card-margin)) +
-            calc(3 * var(--card-margin))
-    );
-    --player-height: calc(
-        3 * calc(var(--card-height) + var(--card-margin)) +
-            calc(2 * var(--card-margin)) + var(--bar-height)
-    );
+    --player-width: calc(9 * var(--card-width) + 10 * var(--card-margin));
     --current-player-color: mediumorchid;
 
-    --fight-zone-bg: url('../images/quartz_block_bottom.png');
+    --hp-font-size: 1.2em;
+    --box-shadow-hp-not-current: 0 0 8px black;
+    --player-name-bg: #001621;
+    --player-name-font-size: 0.9em;
+
     --fight-zone-bg: url('../images/hardened_clay_stained_purple.png');
     --fight-zone-border-width: calc(0.05 * var(--card-width));
     --fight-zone-border-color: darkgoldenrod;
-    --fight-zone-border-radius: calc(0.06 * var(--card-width));
+    --box-shadow-fight-zone: 0 0 8px black;
 
-    --resource-padding-top: calc(0.05 * var(--card-width));
-    --resource-font-size: 1em;
-    --resource-bg: white;
-
-    --cards-height: calc(var(--card-height) + 2 * var(--card-margin));
-    --player-pile-bg: transparent;
-    --player-hand-bg: transparent;
+    --gold-color: gold;
+    --gold-bg: #0a2354;
+    --attack-color: wheat;
+    --attack-bg: darkred;
+    --resource-border-color: #444444;
+    --resource-font-size: 1.1em;
 
     --market-width: calc(
-        6 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
+        1 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
     );
     --market-height: calc(
-        1 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin)
+        6 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin)
     );
     --market-top: calc(calc(var(--match-height) - var(--market-height)) / 2);
-    --market-left: calc(calc(var(--match-width) - var(--market-width)) / 2);
-
+    --market-left: calc(var(--match-width) - var(--market-width));
     --market-bg: url('../images/wool_colored_red.png');
-    --market-border-width: calc(0.04 * var(--card-width));
     --market-border-color: darkred;
+
+    --player-menu-bg: #ffffff;
 
     position: relative;
     height: var(--match-height);
@@ -63,7 +50,8 @@
     background: var(--fight-zone-bg);
     border: var(--fight-zone-border-width) solid var(--fight-zone-border-color);
     border-radius: var(--fight-zone-border-radius);
-    box-shadow: 0 0 8px black;
+    box-shadow: var(--box-shadow-fight-zone);
+    display: none;
 }
 
 .match__market {
@@ -73,60 +61,62 @@
     position: absolute;
     top: var(--market-top);
     left: var(--market-left);
-    border: var(--market-border-width) solid var(--market-border-color);
+    border: var(--fight-zone-border-width) solid var(--market-border-color);
 }
 
 .card--market-deck,
 .card--gem,
 .card--market {
-    --a: calc(var(--card-width) + var(--card-margin));
-    --b: calc(var(--market-left) + var(--card-margin));
+    --a: calc(var(--card-height) + var(--card-margin));
+    --b: calc(var(--market-top) + var(--card-margin));
 
-    top: calc(var(--market-top) + var(--card-margin));
+    left: calc(var(--market-left) + var(--card-margin));
 }
 
 .card--market-deck {
-    left: calc(var(--match-width) + var(--card-margin));
+    top: calc(var(--match-width) + var(--card-margin));
 }
 
 .card--gem {
-    left: var(--b);
+    top: var(--b);
 }
 
 .card--market-0 {
-    left: calc(var(--a) * 1 + var(--b));
+    top: calc(var(--a) * 1 + var(--b));
 }
 
 .card--market-1 {
-    left: calc(var(--a) * 2 + var(--b));
+    top: calc(var(--a) * 2 + var(--b));
 }
 
 .card--market-2 {
-    left: calc(var(--a) * 3 + var(--b));
+    top: calc(var(--a) * 3 + var(--b));
 }
 
 .card--market-3 {
-    left: calc(var(--a) * 4 + var(--b));
+    top: calc(var(--a) * 4 + var(--b));
 }
 
 .card--market-4 {
-    left: calc(var(--a) * 5 + var(--b));
+    top: calc(var(--a) * 5 + var(--b));
 }
 
 .player {
     width: var(--player-width);
-    height: var(--player-height);
 }
 
 .player__fight-zone {
     --height: calc(
-        2 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin)
+        2 * var(--card-height) + 3 * var(--card-margin) + 2 *
+            var(--fight-zone-border-width)
     );
 
     height: var(--height);
     padding: var(--card-margin);
     display: flex;
     align-items: flex-end;
+    background: var(--fight-zone-bg);
+    border: var(--fight-zone-border-width) solid var(--fight-zone-border-color);
 }
 
 .player__hp {
@@ -134,20 +124,33 @@
     height: var(--card-height);
     border-radius: var(--card-border-radius);
     color: wheat;
-    font-size: 1.2em;
     text-shadow: 0 0 10px black;
-    box-shadow: 0 0 2px black;
-    font-weight: bold;
+    box-shadow: var(--box-shadow-hp-not-current);
     background-size: 100% 100%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     position: relative;
 }
 
 .player__hp-bis {
+    font-size: var(--hp-font-size);
+    font-weight: bold;
+    padding-top: 1%;
+}
+
+.player__name {
     position: absolute;
-    margin-top: 3%;
+    bottom: 0;
+    width: 100%;
+    font-size: var(--player-name-font-size);
+    text-align: center;
+    padding: 2% 0 3%;
+    background: var(--player-name-bg);
+    opacity: 0.9;
+    border-bottom-left-radius: var(--card-border-radius);
+    border-bottom-right-radius: var(--card-border-radius);
 }
 
 .player--p0 .player__hp {
@@ -196,64 +199,52 @@
 
 .player__bar {
     display: flex;
-    justify-content: center;
-    height: var(--bar-height);
-    border-bottom: var(--fight-zone-border-width) solid
-        var(--fight-zone-border-color);
-    position: relative;
+    height: calc(var(--card-height) + 2 * var(--card-margin));
+    padding: var(--card-margin)
+        calc(var(--card-margin) + var(--fight-zone-border-width));
+}
+
+.player__discard {
+    height: var(--card-height);
+    width: var(--card-width);
+    border: var(--fight-zone-border-width) dashed darkred;
+    border-radius: var(--card-border-radius);
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .player__resources {
+    margin-left: var(--card-margin);
     display: flex;
-    justify-content: center;
-}
-
-.player__name {
-    position: absolute;
-    left: var(--card-margin);
-    bottom: var(--card-margin);
-}
-
-.player__menu {
-    position: absolute;
-    right: var(--card-margin);
-    bottom: var(--card-margin);
+    flex-direction: column;
+    height: var(--card-height);
+    width: var(--card-width);
+    box-shadow: 0 0 4px black;
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
 }
 
 .player__resource {
     font-size: var(--resource-font-size);
-    border-top: var(--fight-zone-border-width) solid
-        var(--fight-zone-border-color);
-    border-left: var(--fight-zone-border-width) solid
-        var(--fight-zone-border-color);
-    background: var(--resource-bg);
-}
-
-.player__resource:first-of-type {
-    border-top-left-radius: var(--fight-zone-border-radius);
-}
-
-.player__resource:last-of-type {
-    border-top-right-radius: var(--fight-zone-border-radius);
-    border-right: var(--fight-zone-border-width) solid
-        var(--fight-zone-border-color);
+    color: var(--resource-color);
+    font-weight: bold;
+    flex-grow: 1;
 }
 
 .player__gold,
 .player__attack {
-    width: var(--card-width);
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: var(--resource-padding-top);
 }
 
 .player__gold {
-    background-color: goldenrod;
+    --resource-color: var(--gold-color);
+    background: var(--gold-bg);
 }
 
 .player__attack {
-    background-color: darkred;
+    --resource-color: var(--attack-color);
+    background: var(--attack-bg);
 }
 
 .player__gold > svg,
@@ -266,29 +257,13 @@
 
 .player__gold > svg .fa-primary,
 .player__attack > svg .fa-primary {
-    fill: #fff;
+    fill: var(--resource-color);
 }
 
 .player__gold > svg .fa-secondary,
 .player__attack > svg .fa-secondary {
-    fill: #ddd;
-}
-
-.player__cards {
-    display: flex;
-    height: var(--cards-height);
-}
-
-.player__cards-pile {
-    width: calc(var(--card-width) + 2 * var(--card-margin));
-    height: 100%;
-    background: var(--player-pile-bg);
-}
-
-.player__hand {
-    flex-grow: 1;
-    height: 100%;
-    background: var(--player-hand-bg);
+    fill: var(--resource-color);
+    opacity: 0.6;
 }
 
 .card {
@@ -297,6 +272,15 @@
     height: var(--card-height);
     border-radius: var(--card-border-radius);
     transition: top 1s, left 1s;
+    display: none;
+}
+
+.player__menu {
+    position: absolute;
+    background: var(--player-menu-bg);
+    right: 0;
+    bottom: 0;
+    padding: var(--card-margin);
 }
 
 @import './2-players.css';

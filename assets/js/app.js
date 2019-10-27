@@ -72,7 +72,7 @@ const hooks = {
             cards.map(f)
         },
         onClick(button, id) {
-            this.pushEvent('card-click', { button, id })
+            this.pushEvent('card_click', { button, id })
         },
         mounted() {
             const cardsElt = document.getElementById('cards')

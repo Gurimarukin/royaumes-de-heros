@@ -1,5 +1,18 @@
 .match--2-players {
-    --player-left: calc(calc(var(--match-width) - var(--player-width)) / 2);
+    --match-height: 100vh;
+    --match-width: calc(159728 / 136275 * var(--match-height));
+
+    --card-height: calc(278 / 1817 * var(--match-height));
+    --card-width: calc(298 / 417 * var(--card-height));
+
+    --player-left: 0;
+}
+
+@media (max-aspect-ratio: 159728 / 136275) {
+    .match--2-players {
+        --match-width: 100vw;
+        --match-height: calc(136275 / 159728 * var(--match-width));
+    }
 }
 
 .match--2-players::before {
