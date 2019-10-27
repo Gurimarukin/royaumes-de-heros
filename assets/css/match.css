@@ -6,13 +6,18 @@
     align-items: center;
     overflow: hidden;
     background-image: url('../images/planks_oak.png');
+    position: relative;
 }
 
 .match {
     --card-margin: calc(0.06 * var(--card-width));
     --card-border-radius: calc(0.06 * var(--card-width));
+    --card-box-shadow: 0 0 4px black;
 
-    --player-width: calc(9 * var(--card-width) + 10 * var(--card-margin));
+    --player-width: calc(
+        2 * var(--fight-zone-border-width) + 9 * var(--card-width) + 10 *
+            var(--card-margin)
+    );
     --current-player-color: mediumorchid;
 
     --hp-font-size: 1.2em;
@@ -35,17 +40,17 @@
     --resource-font-size: 1.1em;
 
     --market-width: calc(
-        1 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin)
+        1 * calc(var(--card-width) + var(--card-margin)) + var(--card-margin) +
+            2 * var(--fight-zone-border-width)
     );
     --market-height: calc(
-        6 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin)
+        6 * calc(var(--card-height) + var(--card-margin)) + var(--card-margin) +
+            2 * var(--fight-zone-border-width)
     );
     --market-top: calc(calc(var(--match-height) - var(--market-height)) / 2);
     --market-left: calc(var(--match-width) - var(--market-width));
     --market-bg: url('../images/wool_colored_red.png');
     --market-border-color: darkred;
-
-    --player-menu-bg: #ffffff;
 
     position: relative;
     height: var(--match-height);
@@ -77,9 +82,13 @@
 .card--gem,
 .card--market {
     --a: calc(var(--card-height) + var(--card-margin));
-    --b: calc(var(--market-top) + var(--card-margin));
+    --b: calc(
+        var(--market-top) + var(--fight-zone-border-width) + var(--card-margin)
+    );
 
-    left: calc(var(--market-left) + var(--card-margin));
+    left: calc(
+        var(--market-left) + var(--fight-zone-border-width) + var(--card-margin)
+    );
 }
 
 .card--market-deck {
@@ -285,15 +294,17 @@
     width: var(--card-width);
     height: var(--card-height);
     border-radius: var(--card-border-radius);
+    box-shadow: var(--card-box-shadow);
     transition: top 1s, left 1s;
 }
 
 .player__menu {
     position: absolute;
-    background: var(--player-menu-bg);
+    background: #fff;
+    font-size: 0.75em;
     right: 0;
     bottom: 0;
-    padding: var(--card-margin);
+    padding: 0.33em;
 }
 
 @import './2-players.css';

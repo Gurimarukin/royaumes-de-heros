@@ -30,16 +30,16 @@
     <div class="match__market"></div>
     <div phx-update="ignore" id="cards"></div>
     <div phx-hook="cards" phx-value-cards="<%= Phoenix.json_library().encode!(@cards) %>"></div>
-    <div class="player__menu">
-      <button phx-hook="fullscreenBtn"
+  </div>
+  <div class="player__menu">
+    <button phx-hook="fullscreenBtn"
             class="heros-button heros-button--outline">
-        Plein écran
-      </button>
-      <button phx-click="end_turn" phx-throttle="500"
+      Plein écran
+    </button>
+    <button phx-click="end_turn" phx-throttle="500"
             class="heros-button heros-button--outline heros-button--end-turn"
             <%= if not Utils.keyfind(@players, "player1").is_current, do: "disabled" %>>
-        Fin du tour
-      </button>
-    </div>
+      Fin du tour
+    </button>
   </div>
 </div>

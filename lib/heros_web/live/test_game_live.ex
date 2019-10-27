@@ -24,8 +24,8 @@ defmodule HerosWeb.TestGameLive do
            {"card-0-23", :lys},
            {"card-0-24", :lys},
            {"card-0-25", :lys},
-           {"card-0-26", :lys},
-           {"card-0-27", :lys}
+           {"card-0-26", :lys}
+           #  {"card-0-27", :lys}
          ],
          fight_zone: [
            {"card-0-30", :gold},
@@ -43,7 +43,8 @@ defmodule HerosWeb.TestGameLive do
            {"card-0-42", :gold},
            {"card-0-43", :gold},
            {"card-0-44", :gold},
-           {"card-0-45", :gold}
+           {"card-0-45", :gold},
+           {"card-0-46", :gold}
          ]
        }},
       {"player2",
@@ -63,8 +64,8 @@ defmodule HerosWeb.TestGameLive do
            {"card-1-23", :lys},
            {"card-1-24", :lys},
            {"card-1-25", :lys},
-           {"card-1-26", :lys},
-           {"card-1-27", :lys}
+           {"card-1-26", :lys}
+           #  {"card-1-27", :lys}
          ],
          fight_zone: [
            {"card-1-30", :arkus},
@@ -82,7 +83,8 @@ defmodule HerosWeb.TestGameLive do
            {"card-1-42", :arkus},
            {"card-1-43", :arkus},
            {"card-1-44", :arkus},
-           {"card-1-45", :arkus}
+           {"card-1-45", :arkus},
+           {"card-1-46", :arkus}
          ]
        }}
     ]

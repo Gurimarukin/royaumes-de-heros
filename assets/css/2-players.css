@@ -1,6 +1,6 @@
 .match--2-players {
     --match-height: 100vh;
-    --match-width: calc(159728 / 136275 * var(--match-height));
+    --match-width: calc(54534 / 45425 * var(--match-height));
 
     --card-height: calc(278 / 1817 * var(--match-height));
     --card-width: calc(298 / 417 * var(--card-height));
@@ -8,16 +8,16 @@
     --player-left: 0;
 }
 
-@media (max-aspect-ratio: 159728 / 136275) {
+@media (max-aspect-ratio: 54534 / 45425) {
     .match--2-players {
         --match-width: 100vw;
-        --match-height: calc(136275 / 159728 * var(--match-width));
+        --match-height: calc(45425 / 54534 * var(--match-width));
     }
 }
 
 .match--2-players::before {
     left: var(--player-left);
-    right: var(--player-left);
+    right: calc(var(--market-width) + var(--card-margin));
     top: var(--player-bar-height);
     bottom: var(--player-bar-height);
 }
@@ -45,24 +45,24 @@
 /* deck */
 .match--2-players .card--deck-0 {
     left: calc(
-        var(--match-width) - calc(var(--match-width) - var(--player-width)) / 2 -
-            var(--card-width) - var(--card-margin)
+        var(--player-width) - var(--fight-zone-border-width) - var(--card-width) -
+            var(--card-margin)
     );
     top: calc(var(--match-height) - var(--card-height) - var(--card-margin));
 }
 
 .match--2-players .card--deck-1 {
-    left: calc(
-        calc(var(--match-width) - var(--player-width)) / 2 + var(--card-margin)
-    );
+    left: calc(var(--fight-zone-border-width) + var(--card-margin));
     top: var(--card-margin);
 }
 
 /* hand */
 .match--2-players .card--hand {
     --a: calc(var(--card-width) + var(--card-margin));
-    --b: calc(var(--match-width) - var(--player-width)) / 2 +
-        calc(2 * var(--card-margin));
+    --b: calc(
+        var(--fight-zone-border-width) + 2 * var(--card-width) + 3 *
+            var(--card-margin)
+    );
 }
 
 .match--2-players .card--hand-p0 {
@@ -70,35 +70,35 @@
 }
 
 .match--2-players .card--hand-p1 {
+    --b: calc(
+        var(--fight-zone-border-width) + 1 * var(--card-width) + 2 *
+            var(--card-margin)
+    );
     top: var(--card-margin);
 }
 
 .match--2-players .card--hand-0 {
-    left: calc(var(--a) * 4 + var(--b));
-}
-
-.match--2-players .card--hand-1 {
-    left: calc(var(--a) * 5 + var(--b));
-}
-
-.match--2-players .card--hand-2 {
-    left: calc(var(--a) * 3 + var(--b));
-}
-
-.match--2-players .card--hand-3 {
-    left: calc(var(--a) * 6 + var(--b));
-}
-
-.match--2-players .card--hand-4 {
     left: calc(var(--a) * 2 + var(--b));
 }
 
-.match--2-players .card--hand-5 {
-    left: calc(var(--a) * 7 + var(--b));
+.match--2-players .card--hand-1 {
+    left: calc(var(--a) * 3 + var(--b));
 }
 
-.match--2-players .card--hand-6 {
+.match--2-players .card--hand-2 {
     left: calc(var(--a) * 1 + var(--b));
+}
+
+.match--2-players .card--hand-3 {
+    left: calc(var(--a) * 4 + var(--b));
+}
+
+.match--2-players .card--hand-4 {
+    left: calc(var(--a) * 0 + var(--b));
+}
+
+.match--2-players .card--hand-5 {
+    left: calc(var(--a) * 5 + var(--b));
 }
 
 /* fight-zone */
@@ -106,16 +106,18 @@
     --a: calc(var(--card-width) + var(--card-margin));
 
     --first-row: calc(
-        3 * var(--card-margin) + var(--card-height) + var(--bar-height)
+        var(--fight-zone-border-width) + 3 * var(--card-margin) +
+            var(--card-height)
     );
     --second-row: calc(
-        4 * var(--card-margin) + 2 * var(--card-height) + var(--bar-height)
+        var(--fight-zone-border-width) + 4 * var(--card-margin) + 2 *
+            var(--card-height)
     );
 }
 
 .match--2-players .card--fight-zone-p0 {
     --b: calc(
-        calc(var(--match-width) - var(--player-width)) / 2 + 2 *
+        var(--fight-zone-border-width) + var(--card-width) + 2 *
             var(--card-margin)
     );
 
@@ -123,10 +125,7 @@
 }
 
 .match--2-players .card--fight-zone-p1 {
-    --b: calc(
-        calc(var(--match-width) - var(--player-width)) / 2 +
-            calc(2 * var(--card-margin)) - var(--a)
-    );
+    --b: calc(var(--fight-zone-border-width) + var(--card-margin));
 
     top: var(--first-row);
 }
@@ -138,7 +137,8 @@
 .match--2-players .card--fight-zone-p0.card--fight-zone-12,
 .match--2-players .card--fight-zone-p0.card--fight-zone-13,
 .match--2-players .card--fight-zone-p0.card--fight-zone-14,
-.match--2-players .card--fight-zone-p0.card--fight-zone-15 {
+.match--2-players .card--fight-zone-p0.card--fight-zone-15,
+.match--2-players .card--fight-zone-p0.card--fight-zone-16 {
     top: calc(var(--match-height) - var(--card-height) - var(--second-row));
 }
 
@@ -149,86 +149,68 @@
 .match--2-players .card--fight-zone-p1.card--fight-zone-12,
 .match--2-players .card--fight-zone-p1.card--fight-zone-13,
 .match--2-players .card--fight-zone-p1.card--fight-zone-14,
-.match--2-players .card--fight-zone-p1.card--fight-zone-15 {
+.match--2-players .card--fight-zone-p1.card--fight-zone-15,
+.match--2-players .card--fight-zone-p1.card--fight-zone-16 {
     top: var(--second-row);
 }
 
-.match--2-players .card--fight-zone-0 {
-    left: calc(var(--a) * 4 + var(--b));
-}
-
-.match--2-players .card--fight-zone-1 {
-    left: calc(var(--a) * 5 + var(--b));
-}
-
-.match--2-players .card--fight-zone-2 {
-    left: calc(var(--a) * 3 + var(--b));
-}
-
-.match--2-players .card--fight-zone-3 {
-    left: calc(var(--a) * 6 + var(--b));
-}
-
-.match--2-players .card--fight-zone-4 {
-    left: calc(var(--a) * 2 + var(--b));
-}
-
-.match--2-players .card--fight-zone-5 {
-    left: calc(var(--a) * 7 + var(--b));
-}
-
-.match--2-players .card--fight-zone-6 {
-    left: calc(var(--a) * 1 + var(--b));
-}
-
-.match--2-players .card--fight-zone-7 {
-    left: calc(var(--a) * 8 + var(--b));
-}
-
+.match--2-players .card--fight-zone-0,
 .match--2-players .card--fight-zone-8 {
-    left: calc(var(--a) * 4 + var(--b));
-}
-
-.match--2-players .card--fight-zone-9 {
-    left: calc(var(--a) * 5 + var(--b));
-}
-
-.match--2-players .card--fight-zone-10 {
     left: calc(var(--a) * 3 + var(--b));
 }
 
-.match--2-players .card--fight-zone-11 {
-    left: calc(var(--a) * 6 + var(--b));
+.match--2-players .card--fight-zone-1,
+.match--2-players .card--fight-zone-9 {
+    left: calc(var(--a) * 4 + var(--b));
 }
 
-.match--2-players .card--fight-zone-12 {
+.match--2-players .card--fight-zone-2,
+.match--2-players .card--fight-zone-10 {
     left: calc(var(--a) * 2 + var(--b));
 }
 
-.match--2-players .card--fight-zone-13 {
-    left: calc(var(--a) * 7 + var(--b));
+.match--2-players .card--fight-zone-3,
+.match--2-players .card--fight-zone-11 {
+    left: calc(var(--a) * 5 + var(--b));
 }
 
-.match--2-players .card--fight-zone-14 {
+.match--2-players .card--fight-zone-4,
+.match--2-players .card--fight-zone-12 {
     left: calc(var(--a) * 1 + var(--b));
 }
 
+.match--2-players .card--fight-zone-5,
+.match--2-players .card--fight-zone-13 {
+    left: calc(var(--a) * 6 + var(--b));
+}
+
+.match--2-players .card--fight-zone-6,
+.match--2-players .card--fight-zone-14 {
+    left: calc(var(--a) * 0 + var(--b));
+}
+
+.match--2-players .card--fight-zone-7,
 .match--2-players .card--fight-zone-15 {
+    left: calc(var(--a) * 7 + var(--b));
+}
+
+.match--2-players .card--fight-zone-p0.card--fight-zone-16 {
+    left: calc(var(--a) * -1 + var(--b));
+}
+
+.match--2-players .card--fight-zone-p1.card--fight-zone-16 {
     left: calc(var(--a) * 8 + var(--b));
 }
 
 /* discard */
 .match--2-players .card--discard-0 {
-    left: calc(
-        calc(var(--match-width) - var(--player-width)) / 2 + var(--card-margin)
-    );
+    left: calc(var(--fight-zone-border-width) + var(--card-margin));
     top: calc(var(--match-height) - var(--card-height) - var(--card-margin));
 }
 
 .match--2-players .card--discard-1 {
     left: calc(
-        var(--match-width) - var(--card-width) -
-            calc(var(--match-width) - var(--player-width)) / 2 -
+        var(--player-width) - var(--fight-zone-border-width) - var(--card-width) -
             var(--card-margin)
     );
     top: var(--card-margin);
