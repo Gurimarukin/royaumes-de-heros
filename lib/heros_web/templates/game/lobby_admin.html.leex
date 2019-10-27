@@ -14,9 +14,10 @@
           </span>
         <% end %>
       </div>
-      <label class="heros-checkbox lobby__public-label">
+      <label phx-click="toggle_public" phx-throttle="500"
+             class="heros-checkbox lobby__public-label">
         Public :
-        <input onchange="togglePublic(this)" type="checkbox" <%= if @game.is_public, do: "checked" %>>
+        <input type="checkbox" <%= if @game.is_public, do: "checked" %>>
         <div class="checkmark lobby__public-checkbox"></div>
       </label>
     </div>
