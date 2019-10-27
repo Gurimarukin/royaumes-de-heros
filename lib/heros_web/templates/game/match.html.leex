@@ -9,17 +9,20 @@
         </div>
       </div>
       <div class="player__bar">
-        <div class="player__discard"></div>
-        <div class="player__resources">
-          <div class="player__resource player__attack player__rotate">
-            <%= HerosWeb.GameLive.Svg.attack(assigns) %>
-            <%= player.attack %>
-          </div>
-          <div class="player__resource player__gold player__rotate">
-            <%= HerosWeb.GameLive.Svg.gold(assigns) %>
-            <%= player.gold %>
+        <div class="player__bar-left">
+          <div class="player__cards-pile"></div>
+          <div class="player__resources">
+            <div class="player__resource player__attack player__rotate">
+              <%= HerosWeb.GameLive.Svg.attack(assigns) %>
+              <%= player.attack %>
+            </div>
+            <div class="player__resource player__gold player__rotate">
+              <%= HerosWeb.GameLive.Svg.gold(assigns) %>
+              <%= player.gold %>
+            </div>
           </div>
         </div>
+        <div class="player__cards-pile"></div>
       </div>
     </div>
   <% end %>

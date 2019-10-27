@@ -16,12 +16,10 @@
 }
 
 .match--2-players::before {
-    --left: calc(var(--player-left) / 2);
-
-    left: var(--left);
-    right: var(--left);
-    top: var(--cards-height);
-    bottom: var(--cards-height);
+    left: var(--player-left);
+    right: var(--player-left);
+    top: var(--player-bar-height);
+    bottom: var(--player-bar-height);
 }
 
 /* player */

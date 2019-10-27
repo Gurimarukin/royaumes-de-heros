@@ -15,6 +15,8 @@
     --fight-zone-border-color: darkgoldenrod;
     --box-shadow-fight-zone: 0 0 8px black;
 
+    --player-bar-height: calc(var(--card-height) + 2 * var(--card-margin));
+
     --gold-color: gold;
     --gold-bg: #0a2354;
     --attack-color: wheat;
@@ -199,17 +201,22 @@
 
 .player__bar {
     display: flex;
-    height: calc(var(--card-height) + 2 * var(--card-margin));
+    justify-content: space-between;
+    height: var(--player-bar-height);
     padding: var(--card-margin)
         calc(var(--card-margin) + var(--fight-zone-border-width));
 }
 
-.player__discard {
+.player__cards-pile {
     height: var(--card-height);
     width: var(--card-width);
     border: var(--fight-zone-border-width) dashed darkred;
     border-radius: var(--card-border-radius);
     background: rgba(0, 0, 0, 0.3);
+}
+
+.player__bar-left {
+    display: flex;
 }
 
 .player__resources {
