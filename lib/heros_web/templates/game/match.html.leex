@@ -38,7 +38,7 @@
     </button>
     <button phx-click="end_turn" phx-throttle="500"
             class="heros-button heros-button--outline heros-button--end-turn"
-            <%= if not Utils.keyfind(@players, "player1").is_current, do: "disabled" %>>
+            <%= if not @is_current, do: "disabled" %>>
       Fin du tour
     </button>
   </div>

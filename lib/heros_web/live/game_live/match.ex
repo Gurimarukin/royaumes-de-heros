@@ -57,6 +57,8 @@ defmodule HerosWeb.GameLive.Match do
       end)
       |> sorted_players(assigns.session.id)
 
+    is_current = Game.Match.is_current_player(assigns.game.match, assigns.session.id)
+
     assigns = %{
       players: players,
       n_players: length(players),
@@ -67,7 +69,8 @@ defmodule HerosWeb.GameLive.Match do
             nil -> nil
             card -> %{id: id, image: card.card.image, class: card.class}
           end
-        end)
+        end),
+      is_current: is_current
     }
 
     HerosWeb.GameView.render("match.html", assigns)

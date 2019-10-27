@@ -19,13 +19,13 @@
     </div>
     <table class="lobby__players">
       <%= for player <- @game.players do %>
-        <tr class="lobby__player-name">
+        <tr class="lobby__player">
           <td class="lobby__is-admin">
             <%= if player.is_admin do %>
               <i class="fas fa-user-cog" title="Admin"></i>
             <% end %>
           </td>
-          <td class="lobby__name"><%= player.name %></td>
+          <td class="lobby__player-name"><%= player.name %></td>
         </tr>
       <% end %>
     </table>

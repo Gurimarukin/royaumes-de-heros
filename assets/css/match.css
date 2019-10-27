@@ -12,7 +12,6 @@
 .match {
     --card-margin: calc(0.06 * var(--card-width));
     --card-border-radius: calc(0.06 * var(--card-width));
-    --card-box-shadow: 0 0 4px black;
 
     --player-width: calc(
         2 * var(--fight-zone-border-width) + 9 * var(--card-width) + 10 *
@@ -92,7 +91,8 @@
 }
 
 .card--market-deck {
-    top: calc(var(--match-width) + var(--card-margin));
+    top: calc(50vh - var(--card-height) / 2);
+    left: calc(100vw + var(--card-margin));
 }
 
 .card--gem {
@@ -294,7 +294,6 @@
     width: var(--card-width);
     height: var(--card-height);
     border-radius: var(--card-border-radius);
-    box-shadow: var(--card-box-shadow);
     transition: top 1s, left 1s;
 }
 

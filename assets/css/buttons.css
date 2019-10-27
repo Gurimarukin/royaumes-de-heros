@@ -3,11 +3,7 @@
     --button-color-bg: darkgoldenrod;
     --button-color-bg-hover: #916b08;
 
-    background-color: var(--button-color-bg);
-    border: 4px double var(--button-color-bg);
-    border-style: ridge groove groove ridge;
     border-radius: 0;
-    color: var(--button-color);
     text-transform: uppercase;
     font-weight: bold;
     font-size: 0.7em;
@@ -23,12 +19,6 @@
     opacity: 0.5;
 }
 
-.heros-button:disabled:hover,
-.heros-button:disabled:focus {
-    background-color: var(--button-color-bg);
-    border-color: var(--button-color-bg);
-}
-
 .heros-button:focus,
 .heros-button:hover {
     background-color: var(--button-color-bg-hover);
@@ -36,11 +26,13 @@
     color: var(--button-color);
 }
 
-.heros-button--outline {
-    background-color: transparent;
-    border-style: groove ridge ridge groove;
-    border-color: var(--button-color-bg);
-    color: var(--button-color-bg);
+.heros-button,
+.heros-button:disabled:hover,
+.heros-button:disabled:focus {
+    background-color: var(--button-color-bg);
+    border: 4px double var(--button-color-bg);
+    border-style: ridge groove groove ridge;
+    color: var(--button-color);
 }
 
 .heros-button--outline:focus,
@@ -48,4 +40,13 @@
     background-color: transparent;
     border-color: var(--button-color-bg-hover);
     color: var(--button-color-bg-hover);
+}
+
+.heros-button--outline,
+.heros-button--outline:disabled:hover,
+.heros-button--outline:disabled:focus {
+    background-color: transparent;
+    border-style: groove ridge ridge groove;
+    border-color: var(--button-color-bg);
+    color: var(--button-color-bg);
 }
