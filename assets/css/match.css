@@ -18,7 +18,6 @@
             var(--card-margin)
     );
     --current-player-color: mediumorchid;
-    --current-player-fight-zone-shadow: 0 0 20px gold inset;
 
     --hp-font-size: 1.2em;
     --box-shadow-hp-not-current: 0 0 8px black;
@@ -139,7 +138,7 @@
 }
 
 .player--current .player__fight-zone {
-    box-shadow: var(--current-player-fight-zone-shadow);
+    box-shadow: 0 0 20px 3px var(--current-player-color) inset;
 }
 
 .player__hp {
@@ -176,23 +175,35 @@
     border-bottom-right-radius: var(--card-border-radius);
 }
 
-.player--p0 .player__hp {
+.player--p0 {
     --current-player-color: darkblue;
+}
+
+.player--p0 .player__hp {
     background-image: url('../images/counter_blue.png');
 }
 
-.player--p1 .player__hp {
+.player--p1 {
     --current-player-color: darkred;
+}
+
+.player--p1 .player__hp {
     background-image: url('../images/counter_red.png');
 }
 
-.player--p2 .player__hp {
+.player--p2 {
     --current-player-color: darkgreen;
+}
+
+.player--p2 .player__hp {
     background-image: url('../images/counter_green.png');
 }
 
-.player--p3 .player__hp {
+.player--p3 {
     --current-player-color: darkgoldenrod;
+}
+
+.player--p3 .player__hp {
     background-image: url('../images/counter_yellow.png');
 }
 
