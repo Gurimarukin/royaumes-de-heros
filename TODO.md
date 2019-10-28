@@ -5,3 +5,6 @@
 * add message when kicked from lobby
 * remove game projection from `Game`
 * handle empty market
+* add/remove cards from hand algorithm
+* `fullscreenBtn`: change to toggle
+* match: handle player deconnection
