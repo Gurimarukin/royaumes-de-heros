@@ -28,8 +28,12 @@
       </div>
     <% end %>
     <div class="match__market"></div>
-    <div phx-update="ignore" id="cards"></div>
-    <div phx-hook="cards" phx-value-cards="<%= Phoenix.json_library().encode!(@cards) %>"></div>
+    <div>
+      <%= for card <- @cards do %>
+        <img phx-hook="card" phx-value-id="<%= card.id %>"
+             class="<%= card.class %>" src="<%= card.image %>">
+      <% end %>
+    </div>
   </div>
   <div class="player__menu">
     <button phx-hook="fullscreenBtn"

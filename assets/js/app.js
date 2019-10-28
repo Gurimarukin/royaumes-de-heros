@@ -64,51 +64,20 @@ const hooks = {
         }
     },
 
-    cards: {
-        mapCards(f) {
-            const cards = JSON.parse(
-                this.el.getAttribute(this.__view.binding('value-cards'))
-            )
-            cards.map(f)
-        },
-        onClick(button, id) {
-            this.pushEvent('card_click', { button, id })
+    card: {
+        getValue(field) {
+            return this.el.getAttribute(this.__view.binding('value-' + field))
         },
         mounted() {
-            const cardsElt = document.getElementById('cards')
-
-            this.mapCards(card => {
-                const img = document.createElement('img')
-
-                img.id = card.id
-                img.className = card.class
-                img.src = card.image
-                img.setAttribute('phx-throttle', '500')
-
-                img.addEventListener('click', e => {
-                    if (e.button === 0) {
-                        e.stopPropagation()
-                        this.onClick('left', card.id)
-                    }
-                })
-                img.addEventListener('contextmenu', e => {
-                    e.preventDefault()
-                    this.onClick('right', card.id)
-                })
-
-                cardsElt.appendChild(img)
-            })
-        },
-        updated() {
-            this.mapCards(card => {
-                const img = document.getElementById(card.id)
-                if (img === null) {
-                    console.error(`getElementById(${card.id}) was null`)
-                } else {
-                    img.className = card.class
-                    img.src = card.image
+            this.el.addEventListener('click', e => {
+                if (e.button === 0) {
+                    e.stopPropagation()
+                    this.pushEvent('card_click', { id: this.getValue('id') })
                 }
             })
+            // this.el.addEventListener('contextmenu', e => {
+            //     e.preventDefault()
+            // })
         }
     }
 }

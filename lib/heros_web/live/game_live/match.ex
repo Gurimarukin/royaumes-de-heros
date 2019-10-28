@@ -64,10 +64,10 @@ defmodule HerosWeb.GameLive.Match do
       n_players: length(players),
       cards:
         cards(assigns.cards, players, assigns.game.match, assigns.session.id)
-        |> Enum.map(fn {id, card} ->
+        |> Enum.flat_map(fn {id, card} ->
           case card do
-            nil -> nil
-            card -> %{id: id, image: card.card.image, class: card.class}
+            nil -> []
+            card -> [%{id: id, image: card.card.image, class: card.class}]
           end
         end),
       is_current: is_current
@@ -177,12 +177,8 @@ defmodule HerosWeb.GameLive.Match do
     end)
   end
 
-  @impl Stage
-  def handle_event("card_click", %{"button" => "right", "id" => _id}, socket) do
-    {:noreply, socket}
-  end
-
-  def handle_event("card_click", %{"button" => "left", "id" => id_card}, socket) do
+  @impl true
+  def handle_event("card_click", %{"id" => id_card}, socket) do
     Heros.Game.Match.play_card(socket.assigns.game_pid, socket.assigns.session.id, id_card)
     {:noreply, socket}
   end

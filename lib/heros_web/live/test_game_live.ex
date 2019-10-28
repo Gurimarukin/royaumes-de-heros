@@ -130,10 +130,10 @@ defmodule HerosWeb.TestGameLive do
         end)
         |> HerosWeb.GameLive.Match.gems(match)
         |> HerosWeb.GameLive.Match.market(match)
-        |> Enum.map(fn {id, card} ->
+        |> Enum.flat_map(fn {id, card} ->
           case card do
-            nil -> nil
-            card -> %{id: id, image: card.card.image, class: card.class}
+            nil -> []
+            card -> [%{id: id, image: card.card.image, class: card.class}]
           end
         end),
       is_current: true
