@@ -34,8 +34,8 @@ defmodule Heros.Game do
   end
 
   #  Client
-  def start_link(name) do
-    GenServer.start_link(__MODULE__, name, [])
+  def start_link(players) do
+    GenServer.start_link(__MODULE__, players, [])
   end
 
   def get(game) do
@@ -60,8 +60,11 @@ defmodule Heros.Game do
 
   # Server
   @impl true
-  def init(game_name) do
-    {:ok, put_in(%Game{}.players, game_name)}
+  def init(players) do
+    {:ok,
+     %Game{
+       players: players
+     }}
   end
 
   @impl true
