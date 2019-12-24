@@ -2,6 +2,7 @@ defmodule Heros.GamesTest do
   use ExUnit.Case, async: true
 
   alias Heros.{Games, Game}
+  alias Heros.Game.Player
 
   setup do
     games = start_supervised!(Games)
@@ -16,6 +17,6 @@ defmodule Heros.GamesTest do
     assert Process.alive?(game)
 
     game = Game.get(game)
-    assert game.players == [:a, :b]
+    assert game.players == [{:a, %Player{}}, {:b, %Player{}}]
   end
 end

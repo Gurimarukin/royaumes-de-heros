@@ -2,13 +2,14 @@ defmodule Heros.GameTest do
   use ExUnit.Case, async: true
 
   alias Heros.Game
+  alias Heros.Game.Player
 
   test "creates game" do
     {:ok, pid} = Game.start_link([:a, :b])
     game = Game.get(pid)
-    assert game.players == [:a, :b]
+    assert game.players == [{:a, %Player{}}, {:b, %Player{}}]
 
-    assert game.current_player == :a
+    assert game.current_player == nil
   end
 
   test "checks game settings" do

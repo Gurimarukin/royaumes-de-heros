@@ -4,6 +4,7 @@ defmodule Heros.Game do
   require Logger
 
   alias Heros.{Game, Utils}
+  alias Heros.Game.Player
 
   defstruct users: [],
             stage: :lobby,
@@ -64,11 +65,10 @@ defmodule Heros.Game do
   def init(players) do
     # Checking that game settings are valid.
     case players do
-      [first, _] ->
+      [_, _] ->
         {:ok,
          %Game{
-           players: players,
-           current_player: first
+           players: Enum.map(players, &{&1, %Player{}})
          }}
 
       _ ->
