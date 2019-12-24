@@ -2,21 +2,20 @@ defmodule Heros.Cards.Guild do
   alias Heros.Cards.Card
 
   def get do
-    (Card.with_id(borg()) ++
-       Card.with_id(bribe(), 3) ++
-       Card.with_id(death_threat()) ++
-       Card.with_id(deception()) ++
-       Card.with_id(fire_bomb()) ++
-       Card.with_id(hit_job()) ++
-       Card.with_id(intimidation(), 2) ++
-       Card.with_id(myros()) ++
-       Card.with_id(parov()) ++
-       Card.with_id(profit(), 3) ++
-       Card.with_id(rake()) ++
-       Card.with_id(rasmus()) ++
-       Card.with_id(smash_and_grab()) ++
-       Card.with_id(street_thug(), 2))
-    |> Enum.map(&put_in(&1.faction, :guild))
+    Card.with_id(:guild, borg()) ++
+      Card.with_id(:guild, bribe(), 3) ++
+      Card.with_id(:guild, death_threat()) ++
+      Card.with_id(:guild, deception()) ++
+      Card.with_id(:guild, fire_bomb()) ++
+      Card.with_id(:guild, hit_job()) ++
+      Card.with_id(:guild, intimidation(), 2) ++
+      Card.with_id(:guild, myros()) ++
+      Card.with_id(:guild, parov()) ++
+      Card.with_id(:guild, profit(), 3) ++
+      Card.with_id(:guild, rake()) ++
+      Card.with_id(:guild, rasmus()) ++
+      Card.with_id(:guild, smash_and_grab()) ++
+      Card.with_id(:guild, street_thug(), 2)
   end
 
   defp borg,

@@ -15,8 +15,5 @@ defmodule Heros.Cards.CardTest do
     assert length(champions(Wild.get())) == 9
   end
 
-  defp champions(cards) do
-    Enum.map(cards, fn {_id, card} -> Card.fetch(card) end)
-    |> Enum.filter(&Card.is_champion/1)
-  end
+  defp champions(cards), do: Enum.filter(cards, fn {_, card} -> Card.is_champion(card) end)
 end

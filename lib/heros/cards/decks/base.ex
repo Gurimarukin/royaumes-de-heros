@@ -4,10 +4,10 @@ defmodule Heros.Cards.Decks.Base do
   def shuffled, do: Enum.shuffle(get())
 
   defp get do
-    Card.with_id(shortsword()) ++
-      Card.with_id(dagger()) ++
-      Card.with_id(ruby()) ++
-      Card.with_id(gold(), 7)
+    Card.with_id(nil, shortsword()) ++
+      Card.with_id(nil, dagger()) ++
+      Card.with_id(nil, ruby()) ++
+      Card.with_id(nil, gold(), 7)
   end
 
   defp shortsword,

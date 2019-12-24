@@ -2,21 +2,20 @@ defmodule Heros.Cards.Imperial do
   alias Heros.Cards.Card
 
   def get do
-    (Card.with_id(arkus()) ++
-       Card.with_id(close_ranks()) ++
-       Card.with_id(command()) ++
-       Card.with_id(darian()) ++
-       Card.with_id(domination()) ++
-       Card.with_id(cristov()) ++
-       Card.with_id(kraka()) ++
-       Card.with_id(man_at_arms(), 2) ++
-       Card.with_id(weyan()) ++
-       Card.with_id(rally_troops()) ++
-       Card.with_id(recruit(), 3) ++
-       Card.with_id(tithe_priest(), 2) ++
-       Card.with_id(taxation(), 3) ++
-       Card.with_id(word_of_power()))
-    |> Enum.map(&put_in(&1.faction, :imperial))
+    Card.with_id(:imperial, arkus()) ++
+      Card.with_id(:imperial, close_ranks()) ++
+      Card.with_id(:imperial, command()) ++
+      Card.with_id(:imperial, darian()) ++
+      Card.with_id(:imperial, domination()) ++
+      Card.with_id(:imperial, cristov()) ++
+      Card.with_id(:imperial, kraka()) ++
+      Card.with_id(:imperial, man_at_arms(), 2) ++
+      Card.with_id(:imperial, weyan()) ++
+      Card.with_id(:imperial, rally_troops()) ++
+      Card.with_id(:imperial, recruit(), 3) ++
+      Card.with_id(:imperial, tithe_priest(), 2) ++
+      Card.with_id(:imperial, taxation(), 3) ++
+      Card.with_id(:imperial, word_of_power())
   end
 
   defp arkus,
