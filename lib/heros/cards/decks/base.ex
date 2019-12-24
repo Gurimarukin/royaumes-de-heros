@@ -1,48 +1,40 @@
 defmodule Heros.Cards.Decks.Base do
   alias Heros.Cards.Card
 
-  def get do
-    Card.with_id(:shortsword) ++
-      Card.with_id(:dagger) ++
-      Card.with_id(:ruby) ++
-      Card.with_id(:gold, 7)
-  end
-
   def shuffled, do: Enum.shuffle(get())
 
-  def fetch(:shortsword) do
-    %Card{
+  defp get do
+    Card.with_id(shortsword()) ++
+      Card.with_id(dagger()) ++
+      Card.with_id(ruby()) ++
+      Card.with_id(gold(), 7)
+  end
+
+  defp shortsword,
+    do: %Card{
       name: "Épée courte",
-      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-125-shortsword.jpg"
+      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-125-shortsword.jpg",
+      primary_ability: fn game -> Card.add_attack(game, 2) end
     }
-  end
 
-  def fetch(:dagger) do
-    %Card{
+  defp dagger,
+    do: %Card{
       name: "Dague",
-      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-129-dagger.jpg"
+      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-129-dagger.jpg",
+      primary_ability: fn game -> Card.add_attack(game, 1) end
     }
-  end
 
-  def fetch(:ruby) do
-    %Card{
+  defp ruby,
+    do: %Card{
       name: "Rubis",
-      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-133-ruby.jpg"
+      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-133-ruby.jpg",
+      primary_ability: fn game -> Card.add_gold(game, 2) end
     }
-  end
 
-  def fetch(:gold) do
-    %Card{
+  defp gold,
+    do: %Card{
       name: "Or",
-      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-097-gold.jpg"
+      image: "https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-097-gold.jpg",
+      primary_ability: fn game -> Card.add_gold(game, 1) end
     }
-  end
-
-  def primary_effect(game, :shortsword), do: Card.add_attack(game, 2)
-
-  def primary_effect(game, :dagger), do: Card.add_attack(game, 1)
-
-  def primary_effect(game, :ruby), do: Card.add_gold(game, 2)
-
-  def primary_effect(game, :gold), do: Card.add_gold(game, 1)
 end

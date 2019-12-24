@@ -2,8 +2,14 @@ defmodule Heros.Cards.Card do
   defstruct name: nil,
             image: nil,
             cost: nil,
-            champion: nil,
-            faction: nil
+            champion: false,
+            faction: nil,
+            primary_ability: nil
+
+  # primary ability
+  # expend abilities
+  # ally abilities
+  # sacrifice abilities
 
   require Logger
 
