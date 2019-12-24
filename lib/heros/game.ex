@@ -8,7 +8,8 @@ defmodule Heros.Game do
   defstruct users: [],
             stage: :lobby,
             lobby: %Game.Lobby{},
-            match: nil
+            match: nil,
+            players: []
 
   @behaviour Access
 
@@ -37,6 +38,10 @@ defmodule Heros.Game do
     GenServer.start_link(__MODULE__, name, [])
   end
 
+  def get(game) do
+    GenServer.call(game, :get)
+  end
+
   def short(game) do
     GenServer.call(game, :short)
   end
@@ -56,7 +61,12 @@ defmodule Heros.Game do
   # Server
   @impl true
   def init(game_name) do
-    {:ok, put_in(%Game{}.lobby.name, game_name)}
+    {:ok, put_in(%Game{}.players, game_name)}
+  end
+
+  @impl true
+  def handle_call(:get, _from, game) do
+    {:reply, game, game}
   end
 
   @impl true
