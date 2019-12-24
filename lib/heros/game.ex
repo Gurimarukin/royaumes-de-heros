@@ -9,7 +9,8 @@ defmodule Heros.Game do
             stage: :lobby,
             lobby: %Game.Lobby{},
             match: nil,
-            players: []
+            players: [],
+            current_player: nil
 
   @behaviour Access
 
@@ -61,10 +62,18 @@ defmodule Heros.Game do
   # Server
   @impl true
   def init(players) do
-    {:ok,
-     %Game{
-       players: players
-     }}
+    # Checking that game settings are valid.
+    case players do
+      [first, _] ->
+        {:ok,
+         %Game{
+           players: players,
+           current_player: first
+         }}
+
+      _ ->
+        {:stop, :invalid_players_number}
+    end
   end
 
   @impl true
