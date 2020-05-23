@@ -10,6 +10,10 @@ defmodule Heros.GameTest do
     assert game.players == [{:a, %Player{}}, {:b, %Player{}}]
 
     assert game.current_player == nil
+
+    :ok == Game.start(pid)
+
+    assert game.current_player == :a
   end
 
   test "checks game settings" do

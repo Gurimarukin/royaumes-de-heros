@@ -52,6 +52,11 @@ defmodule Heros.Game do
     GenServer.call(game, {:update, {:subscribe, session, pid}})
   end
 
+  def start(game) do
+    # TODO update
+    GenServer.call(game, :start)
+  end
+
   def leave(game, session_id) do
     GenServer.call(game, {:update, {:leave, session_id}})
   end
