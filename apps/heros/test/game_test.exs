@@ -31,10 +31,16 @@ defmodule Heros.GameTest do
 
     # gems
     assert length(game.gems) == 16
+    assert {_, %{key: :gem}} = hd(game.gems)
 
     # market
+    assert length(game.market) == 5
+
     # market_deck
+    assert length(game.market_deck) == length(Heros.Cards.market()) - 5
+
     # cemetery
+    assert game.cemetery == []
   end
 
   test "4 players" do

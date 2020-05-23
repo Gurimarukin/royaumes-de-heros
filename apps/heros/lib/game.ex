@@ -60,34 +60,43 @@ defmodule Heros.Game do
   end
 
   defp start_game(players) do
-    len = length(players)
-
-    inspect(players)
+    {market, market_deck} = init_market
 
     %Game{
-      players:
-        players
-        |> Enum.with_index()
-        |> Enum.map(fn {player_id, i} -> {player_id, Player.init(initial_hand(len, i))} end),
+      players: init_players(players),
       current_player: hd(players),
       gems: Cards.gems(),
-      market: [],
-      market_deck: [],
+      market: market,
+      market_deck: market_deck,
       cemetery: []
     }
   end
 
-  @spec initial_hand(integer, integer) :: integer
-  defp initial_hand(len, i) do
-    cond do
-      # first player always gets 3 cards
-      i == 0 -> 3
-      # when 2 players, second player gets 5 cards
-      i == 1 && len == 2 -> 5
-      # else, second player gets 4 cards
-      i == 1 -> 4
-      # other players get 5 cards
-      true -> 5
-    end
+  defp init_players(players) do
+    n_players = length(players)
+
+    players
+    |> Enum.with_index()
+    |> Enum.map(fn {player_id, i} ->
+      {player_id,
+       Player.init(
+         cond do
+           # first player always gets 3 cards
+           i == 0 -> 3
+           # when 2 players, second player gets 5 cards
+           i == 1 && n_players == 2 -> 5
+           # else, second player gets 4 cards
+           i == 1 -> 4
+           # other players get 5 cards
+           true -> 5
+         end
+       )}
+    end)
+  end
+
+  defp init_market do
+    Cards.market()
+    |> Enum.shuffle()
+    |> Enum.split(5)
   end
 end
