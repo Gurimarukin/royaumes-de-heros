@@ -3,7 +3,7 @@ defmodule Heros.Game do
 
   require Logger
 
-  alias Heros.{Card, Game, Player}
+  alias Heros.{Card, Cards, Game, Player}
 
   @type t :: %{
           players: list({Player.id(), Player.t()}),
@@ -68,17 +68,17 @@ defmodule Heros.Game do
       players:
         players
         |> Enum.with_index()
-        |> Enum.map(fn {player_id, i} -> {player_id, Player.init(start_cards(len, i))} end),
+        |> Enum.map(fn {player_id, i} -> {player_id, Player.init(initial_hand(len, i))} end),
       current_player: hd(players),
-      gems: [],
+      gems: Cards.gems(),
       market: [],
       market_deck: [],
       cemetery: []
     }
   end
 
-  @spec start_cards(integer, integer) :: integer
-  defp start_cards(len, i) do
+  @spec initial_hand(integer, integer) :: integer
+  defp initial_hand(len, i) do
     cond do
       # first player always gets 3 cards
       i == 0 -> 3

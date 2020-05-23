@@ -7,6 +7,7 @@ defmodule Heros.GameTest do
     {:ok, pid} = Game.start([:a, :b])
     game = Game.get(pid)
 
+    # players
     assert [{:a, _}, {:b, _}] = game.players
 
     assert length(game.players[:a].hand) == 3
@@ -24,6 +25,16 @@ defmodule Heros.GameTest do
 
       assert length(player.hand) + length(player.deck) == 10
     end)
+
+    # current_player
+    assert game.current_player == :a
+
+    # gems
+    assert length(game.gems) == 16
+
+    # market
+    # market_deck
+    # cemetery
   end
 
   test "4 players" do
