@@ -1,22 +1,23 @@
 defmodule Heros.Cards.Imperial do
+  alias Heros.Cards
   alias Heros.Cards.Card
 
   @spec get :: list({Card.id(), Card.t()})
   def get do
-    Card.with_id(:arkus) ++
-      Card.with_id(:close_ranks) ++
-      Card.with_id(:command) ++
-      Card.with_id(:darian) ++
-      Card.with_id(:domination) ++
-      Card.with_id(:cristov) ++
-      Card.with_id(:kraka) ++
-      Card.with_id(:man_at_arms, 2) ++
-      Card.with_id(:weyan) ++
-      Card.with_id(:rally_troops) ++
-      Card.with_id(:recruit, 3) ++
-      Card.with_id(:tithe_priest, 2) ++
-      Card.with_id(:taxation, 3) ++
-      Card.with_id(:word_of_power)
+    Cards.with_id(:arkus) ++
+      Cards.with_id(:close_ranks) ++
+      Cards.with_id(:command) ++
+      Cards.with_id(:darian) ++
+      Cards.with_id(:domination) ++
+      Cards.with_id(:cristov) ++
+      Cards.with_id(:kraka) ++
+      Cards.with_id(:man_at_arms, 2) ++
+      Cards.with_id(:weyan) ++
+      Cards.with_id(:rally_troops) ++
+      Cards.with_id(:recruit, 3) ++
+      Cards.with_id(:tithe_priest, 2) ++
+      Cards.with_id(:taxation, 3) ++
+      Cards.with_id(:word_of_power)
   end
 
   @spec price(atom) :: nil | integer

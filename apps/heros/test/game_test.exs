@@ -2,7 +2,6 @@ defmodule Heros.GameTest do
   use ExUnit.Case, async: true
 
   alias Heros.{Cards, Game, Player, Utils}
-  alias Heros.Cards.Card
 
   test "creates game" do
     {:ok, pid} = Game.start({:from_player_ids, ["p1", "p2"]})
@@ -109,11 +108,11 @@ defmodule Heros.GameTest do
     assert Cards.gems() != Cards.gems()
     gems = Cards.gems()
 
-    [orc_grunt1, orc_grunt2] = Card.with_id(:orc_grunt, 2)
-    [arkus] = Card.with_id(:arkus)
-    [cult_priest1, cult_priest2] = Card.with_id(:cult_priest, 2)
-    [myros] = Card.with_id(:myros)
-    [filler] = Card.with_id(:whatever)
+    [orc_grunt1, orc_grunt2] = Cards.with_id(:orc_grunt, 2)
+    [arkus] = Cards.with_id(:arkus)
+    [cult_priest1, cult_priest2] = Cards.with_id(:cult_priest, 2)
+    [myros] = Cards.with_id(:myros)
+    [filler] = Cards.with_id(:whatever)
 
     p1 = %Player{
       hp: 50,
