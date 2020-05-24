@@ -17,9 +17,10 @@ defmodule Heros.Game do
   defstruct [:players, :current_player, :gems, :market, :market_deck, :cemetery]
 
   # Client
-  @spec start(list(Player.id())) :: :ignore | {:error, any} | {:ok, pid}
-  def start(players) do
-    GenServer.start_link(__MODULE__, players)
+  @spec start({:from_player_ids, list(Player.id())} | {:from_game, Game.t()}) ::
+          :ignore | {:error, any} | {:ok, pid}
+  def start(construct) do
+    GenServer.start_link(__MODULE__, construct)
   end
 
   @spec get(atom | pid | {atom, any} | {:via, atom, any}) :: Game.t()
@@ -33,12 +34,21 @@ defmodule Heros.Game do
 
   # Server
   @impl true
-  @spec init(any) :: {:ok, Game.t()} | {:stop, :invalid_players | :invalid_players_number}
-  def init(players) do
+  @spec init(
+          {:from_player_ids, list(Player.t())}
+          | {:from_game, Game.t()}
+        ) ::
+          {:ok, Game.t()}
+          | {:stop, :invalid_players | :invalid_players_number}
+  def init({:from_player_ids, players}) do
     case check_init_players(players) do
       :ok -> {:ok, start_game(players)}
       {:error, error} -> {:stop, error}
     end
+  end
+
+  def init({:from_game, game}) do
+    {:ok, game}
   end
 
   @impl true

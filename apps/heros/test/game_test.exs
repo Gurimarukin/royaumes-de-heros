@@ -4,7 +4,7 @@ defmodule Heros.GameTest do
   alias Heros.{Game, Utils}
 
   test "creates game" do
-    {:ok, pid} = Game.start(["p1", "p2"])
+    {:ok, pid} = Game.start({:from_player_ids, ["p1", "p2"]})
     game = Game.get(pid)
 
     # players
@@ -44,7 +44,7 @@ defmodule Heros.GameTest do
   end
 
   test "creates 4 players game" do
-    {:ok, pid} = Game.start(["p1", "p2", "p3", "p4"])
+    {:ok, pid} = Game.start({:from_player_ids, ["p1", "p2", "p3", "p4"]})
     game = Game.get(pid)
 
     assert length(Utils.keyfind(game.players, "p1").hand) == 3
@@ -54,13 +54,15 @@ defmodule Heros.GameTest do
   end
 
   test "doesn't create game with invalid settings" do
-    assert {:error, :invalid_players} = Game.start(:pouet)
-    assert {:error, :invalid_players_number} = Game.start([:a])
-    assert {:error, :invalid_players_number} = Game.start([:a, :b, :c, :d, :e])
+    assert {:error, :invalid_players} = Game.start({:from_player_ids, :pouet})
+    assert {:error, :invalid_players_number} = Game.start({:from_player_ids, [:a]})
+
+    assert {:error, :invalid_players_number} =
+             Game.start({:from_player_ids, [:a, :b, :c, :d, :e]})
   end
 
   test "playing cards moves them from hand to fight zone" do
-    {:ok, pid} = Game.start(["p1", "p2"])
+    {:ok, pid} = Game.start({:from_player_ids, ["p1", "p2"]})
     game = Game.get(pid)
     p1 = Utils.keyfind(game.players, "p1")
     p2 = Utils.keyfind(game.players, "p2")
