@@ -43,7 +43,7 @@ defmodule Heros.GameTest do
     assert game.cemetery == []
   end
 
-  test "4 players" do
+  test "creates 4 players game" do
     {:ok, pid} = Game.start([:a, :b, :c, :d])
     game = Game.get(pid)
 
@@ -53,7 +53,7 @@ defmodule Heros.GameTest do
     assert length(game.players[:d].hand) == 5
   end
 
-  test "check game settings" do
+  test "doesn't create game with invalid settings" do
     assert {:error, :invalid_players} = Game.start(:pouet)
     assert {:error, :invalid_players_number} = Game.start([:a])
     assert {:error, :invalid_players_number} = Game.start([:a, :b, :c, :d, :e])

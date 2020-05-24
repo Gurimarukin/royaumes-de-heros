@@ -60,7 +60,7 @@ defmodule Heros.Game do
   end
 
   defp start_game(players) do
-    {market, market_deck} = init_market
+    {market, market_deck} = init_market()
 
     %Game{
       players: init_players(players),
