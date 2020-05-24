@@ -18,4 +18,21 @@ defmodule Heros.Cards.Imperial do
       Card.with_id(:taxation, 3) ++
       Card.with_id(:word_of_power)
   end
+
+  @spec price(atom) :: nil | integer
+  def price(:arkus), do: 8
+  def price(:close_ranks), do: 3
+  def price(:command), do: 5
+  def price(:darian), do: 4
+  def price(:domination), do: 7
+  def price(:cristov), do: 5
+  def price(:kraka), do: 6
+  def price(:man_at_arms), do: 3
+  def price(:weyan), do: 4
+  def price(:rally_troops), do: 4
+  def price(:recruit), do: 2
+  def price(:tithe_priest), do: 2
+  def price(:taxation), do: 1
+  def price(:word_of_power), do: 6
+  def price(_), do: nil
 end

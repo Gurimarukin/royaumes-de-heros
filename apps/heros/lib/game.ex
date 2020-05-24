@@ -9,12 +9,23 @@ defmodule Heros.Game do
           players: list({Player.id(), Player.t()}),
           current_player: Player.id(),
           gems: list(Card.t()),
-          market: list(Card.t()),
+          market: list(nil | Card.t()),
           market_deck: list(Card.t()),
           cemetery: list(Card.t())
         }
   @enforce_keys [:players, :current_player, :gems, :market, :market_deck, :cemetery]
   defstruct [:players, :current_player, :gems, :market, :market_deck, :cemetery]
+
+  @behaviour Access
+
+  @impl Access
+  def fetch(game, key), do: Map.fetch(game, key)
+
+  @impl Access
+  def get_and_update(game, key, fun), do: Map.get_and_update(game, key, fun)
+
+  @impl Access
+  def pop(game, key, default \\ nil), do: Map.pop(game, key, default)
 
   # Client
   @spec start({:from_player_ids, list(Player.id())} | {:from_game, Game.t()}) ::
@@ -30,6 +41,10 @@ defmodule Heros.Game do
 
   def play_card(game, player_id, card_id) do
     GenServer.call(game, {:play_card, player_id, card_id})
+  end
+
+  def buy_card(game, player_id, card_id) do
+    GenServer.call(game, {:buy_card, player_id, card_id})
   end
 
   # Server
@@ -56,11 +71,26 @@ defmodule Heros.Game do
     {:reply, game, game}
   end
 
-  @impl true
   def handle_call({:play_card, player_id, card_id}, _from, game) do
-    case handle_play_card(game, player_id, card_id) do
-      {status, game} -> {:reply, status, game}
-    end
+    if_is_current_player(game, player_id, fn player ->
+      {status, new_player} = Player.play_card(player, card_id)
+      {:reply, status, update_in(game.players, &Utils.keyreplace(&1, player_id, new_player))}
+    end)
+  end
+
+  def handle_call({:buy_card, player_id, card_id}, _from, game) do
+    if_is_current_player(game, player_id, fn player ->
+      case Utils.keyfind(game.market, card_id) do
+        nil ->
+          case Utils.keyfind(game.gems, card_id) do
+            nil -> {:reply, :not_found, game}
+            card -> buy_gem(game, {player_id, player}, {card_id, card})
+          end
+
+        card ->
+          buy_market_card(game, {player_id, player}, {card_id, card})
+      end
+    end)
   end
 
   # Helpers
@@ -121,20 +151,51 @@ defmodule Heros.Game do
     |> Enum.split(5)
   end
 
-  @spec handle_play_card(Game.t(), Player.id(), Card.id()) :: {atom, Game.t()}
-  defp handle_play_card(game, player_id, card_id) do
+  defp if_is_current_player(game, player_id, f) do
     if game.current_player == player_id do
       case Utils.keyfind(game.players, player_id) do
-        nil ->
-          {:not_found, game}
-
-        player ->
-          {status, new_player} = Player.play_card(player, card_id)
-          new_game = update_in(game.players, &Utils.keyreplace(&1, player_id, new_player))
-          {status, new_game}
+        nil -> {:reply, :not_found, game}
+        player -> f.(player)
       end
     else
-      {:forbidden, game}
+      {:reply, :forbidden, game}
+    end
+  end
+
+  defp buy_market_card(game, {player_id, player}, {card_id, card}) do
+    case Player.buy_card(player, {card_id, card}) do
+      {:ok, new_player} ->
+        {new_market_card, new_market_deck} =
+          case game.market_deck do
+            [] -> {nil, []}
+            [new_market_card | new_market_deck] -> {new_market_card, new_market_deck}
+          end
+
+        new_game =
+          game
+          |> update_in([:players], &Utils.keyreplace(&1, player_id, new_player))
+          |> update_in([:market], &Utils.keyfullereplace(&1, card_id, new_market_card))
+          |> put_in([:market_deck], new_market_deck)
+
+        {:reply, :ok, new_game}
+
+      {status, _} ->
+        {:reply, status, game}
+    end
+  end
+
+  defp buy_gem(game, {player_id, player}, {card_id, card}) do
+    case Player.buy_card(player, {card_id, card}) do
+      {:ok, new_player} ->
+        new_game =
+          game
+          |> update_in([:players], &Utils.keyreplace(&1, player_id, new_player))
+          |> update_in([:gems], &Utils.keydelete(&1, card_id))
+
+        {:reply, :ok, new_game}
+
+      {status, _} ->
+        {:reply, status, game}
     end
   end
 end

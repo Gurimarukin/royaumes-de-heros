@@ -1,5 +1,5 @@
 defmodule Heros.Cards.Card do
-  alias Heros.Cards.Card
+  alias Heros.Cards.{Card, Guild, Imperial, Necros, Wild}
 
   @type id :: binary
 
@@ -21,12 +21,22 @@ defmodule Heros.Cards.Card do
     }
   end
 
-  @spec with_id(atom, number) :: list({Card.id(), Card.t()})
+  @spec with_id(atom, integer) :: list({Card.id(), Card.t()})
   def with_id(key, n \\ 1) do
     List.duplicate(
       get(key),
       n
     )
     |> Enum.map(&{UUID.uuid1(:hex), &1})
+  end
+
+  @spec price(atom) :: nil | integer
+  def price(:gem), do: 2
+
+  def price(key) do
+    Guild.price(key) ||
+      Imperial.price(key) ||
+      Necros.price(key) ||
+      Wild.price(key)
   end
 end

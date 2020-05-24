@@ -9,15 +9,15 @@ defmodule Heros.Player do
           max_hp: integer,
           gold: integer,
           attack: integer,
+          hand: list(Card.t()),
           deck: list(Card.t()),
           discard: list(Card.t()),
-          hand: list(Card.t()),
           fight_zone: list(Card.t())
           # inventory: list(Card.t())
           # enemy_fight_zone: list(Card.t())
         }
-  @enforce_keys [:hp, :max_hp, :gold, :attack, :deck, :discard, :hand, :fight_zone]
-  defstruct [:hp, :max_hp, :gold, :attack, :deck, :discard, :hand, :fight_zone]
+  @enforce_keys [:hp, :max_hp, :gold, :attack, :hand, :deck, :discard, :fight_zone]
+  defstruct [:hp, :max_hp, :gold, :attack, :hand, :deck, :discard, :fight_zone]
 
   @behaviour Access
 
@@ -36,9 +36,9 @@ defmodule Heros.Player do
       max_hp: 50,
       gold: 0,
       attack: 0,
+      hand: [],
       deck: [],
       discard: [],
-      hand: [],
       fight_zone: []
     }
   end
@@ -83,6 +83,20 @@ defmodule Heros.Player do
          player
          |> update_in([:hand], &Utils.keydelete(&1, card_id))
          |> update_in([:fight_zone], &(&1 ++ [{card_id, card}]))}
+    end
+  end
+
+  @spec buy_card(Player.t(), {Card.id(), Card.t()}) :: {atom, Player.t()}
+  def buy_card(player, card) do
+    price = Card.price(elem(card, 1).key)
+
+    if player.gold >= price do
+      {:ok,
+       player
+       |> update_in([:gold], &(&1 - price))
+       |> update_in([:discard], &([card] ++ &1))}
+    else
+      {:forbidden, player}
     end
   end
 end

@@ -1,7 +1,8 @@
 defmodule Heros.GameTest do
   use ExUnit.Case, async: true
 
-  alias Heros.{Game, Utils}
+  alias Heros.{Cards, Game, Player, Utils}
+  alias Heros.Cards.Card
 
   test "creates game" do
     {:ok, pid} = Game.start({:from_player_ids, ["p1", "p2"]})
@@ -102,5 +103,87 @@ defmodule Heros.GameTest do
 
     assert [] = p1.hand
     assert p1.fight_zone == [{id1, card1}, {id3, card3}, {id2, card2}]
+  end
+
+  test "buying cards moves them to discard" do
+    assert Cards.gems() != Cards.gems()
+    gems = Cards.gems()
+
+    [orc_grunt1, orc_grunt2] = Card.with_id(:orc_grunt, 2)
+    [arkus] = Card.with_id(:arkus)
+    [cult_priest1, cult_priest2] = Card.with_id(:cult_priest, 2)
+    [myros] = Card.with_id(:myros)
+    [filler] = Card.with_id(:whatever)
+
+    p1 = %Player{
+      hp: 50,
+      max_hp: 50,
+      gold: 8,
+      attack: 0,
+      hand: [],
+      deck: [],
+      discard: [myros],
+      fight_zone: []
+    }
+
+    p2 = %Player{
+      hp: 50,
+      max_hp: 50,
+      gold: 0,
+      attack: 0,
+      hand: [],
+      deck: [],
+      discard: [],
+      fight_zone: []
+    }
+
+    game = %Game{
+      players: [{"p1", p1}, {"p2", p2}],
+      current_player: "p1",
+      gems: gems,
+      market: [orc_grunt1, arkus, orc_grunt2, filler, filler],
+      market_deck: [cult_priest1],
+      cemetery: [cult_priest2]
+    }
+
+    {:ok, pid} = Game.start({:from_game, game})
+
+    # not p2's turn
+    assert Game.buy_card(pid, "p2", elem(orc_grunt1, 0)) == :forbidden
+    # not in market
+    assert Game.buy_card(pid, "p1", elem(cult_priest1, 0)) == :not_found
+    assert Game.buy_card(pid, "p1", elem(cult_priest2, 0)) == :not_found
+
+    # buying orc_grunt1
+    assert Game.buy_card(pid, "p1", elem(orc_grunt1, 0)) == :ok
+    game = Game.get(pid)
+    p1 = Utils.keyfind(game.players, "p1")
+    assert p1.gold == 5
+    assert p1.discard == [orc_grunt1, myros]
+    assert game.market == [cult_priest1, arkus, orc_grunt2, filler, filler]
+    assert game.market_deck == []
+
+    # to expensive
+    assert Game.buy_card(pid, "p1", elem(arkus, 0)) == :forbidden
+
+    # buying orc_grunt2
+    assert Game.buy_card(pid, "p1", elem(orc_grunt2, 0)) == :ok
+    game = Game.get(pid)
+    p1 = Utils.keyfind(game.players, "p1")
+    assert p1.gold == 2
+    assert p1.discard == [orc_grunt2, orc_grunt1, myros]
+    assert game.market == [cult_priest1, arkus, nil, filler, filler]
+    assert game.market_deck == []
+
+    # buying gem
+    [gem | tail] = gems
+    assert Game.buy_card(pid, "p1", elem(gem, 0)) == :ok
+    game = Game.get(pid)
+    p1 = Utils.keyfind(game.players, "p1")
+    assert p1.gold == 0
+    assert p1.discard == [gem, orc_grunt2, orc_grunt1, myros]
+    assert game.gems == tail
+    assert game.market == [cult_priest1, arkus, nil, filler, filler]
+    assert game.market_deck == []
   end
 end
