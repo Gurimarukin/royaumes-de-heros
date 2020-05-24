@@ -3,7 +3,7 @@ defmodule Heros.Game do
 
   require Logger
 
-  alias Heros.{Card, Cards, Game, Player}
+  alias Heros.{Card, Cards, Game, Player, Utils}
 
   @type t :: %{
           players: list({Player.id(), Player.t()}),
@@ -27,11 +27,15 @@ defmodule Heros.Game do
     GenServer.call(game, :get)
   end
 
+  def play_card(game, player_id, card_id) do
+    GenServer.call(game, {:play_card, player_id, card_id})
+  end
+
   # Server
   @impl true
   @spec init(any) :: {:ok, Game.t()} | {:stop, :invalid_players | :invalid_players_number}
   def init(players) do
-    case check_players(players) do
+    case check_init_players(players) do
       :ok -> {:ok, start_game(players)}
       {:error, error} -> {:stop, error}
     end
@@ -42,10 +46,17 @@ defmodule Heros.Game do
     {:reply, game, game}
   end
 
+  @impl true
+  def handle_call({:play_card, player_id, card_id}, _from, game) do
+    case handle_play_card(game, player_id, card_id) do
+      {status, game} -> {:reply, status, game}
+    end
+  end
+
   # Helpers
-  @spec check_players(list(Player.t())) ::
+  @spec check_init_players(list(Player.t())) ::
           :ok | {:error, :invalid_players | :invalid_players_number}
-  defp check_players(players) do
+  defp check_init_players(players) do
     if is_list(players) do
       n = length(players)
 
@@ -98,5 +109,22 @@ defmodule Heros.Game do
     Cards.market()
     |> Enum.shuffle()
     |> Enum.split(5)
+  end
+
+  @spec handle_play_card(Game.t(), Player.id(), Card.id()) :: {atom, Game.t()}
+  defp handle_play_card(game, player_id, card_id) do
+    if game.current_player == player_id do
+      case Utils.keyfind(game.players, player_id) do
+        nil ->
+          {:not_found, game}
+
+        player ->
+          {status, new_player} = Player.play_card(player, card_id)
+          new_game = update_in(game.players, &Utils.keyreplace(&1, player_id, new_player))
+          {status, new_game}
+      end
+    else
+      {:forbidden, game}
+    end
   end
 end

@@ -1,5 +1,5 @@
 defmodule Heros.Player do
-  alias Heros.{Cards, Player}
+  alias Heros.{Cards, Player, Utils}
   alias Heros.Cards.Card
 
   @type id :: String.t()
@@ -69,6 +69,20 @@ defmodule Heros.Player do
       |> update_in([:hand], &(&1 ++ [head]))
       |> put_in([:deck], tail)
       |> draw_cards(n - 1)
+    end
+  end
+
+  @spec play_card(Player.t(), Card.id()) :: {atom, Player.t()}
+  def play_card(player, card_id) do
+    case Utils.keyfind(player.hand, card_id) do
+      nil ->
+        {:not_found, player}
+
+      card ->
+        {:ok,
+         player
+         |> update_in([:hand], &Utils.keydelete(&1, card_id))
+         |> update_in([:fight_zone], &(&1 ++ [{card_id, card}]))}
     end
   end
 end

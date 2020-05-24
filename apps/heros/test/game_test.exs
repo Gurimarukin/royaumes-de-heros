@@ -1,17 +1,17 @@
 defmodule Heros.GameTest do
   use ExUnit.Case, async: true
 
-  alias Heros.Game
+  alias Heros.{Game, Utils}
 
   test "creates game" do
-    {:ok, pid} = Game.start([:a, :b])
+    {:ok, pid} = Game.start(["p1", "p2"])
     game = Game.get(pid)
 
     # players
-    assert [{:a, _}, {:b, _}] = game.players
+    assert [{"p1", _}, {"p2", _}] = game.players
 
-    assert length(game.players[:a].hand) == 3
-    assert length(game.players[:b].hand) == 5
+    assert length(Utils.keyfind(game.players, "p1").hand) == 3
+    assert length(Utils.keyfind(game.players, "p2").hand) == 5
 
     game.players
     |> Enum.map(fn {_, player} ->
@@ -27,7 +27,7 @@ defmodule Heros.GameTest do
     end)
 
     # current_player
-    assert game.current_player == :a
+    assert game.current_player == "p1"
 
     # gems
     assert length(game.gems) == 16
@@ -44,18 +44,61 @@ defmodule Heros.GameTest do
   end
 
   test "creates 4 players game" do
-    {:ok, pid} = Game.start([:a, :b, :c, :d])
+    {:ok, pid} = Game.start(["p1", "p2", "p3", "p4"])
     game = Game.get(pid)
 
-    assert length(game.players[:a].hand) == 3
-    assert length(game.players[:b].hand) == 4
-    assert length(game.players[:c].hand) == 5
-    assert length(game.players[:d].hand) == 5
+    assert length(Utils.keyfind(game.players, "p1").hand) == 3
+    assert length(Utils.keyfind(game.players, "p2").hand) == 4
+    assert length(Utils.keyfind(game.players, "p3").hand) == 5
+    assert length(Utils.keyfind(game.players, "p4").hand) == 5
   end
 
   test "doesn't create game with invalid settings" do
     assert {:error, :invalid_players} = Game.start(:pouet)
     assert {:error, :invalid_players_number} = Game.start([:a])
     assert {:error, :invalid_players_number} = Game.start([:a, :b, :c, :d, :e])
+  end
+
+  test "playing cards moves them from hand to fight zone" do
+    {:ok, pid} = Game.start(["p1", "p2"])
+    game = Game.get(pid)
+    p1 = Utils.keyfind(game.players, "p1")
+    p2 = Utils.keyfind(game.players, "p2")
+
+    [{id, _}, _, _, _, _] = p2.hand
+    # b can't play as he isn't current player
+    assert Game.play_card(pid, "p2", id) == :forbidden
+    # a can't play b's card
+    assert Game.play_card(pid, "p1", id) == :not_found
+
+    [{id1, card1}, {id2, card2}, {id3, card3}] = p1.hand
+
+    # player not found, he isn't current player
+    assert Game.play_card(pid, "p3", id1) == :forbidden
+    # card not found
+    assert Game.play_card(pid, "p1", "whatever") == :not_found
+
+    assert Game.play_card(pid, "p1", id1) == :ok
+    game = Game.get(pid)
+    p1 = Utils.keyfind(game.players, "p1")
+
+    assert [{^id2, ^card2}, {^id3, ^card3}] = p1.hand
+    assert p1.fight_zone == [{id1, card1}]
+
+    assert Game.play_card(pid, "p1", id1) == :not_found
+
+    assert Game.play_card(pid, "p1", id3) == :ok
+    game = Game.get(pid)
+    p1 = Utils.keyfind(game.players, "p1")
+
+    assert [{^id2, ^card2}] = p1.hand
+    assert p1.fight_zone == [{id1, card1}, {id3, card3}]
+
+    assert Game.play_card(pid, "p1", id2) == :ok
+    game = Game.get(pid)
+    p1 = Utils.keyfind(game.players, "p1")
+
+    assert [] = p1.hand
+    assert p1.fight_zone == [{id1, card1}, {id3, card3}, {id2, card2}]
   end
 end
