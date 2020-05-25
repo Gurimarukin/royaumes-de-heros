@@ -59,7 +59,7 @@ defmodule Heros.Game do
           Player.id(),
           Player.id(),
           :player | Card.id()
-        ) :: :ok | atom
+        ) :: :ok | {:victory, Player.id()} | atom
   def attack(game, attacker, defender, what) do
     GenServer.call(game, {:attack, attacker, defender, what})
   end
@@ -350,15 +350,19 @@ defmodule Heros.Game do
     else
       damages = min(attacker.combat, defender.hp)
 
-      game = %{
-        game
-        | players:
-            game.players
-            |> KeyListUtils.replace(attacker_id, attacker |> Player.decr_combat(damages))
-            |> KeyListUtils.replace(defender_id, defender |> Player.decr_hp(damages))
-      }
+      players =
+        game.players
+        |> KeyListUtils.replace(attacker_id, attacker |> Player.decr_combat(damages))
+        |> KeyListUtils.replace(defender_id, defender |> Player.decr_hp(damages))
 
-      {:reply, :ok, game}
+      game = %{game | players: players}
+      players_alive = players |> Enum.count(fn {_, p} -> Player.is_alive(p) end)
+
+      if players_alive == 1 do
+        {:reply, {:victory, attacker_id}, game}
+      else
+        {:reply, :ok, game}
+      end
     end
   end
 

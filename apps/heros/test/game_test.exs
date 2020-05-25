@@ -265,7 +265,7 @@ defmodule Heros.GameTest do
 
     {:ok, pid} = Game.start({:from_game, game})
 
-    assert Game.attack(pid, "p1", "p2", :player) == :ok
+    assert Game.attack(pid, "p1", "p2", :player) == {:victory, "p1"}
     game = Game.get(pid)
     p1 = %{p1 | combat: 2}
     p2 = %{p2 | hp: 0}
@@ -431,5 +431,19 @@ defmodule Heros.GameTest do
     {:ok, pid} = Game.start({:from_game, game})
 
     assert Game.buy_card(pid, "p1", gems |> hd() |> elem(0)) == :forbidden
+  end
+
+  test "game end" do
+    p1 = %{Player.empty() | hp: 4}
+    p2 = %{Player.empty() | combat: 12}
+    p3 = %{Player.empty() | hp: 6}
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}, {"p3", p3}], "p2")
+
+    {:ok, pid} = Game.start({:from_game, game})
+
+    assert Game.attack(pid, "p2", "p3", :player) == :ok
+    assert Game.attack(pid, "p2", "p1", :player) == {:victory, "p2"}
+    assert [{_, %{hp: 0}}, _, {_, %{hp: 0}}] = Game.get(pid).players
   end
 end
