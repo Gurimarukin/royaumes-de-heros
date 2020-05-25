@@ -408,4 +408,28 @@ defmodule Heros.GameTest do
 
     assert game.current_player == "p2"
   end
+
+  test "current player doesn't exist" do
+    p1 = Player.empty()
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p3")
+
+    {:ok, pid} = Game.start({:from_game, game})
+
+    assert Game.attack(pid, "p3", "p2", :player) == :not_found
+  end
+
+  test "can't buy gem if no gold" do
+    gems = Cards.gems()
+
+    p1 = Player.empty()
+    p2 = Player.empty()
+
+    game = %{Game.empty([{"p1", p1}, {"p2", p2}], "p1") | gems: gems}
+
+    {:ok, pid} = Game.start({:from_game, game})
+
+    assert Game.buy_card(pid, "p1", gems |> hd() |> elem(0)) == :forbidden
+  end
 end
