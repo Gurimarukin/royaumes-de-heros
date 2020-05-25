@@ -1,5 +1,5 @@
 defmodule Heros.Player do
-  alias Heros.{Cards, Player, Utils}
+  alias Heros.{Cards, KeyListUtils, Player}
   alias Heros.Cards.Card
 
   @type id :: String.t()
@@ -77,14 +77,14 @@ defmodule Heros.Player do
 
   @spec play_card(Player.t(), Card.id()) :: {atom, Player.t()}
   def play_card(player, card_id) do
-    case Utils.keyfind(player.hand, card_id) do
+    case KeyListUtils.find(player.hand, card_id) do
       nil ->
         {:not_found, player}
 
       card ->
         {:ok,
          player
-         |> update_in([:hand], &Utils.keydelete(&1, card_id))
+         |> update_in([:hand], &KeyListUtils.delete(&1, card_id))
          |> update_in([:fight_zone], &(&1 ++ [{card_id, card}]))}
     end
   end
@@ -101,5 +101,21 @@ defmodule Heros.Player do
     else
       {:forbidden, player}
     end
+  end
+
+  @spec discard_phase(Player.t()) :: Player.t()
+  def discard_phase(player) do
+    {champions, non_champions} =
+      player.fight_zone
+      |> Enum.split_with(fn {_, c} -> Card.is_champion(c.key) end)
+
+    %{
+      player
+      | gold: 0,
+        combat: 0,
+        hand: [],
+        discard: Enum.reverse(player.hand) ++ Enum.reverse(non_champions) ++ player.discard,
+        fight_zone: champions |> KeyListUtils.map(&Card.reset_state/1)
+    }
   end
 end

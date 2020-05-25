@@ -3,7 +3,7 @@ defmodule Heros.Game do
 
   require Logger
 
-  alias Heros.{Cards, Game, Player, Utils}
+  alias Heros.{Cards, Game, KeyListUtils, Player}
   alias Heros.Cards.Card
 
   @type t :: %{
@@ -54,13 +54,13 @@ defmodule Heros.Game do
   end
 
   @spec play_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
-          :ok | any
+          :ok | atom
   def play_card(game, player_id, card_id) do
     GenServer.call(game, {:play_card, player_id, card_id})
   end
 
   @spec buy_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
-          :ok | any
+          :ok | atom
   def buy_card(game, player_id, card_id) do
     GenServer.call(game, {:buy_card, player_id, card_id})
   end
@@ -70,9 +70,14 @@ defmodule Heros.Game do
           Player.id(),
           Player.id(),
           :player | Card.id()
-        ) :: :ok | any
+        ) :: :ok | atom
   def attack(game, attacker, defender, what) do
     GenServer.call(game, {:attack, attacker, defender, what})
+  end
+
+  @spec discard_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: :ok | atom
+  def discard_phase(game, player_id) do
+    GenServer.call(game, {:discard_phase, player_id})
   end
 
   #
@@ -104,15 +109,16 @@ defmodule Heros.Game do
   def handle_call({:play_card, player_id, card_id}, _from, game) do
     if_is_current_player(game, player_id, fn player ->
       {status, new_player} = Player.play_card(player, card_id)
-      {:reply, status, update_in(game.players, &Utils.keyreplace(&1, player_id, new_player))}
+
+      {:reply, status, update_in(game.players, &KeyListUtils.replace(&1, player_id, new_player))}
     end)
   end
 
   def handle_call({:buy_card, player_id, card_id}, _from, game) do
     if_is_current_player(game, player_id, fn player ->
-      case Utils.keyfind(game.market, card_id) do
+      case KeyListUtils.find(game.market, card_id) do
         nil ->
-          case Utils.keyfind(game.gems, card_id) do
+          case KeyListUtils.find(game.gems, card_id) do
             nil -> {:reply, :not_found, game}
             card -> buy_gem(game, {player_id, player}, {card_id, card})
           end
@@ -125,14 +131,29 @@ defmodule Heros.Game do
 
   def handle_call({:attack, attacker_id, defender_id, what}, _from, game) do
     if_is_current_player(game, attacker_id, fn attacker ->
-      if attacker.combat > 0 and are_neighbours(game, attacker_id, defender_id) do
-        case Utils.keyfind(game.players, defender_id) do
-          nil -> {:reply, :not_found, game}
-          defender -> attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
-        end
-      else
-        {:reply, :forbidden, game}
+      case KeyListUtils.find(game.players, defender_id) do
+        nil ->
+          {:reply, :not_found, game}
+
+        defender ->
+          if attacker.combat > 0 and is_next_to_current_player(game, defender_id) do
+            attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
+          else
+            {:reply, :forbidden, game}
+          end
       end
+    end)
+  end
+
+  def handle_call({:discard_phase, player_id}, _from, game) do
+    if_is_current_player(game, player_id, fn _player ->
+      new_game = %{
+        game
+        | players: KeyListUtils.update(game.players, player_id, &Player.discard_phase/1),
+          current_player: next_player_alive(game)
+      }
+
+      {:reply, :ok, new_game}
     end)
   end
 
@@ -199,7 +220,7 @@ defmodule Heros.Game do
 
   defp if_is_current_player(game, player_id, f) do
     if game.current_player == player_id do
-      case Utils.keyfind(game.players, player_id) do
+      case KeyListUtils.find(game.players, player_id) do
         nil -> {:reply, :not_found, game}
         player -> f.(player)
       end
@@ -220,8 +241,8 @@ defmodule Heros.Game do
 
         new_game =
           game
-          |> update_in([:players], &Utils.keyreplace(&1, player_id, new_player))
-          |> update_in([:market], &Utils.keyfullereplace(&1, card_id, new_market_card))
+          |> update_in([:players], &KeyListUtils.replace(&1, player_id, new_player))
+          |> update_in([:market], &KeyListUtils.replace_with_key(&1, card_id, new_market_card))
           |> put_in([:market_deck], new_market_deck)
 
         {:reply, :ok, new_game}
@@ -236,8 +257,8 @@ defmodule Heros.Game do
       {:ok, new_player} ->
         new_game =
           game
-          |> update_in([:players], &Utils.keyreplace(&1, player_id, new_player))
-          |> update_in([:gems], &Utils.keydelete(&1, card_id))
+          |> update_in([:players], &KeyListUtils.replace(&1, player_id, new_player))
+          |> update_in([:gems], &KeyListUtils.delete(&1, card_id))
 
         {:reply, :ok, new_game}
 
@@ -246,26 +267,61 @@ defmodule Heros.Game do
     end
   end
 
-  # attack
-  defp are_neighbours(game, attacker_id, defender_id) do
-    case {
-      Enum.find_index(game.players, fn {id, _} -> id == attacker_id end),
-      Enum.find_index(game.players, fn {id, _} -> id == defender_id end)
-    } do
-      {nil, _} -> true
-      {_, nil} -> true
-      {0, j} -> j == 1 or j == length(game.players) - 1
-      {i, 0} -> i == 1 or i == length(game.players) - 1
-      {i, j} -> abs(i - j) == 1
+  defp next_player_alive(game) do
+    case Enum.find_index(game.players, fn {id, _} -> id == game.current_player end) do
+      nil -> nil
+      i -> next_player_alive_rec(game.players, i)
     end
   end
 
+  defp previous_player_alive(game) do
+    case Enum.find_index(game.players, fn {id, _} -> id == game.current_player end) do
+      nil -> nil
+      i -> previous_player_alive_rec(game.players, i)
+    end
+  end
+
+  defp next_player_alive_rec(players, i) do
+    i = if i == length(players) - 1, do: 0, else: i + 1
+    step_if_dead(players, i, &next_player_alive_rec/2)
+  end
+
+  defp previous_player_alive_rec(players, i) do
+    i = if i == 0, do: length(players) - 1, else: i - 1
+    step_if_dead(players, i, &previous_player_alive_rec/2)
+  end
+
+  defp step_if_dead(players, i, f) do
+    case Enum.fetch(players, i) do
+      {:ok, {k, p}} -> if Player.is_alive(p), do: k, else: f.(players, i)
+      :error -> nil
+    end
+  end
+
+  defp is_next_to_current_player(game, player_id) do
+    case next_player_alive(game) do
+      nil ->
+        false
+
+      ^player_id ->
+        true
+
+      _ ->
+        case previous_player_alive(game) do
+          nil -> false
+          ^player_id -> true
+          _ -> false
+        end
+    end
+  end
+
+  # attack
   defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, :player) do
     attack_player(game, {attacker_id, attacker}, {defender_id, defender})
   end
 
   defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, card_id) do
-    case Utils.keyfind(defender.fight_zone, card_id) do
+    case KeyListUtils.find(defender.fight_zone, card_id) do
       nil -> {:reply, :not_found, game}
       card -> attack_card(game, {attacker_id, attacker}, {defender_id, defender}, {card_id, card})
     end
@@ -284,8 +340,8 @@ defmodule Heros.Game do
       new_game =
         update_in(game.players, fn players ->
           players
-          |> Utils.keyreplace(attacker_id, new_attacker)
-          |> Utils.keyreplace(defender_id, new_defender)
+          |> KeyListUtils.replace(attacker_id, new_attacker)
+          |> KeyListUtils.replace(defender_id, new_defender)
         end)
 
       {:reply, :ok, new_game}
@@ -336,13 +392,13 @@ defmodule Heros.Game do
       new_defender =
         defender
         |> update_in([:discard], &([{card_id, card}] ++ &1))
-        |> update_in([:fight_zone], &Utils.keydelete(&1, card_id))
+        |> update_in([:fight_zone], &KeyListUtils.delete(&1, card_id))
 
       new_game =
         update_in(game.players, fn players ->
           players
-          |> Utils.keyreplace(attacker_id, new_attacker)
-          |> Utils.keyreplace(defender_id, new_defender)
+          |> KeyListUtils.replace(attacker_id, new_attacker)
+          |> KeyListUtils.replace(defender_id, new_defender)
         end)
 
       {:reply, :ok, new_game}

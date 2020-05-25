@@ -1,7 +1,7 @@
 defmodule Heros.GameTest do
   use ExUnit.Case, async: true
 
-  alias Heros.{Cards, Game, Player, Utils}
+  alias Heros.{Cards, Game, KeyListUtils, Player}
 
   test "creates game" do
     {:ok, pid} = Game.start({:from_player_ids, ["p1", "p2"]})
@@ -10,8 +10,8 @@ defmodule Heros.GameTest do
     # players
     assert [{"p1", _}, {"p2", _}] = game.players
 
-    assert length(Utils.keyfind(game.players, "p1").hand) == 3
-    assert length(Utils.keyfind(game.players, "p2").hand) == 5
+    assert length(KeyListUtils.find(game.players, "p1").hand) == 3
+    assert length(KeyListUtils.find(game.players, "p2").hand) == 5
 
     game.players
     |> Enum.map(fn {_, player} ->
@@ -47,10 +47,10 @@ defmodule Heros.GameTest do
     {:ok, pid} = Game.start({:from_player_ids, ["p1", "p2", "p3", "p4"]})
     game = Game.get(pid)
 
-    assert length(Utils.keyfind(game.players, "p1").hand) == 3
-    assert length(Utils.keyfind(game.players, "p2").hand) == 4
-    assert length(Utils.keyfind(game.players, "p3").hand) == 5
-    assert length(Utils.keyfind(game.players, "p4").hand) == 5
+    assert length(KeyListUtils.find(game.players, "p1").hand) == 3
+    assert length(KeyListUtils.find(game.players, "p2").hand) == 4
+    assert length(KeyListUtils.find(game.players, "p3").hand) == 5
+    assert length(KeyListUtils.find(game.players, "p4").hand) == 5
   end
 
   test "doesn't create game with invalid settings" do
@@ -64,8 +64,8 @@ defmodule Heros.GameTest do
   test "playing cards moves them from hand to fight zone" do
     {:ok, pid} = Game.start({:from_player_ids, ["p1", "p2"]})
     game = Game.get(pid)
-    p1 = Utils.keyfind(game.players, "p1")
-    p2 = Utils.keyfind(game.players, "p2")
+    p1 = KeyListUtils.find(game.players, "p1")
+    p2 = KeyListUtils.find(game.players, "p2")
 
     [{id, _}, _, _, _, _] = p2.hand
     # b can't play as he isn't current player
@@ -82,7 +82,7 @@ defmodule Heros.GameTest do
 
     assert Game.play_card(pid, "p1", id1) == :ok
     game = Game.get(pid)
-    p1 = Utils.keyfind(game.players, "p1")
+    p1 = KeyListUtils.find(game.players, "p1")
 
     assert [{^id2, ^card2}, {^id3, ^card3}] = p1.hand
     assert p1.fight_zone == [{id1, card1}]
@@ -91,14 +91,14 @@ defmodule Heros.GameTest do
 
     assert Game.play_card(pid, "p1", id3) == :ok
     game = Game.get(pid)
-    p1 = Utils.keyfind(game.players, "p1")
+    p1 = KeyListUtils.find(game.players, "p1")
 
     assert [{^id2, ^card2}] = p1.hand
     assert p1.fight_zone == [{id1, card1}, {id3, card3}]
 
     assert Game.play_card(pid, "p1", id2) == :ok
     game = Game.get(pid)
-    p1 = Utils.keyfind(game.players, "p1")
+    p1 = KeyListUtils.find(game.players, "p1")
 
     assert [] = p1.hand
     assert p1.fight_zone == [{id1, card1}, {id3, card3}, {id2, card2}]
@@ -139,7 +139,7 @@ defmodule Heros.GameTest do
     # buying orc_grunt1
     assert Game.buy_card(pid, "p1", elem(orc_grunt1, 0)) == :ok
     game = Game.get(pid)
-    p1 = Utils.keyfind(game.players, "p1")
+    p1 = KeyListUtils.find(game.players, "p1")
     assert p1.gold == 5
     assert p1.discard == [orc_grunt1, myros]
     assert game.market == [cult_priest1, arkus, orc_grunt2, filler, filler]
@@ -151,7 +151,7 @@ defmodule Heros.GameTest do
     # buying orc_grunt2
     assert Game.buy_card(pid, "p1", elem(orc_grunt2, 0)) == :ok
     game = Game.get(pid)
-    p1 = Utils.keyfind(game.players, "p1")
+    p1 = KeyListUtils.find(game.players, "p1")
     assert p1.gold == 2
     assert p1.discard == [orc_grunt2, orc_grunt1, myros]
     assert game.market == [cult_priest1, arkus, nil, filler, filler]
@@ -161,7 +161,7 @@ defmodule Heros.GameTest do
     [gem | tail] = gems
     assert Game.buy_card(pid, "p1", elem(gem, 0)) == :ok
     game = Game.get(pid)
-    p1 = Utils.keyfind(game.players, "p1")
+    p1 = KeyListUtils.find(game.players, "p1")
     assert p1.gold == 0
     assert p1.discard == [gem, orc_grunt2, orc_grunt1, myros]
     assert game.gems == tail
@@ -213,8 +213,8 @@ defmodule Heros.GameTest do
       |> put_in([:fight_zone], [cult_priest, smash_and_grab, street_thug])
       |> put_in([:discard], [orc_grunt])
 
-    assert p1 == Utils.keyfind(game.players, "p1")
-    assert p2 == Utils.keyfind(game.players, "p2")
+    assert p1 == KeyListUtils.find(game.players, "p1")
+    assert p2 == KeyListUtils.find(game.players, "p2")
 
     # attack street_thug
     assert Game.attack(pid, "p1", "p2", elem(street_thug, 0)) == :ok
@@ -226,8 +226,8 @@ defmodule Heros.GameTest do
       |> put_in([:fight_zone], [cult_priest, smash_and_grab])
       |> put_in([:discard], [street_thug, orc_grunt])
 
-    assert p1 == Utils.keyfind(game.players, "p1")
-    assert p2 == Utils.keyfind(game.players, "p2")
+    assert p1 == KeyListUtils.find(game.players, "p1")
+    assert p2 == KeyListUtils.find(game.players, "p2")
 
     # not enough combat for cult_priest
     assert Game.attack(pid, "p1", "p2", elem(cult_priest, 0)) == :forbidden
@@ -237,8 +237,8 @@ defmodule Heros.GameTest do
     game = Game.get(pid)
     p1 = put_in(p1.combat, 0)
     p2 = put_in(p2.hp, 47)
-    assert p1 == Utils.keyfind(game.players, "p1")
-    assert p2 == Utils.keyfind(game.players, "p2")
+    assert p1 == KeyListUtils.find(game.players, "p1")
+    assert p2 == KeyListUtils.find(game.players, "p2")
   end
 
   test "attacking and killing a player" do
@@ -260,8 +260,8 @@ defmodule Heros.GameTest do
     game = Game.get(pid)
     p1 = put_in(p1.combat, 2)
     p2 = put_in(p2.hp, 0)
-    assert p1 == Utils.keyfind(game.players, "p1")
-    assert p2 == Utils.keyfind(game.players, "p2")
+    assert p1 == KeyListUtils.find(game.players, "p1")
+    assert p2 == KeyListUtils.find(game.players, "p2")
 
     # can't attack dead player
     assert Game.attack(pid, "p1", "p2", :player) == :forbidden
@@ -288,5 +288,57 @@ defmodule Heros.GameTest do
 
     assert Game.attack(pid, "p1", "p3", :player) == :forbidden
     assert Game.attack(pid, "p1", "p4", :player) == :ok
+  end
+
+  test "end turn" do
+    [orc_grunt] = Cards.with_id(:orc_grunt)
+    [lys] = Cards.with_id(:lys)
+    expended_lys = {elem(lys, 0), elem(lys, 1) |> Cards.Card.expend()}
+    [arkus] = Cards.with_id(:arkus)
+    [smash_and_grab] = Cards.with_id(:smash_and_grab)
+    [cult_priest] = Cards.with_id(:cult_priest)
+    [myros] = Cards.with_id(:myros)
+    [gem1, gem2, gem3] = Cards.with_id(:gem, 3)
+
+    p1 =
+      Player.empty()
+      |> put_in([:hp], 0)
+
+    p2 = Player.empty()
+
+    p3 =
+      Player.empty()
+      |> put_in([:gold], 1)
+      |> put_in([:combat], 3)
+      |> put_in([:hand], [arkus])
+      |> put_in([:deck], [orc_grunt, gem1])
+      |> put_in([:discard], [myros, gem2])
+      |> put_in([:fight_zone], [expended_lys, gem3, cult_priest, smash_and_grab])
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}, {"p3", p3}], "p3")
+
+    {:ok, pid} = Game.start({:from_game, game})
+
+    # not p1 or p2's turn
+    assert Game.discard_phase(pid, "p1") == :forbidden
+    assert Game.discard_phase(pid, "p2") == :forbidden
+
+    assert Game.discard_phase(pid, "p3") == :ok
+    game = Game.get(pid)
+
+    p3 =
+      p3
+      |> put_in([:gold], 0)
+      |> put_in([:combat], 0)
+      |> put_in([:hand], [])
+      |> put_in([:deck], [orc_grunt, gem1])
+      |> put_in([:discard], [arkus, smash_and_grab, gem3, myros, gem2])
+      |> put_in([:fight_zone], [lys, cult_priest])
+
+    assert p1 == KeyListUtils.find(game.players, "p1")
+    assert p2 == KeyListUtils.find(game.players, "p2")
+    assert p3 == KeyListUtils.find(game.players, "p3")
+
+    assert game.current_player == "p2"
   end
 end

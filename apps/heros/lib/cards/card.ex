@@ -39,6 +39,9 @@ defmodule Heros.Cards.Card do
       Wild.champion(key)
   end
 
+  @spec is_champion(atom) :: boolean
+  def is_champion(key), do: champion(key) != nil
+
   @spec is_guard(atom) :: boolean
   def is_guard(key) do
     case champion(key) do
@@ -46,4 +49,17 @@ defmodule Heros.Cards.Card do
       _ -> false
     end
   end
+
+  @spec reset_state(Card.t()) :: Card.t()
+  def reset_state(card) do
+    %{
+      card
+      | expend_ability_used: false,
+        ally_ability_used: false,
+        sacrifice_ability_used: false
+    }
+  end
+
+  @spec expend(Card.t()) :: Card.t()
+  def expend(card), do: put_in(card.expend_ability_used, true)
 end
