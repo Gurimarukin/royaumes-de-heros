@@ -348,6 +348,64 @@ defmodule Heros.GameTest do
     assert p2 == KeyListUtils.find(game.players, "p2")
     assert p3 == KeyListUtils.find(game.players, "p3")
 
+    assert game.current_player == "p3"
+
+    assert Game.draw_phase(pid, "p1") == :forbidden
+    assert Game.draw_phase(pid, "p2") == :forbidden
+
+    assert Game.draw_phase(pid, "p3") == :ok
+    game = Game.get(pid)
+
+    assert p1 == KeyListUtils.find(game.players, "p1")
+    assert p2 == KeyListUtils.find(game.players, "p2")
+
+    p3 = KeyListUtils.find(game.players, "p3")
+    assert [^orc_grunt, ^gem1, hand3, hand4, hand5] = p3.hand
+    assert [deck1, deck2] = p3.deck
+    assert [] = p3.discard
+
+    assert hand3 == arkus or
+             hand3 == smash_and_grab or
+             hand3 == gem3 or
+             hand3 == myros or
+             hand3 == gem2
+
+    assert hand4 == arkus or
+             hand4 == smash_and_grab or
+             hand4 == gem3 or
+             hand4 == myros or
+             hand4 == gem2
+
+    assert hand5 == arkus or
+             hand5 == smash_and_grab or
+             hand5 == gem3 or
+             hand5 == myros or
+             hand5 == gem2
+
+    assert hand3 != hand4 and hand4 != hand5 and hand5 != hand3
+
+    assert deck1 == arkus or
+             deck1 == smash_and_grab or
+             deck1 == gem3 or
+             deck1 == myros or
+             deck1 == gem2
+
+    assert deck2 == arkus or
+             deck2 == smash_and_grab or
+             deck2 == gem3 or
+             deck2 == myros or
+             deck2 == gem2
+
+    assert deck1 != deck2
+
+    assert deck1 != hand3
+    assert deck1 != hand4
+    assert deck1 != hand5
+
+    assert deck2 != hand3
+    assert deck2 != hand4
+    assert deck2 != hand5
+
     assert game.current_player == "p2"
   end
 end

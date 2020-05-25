@@ -69,6 +69,11 @@ defmodule Heros.Game do
     GenServer.call(game, {:discard_phase, player_id})
   end
 
+  @spec draw_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: :ok | atom
+  def draw_phase(game, player_id) do
+    GenServer.call(game, {:draw_phase, player_id})
+  end
+
   #
   # Server
   #
@@ -79,9 +84,9 @@ defmodule Heros.Game do
         ) ::
           {:ok, Game.t()}
           | {:stop, :invalid_players | :invalid_players_number}
-  def init({:from_player_ids, players}) do
-    case check_init_players(players) do
-      :ok -> {:ok, start_game(players)}
+  def init({:from_player_ids, player_ids}) do
+    case check_init_players(player_ids) do
+      :ok -> {:ok, start_game(player_ids)}
       {:error, error} -> {:stop, error}
     end
   end
@@ -147,9 +152,23 @@ defmodule Heros.Game do
       {:reply, :ok,
        %{
          game
-         | players: game.players |> KeyListUtils.update(player_id, &Player.discard_phase/1),
-           current_player: next_player_alive(game)
+         | players: game.players |> KeyListUtils.update(player_id, &Player.discard_phase/1)
+           #  current_player: next_player_alive(game)
        }}
+    end)
+  end
+
+  def handle_call({:draw_phase, player_id}, _from, game) do
+    if_is_current_player(game, player_id, fn _player ->
+      {
+        :reply,
+        :ok,
+        %{
+          game
+          | players: game.players |> KeyListUtils.update(player_id, &Player.draw_cards(&1, 5)),
+            current_player: next_player_alive(game)
+        }
+      }
     end)
   end
 
@@ -173,12 +192,12 @@ defmodule Heros.Game do
     end
   end
 
-  defp start_game(players) do
+  defp start_game(player_ids) do
     {market, market_deck} = init_market()
 
     %Game{
-      players: init_players(players),
-      current_player: hd(players),
+      players: init_players(player_ids),
+      current_player: hd(player_ids),
       gems: Cards.gems(),
       market: market,
       market_deck: market_deck,
@@ -186,10 +205,10 @@ defmodule Heros.Game do
     }
   end
 
-  defp init_players(players) do
-    n_players = length(players)
+  defp init_players(player_ids) do
+    n_players = length(player_ids)
 
-    players
+    player_ids
     |> Enum.with_index()
     |> Enum.map(fn {player_id, i} ->
       {player_id,

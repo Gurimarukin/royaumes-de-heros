@@ -50,16 +50,9 @@ defmodule Heros.Cards.Card do
     end
   end
 
-  @spec reset_state(Card.t()) :: Card.t()
-  def reset_state(card) do
-    %{
-      card
-      | expend_ability_used: false,
-        ally_ability_used: false,
-        sacrifice_ability_used: false
-    }
-  end
-
   @spec expend(Card.t()) :: Card.t()
   def expend(card), do: %{card | expend_ability_used: true}
+
+  @spec prepare(Card.t()) :: Card.t()
+  def prepare(card), do: %{card | expend_ability_used: false}
 end

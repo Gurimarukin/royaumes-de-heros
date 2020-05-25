@@ -41,10 +41,12 @@ defmodule Heros.Player do
   @spec is_alive(Player.t()) :: boolean
   def is_alive(player), do: player.hp > 0
 
-  @spec draw_cards(Player.t(), non_neg_integer) :: Player.t()
-  def draw_cards(player, 0), do: player
-
+  @spec draw_cards(Player.t(), integer) :: Player.t()
   def draw_cards(player, n) do
+    if n <= 0, do: player, else: draw_cards_rec(player, n)
+  end
+
+  defp draw_cards_rec(player, n) do
     case {player.deck, player.discard} do
       {[], []} ->
         player
@@ -55,6 +57,7 @@ defmodule Heros.Player do
           | deck: Enum.shuffle(discard),
             discard: []
         }
+        |> draw_cards(n)
 
       {[head | tail], _} ->
         %{
@@ -107,7 +110,7 @@ defmodule Heros.Player do
         combat: 0,
         hand: [],
         discard: Enum.reverse(player.hand) ++ Enum.reverse(non_champions) ++ player.discard,
-        fight_zone: champions |> KeyListUtils.map(&Card.reset_state/1)
+        fight_zone: champions |> KeyListUtils.map(&Card.prepare/1)
     }
   end
 
