@@ -19,29 +19,45 @@ defmodule Heros.Cards.Necros do
       Cards.with_id(:varrick)
   end
 
-  @spec price(atom) :: nil | integer
-  def price(:cult_priest), do: 3
-  def price(:dark_energy), do: 4
-  def price(:dark_reward), do: 5
-  def price(:death_cultist), do: 2
-  def price(:death_touch), do: 1
-  def price(:rayla), do: 4
-  def price(:influence), do: 2
-  def price(:krythos), do: 7
-  def price(:life_drain), do: 6
-  def price(:lys), do: 6
-  def price(:the_rot), do: 3
-  def price(:tyrannor), do: 8
-  def price(:varrick), do: 5
-  def price(_), do: nil
+  @spec cost(atom) :: nil | integer
+  def cost(:cult_priest), do: 3
+  def cost(:dark_energy), do: 4
+  def cost(:dark_reward), do: 5
+  def cost(:death_cultist), do: 2
+  def cost(:death_touch), do: 1
+  def cost(:rayla), do: 4
+  def cost(:influence), do: 2
+  def cost(:krythos), do: 7
+  def cost(:life_drain), do: 6
+  def cost(:lys), do: 6
+  def cost(:the_rot), do: 3
+  def cost(:tyrannor), do: 8
+  def cost(:varrick), do: 5
+  def cost(_), do: nil
 
-  @spec champion(atom) :: nil | {:not_guard | :guard, integer}
-  def champion(:cult_priest), do: {:not_guard, 4}
-  def champion(:death_cultist), do: {:guard, 3}
-  def champion(:rayla), do: {:not_guard, 4}
-  def champion(:krythos), do: {:not_guard, 6}
-  def champion(:lys), do: {:guard, 5}
-  def champion(:tyrannor), do: {:guard, 6}
-  def champion(:varrick), do: {:not_guard, 3}
-  def champion(_), do: nil
+  @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
+  def type(:cult_priest), do: {:not_guard, 4}
+  def type(:death_cultist), do: {:guard, 3}
+  def type(:rayla), do: {:not_guard, 4}
+  def type(:krythos), do: {:not_guard, 6}
+  def type(:lys), do: {:guard, 5}
+  def type(:tyrannor), do: {:guard, 6}
+  def type(:varrick), do: {:not_guard, 3}
+  def type(_), do: nil
+
+  @spec faction(atom) :: nil | :necros
+  def faction(:cult_priest), do: :necros
+  def faction(:dark_energy), do: :necros
+  def faction(:dark_reward), do: :necros
+  def faction(:death_cultist), do: :necros
+  def faction(:death_touch), do: :necros
+  def faction(:rayla), do: :necros
+  def faction(:influence), do: :necros
+  def faction(:krythos), do: :necros
+  def faction(:life_drain), do: :necros
+  def faction(:lys), do: :necros
+  def faction(:the_rot), do: :necros
+  def faction(:tyrannor), do: :necros
+  def faction(:varrick), do: :necros
+  def faction(_), do: nil
 end

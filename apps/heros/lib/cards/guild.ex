@@ -20,29 +20,46 @@ defmodule Heros.Cards.Guild do
       Cards.with_id(:street_thug, 2)
   end
 
-  @spec price(atom) :: nil | integer
-  def price(:borg), do: 6
-  def price(:bribe), do: 3
-  def price(:death_threat), do: 3
-  def price(:deception), do: 5
-  def price(:fire_bomb), do: 8
-  def price(:hit_job), do: 4
-  def price(:intimidation), do: 2
-  def price(:myros), do: 5
-  def price(:parov), do: 5
-  def price(:profit), do: 1
-  def price(:rake), do: 7
-  def price(:rasmus), do: 4
-  def price(:smash_and_grab), do: 6
-  def price(:street_thug), do: 3
-  def price(_), do: nil
+  @spec cost(atom) :: nil | integer
+  def cost(:borg), do: 6
+  def cost(:bribe), do: 3
+  def cost(:death_threat), do: 3
+  def cost(:deception), do: 5
+  def cost(:fire_bomb), do: 8
+  def cost(:hit_job), do: 4
+  def cost(:intimidation), do: 2
+  def cost(:myros), do: 5
+  def cost(:parov), do: 5
+  def cost(:profit), do: 1
+  def cost(:rake), do: 7
+  def cost(:rasmus), do: 4
+  def cost(:smash_and_grab), do: 6
+  def cost(:street_thug), do: 3
+  def cost(_), do: nil
 
-  @spec champion(atom) :: nil | {:not_guard | :guard, integer}
-  def champion(:borg), do: {:guard, 6}
-  def champion(:myros), do: {:guard, 3}
-  def champion(:parov), do: {:guard, 5}
-  def champion(:rake), do: {:not_guard, 7}
-  def champion(:rasmus), do: {:not_guard, 5}
-  def champion(:street_thug), do: {:not_guard, 4}
-  def champion(_), do: nil
+  @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
+  def type(:borg), do: {:guard, 6}
+  def type(:myros), do: {:guard, 3}
+  def type(:parov), do: {:guard, 5}
+  def type(:rake), do: {:not_guard, 7}
+  def type(:rasmus), do: {:not_guard, 5}
+  def type(:street_thug), do: {:not_guard, 4}
+  def type(_), do: nil
+
+  @spec faction(atom) :: nil | :guild
+  def faction(:borg), do: :guild
+  def faction(:bribe), do: :guild
+  def faction(:death_threat), do: :guild
+  def faction(:deception), do: :guild
+  def faction(:fire_bomb), do: :guild
+  def faction(:hit_job), do: :guild
+  def faction(:intimidation), do: :guild
+  def faction(:myros), do: :guild
+  def faction(:parov), do: :guild
+  def faction(:profit), do: :guild
+  def faction(:rake), do: :guild
+  def faction(:rasmus), do: :guild
+  def faction(:smash_and_grab), do: :guild
+  def faction(:street_thug), do: :guild
+  def faction(_), do: nil
 end

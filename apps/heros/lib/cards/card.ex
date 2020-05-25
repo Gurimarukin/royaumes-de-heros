@@ -1,5 +1,5 @@
 defmodule Heros.Cards.Card do
-  alias Heros.Cards.{Card, Guild, Imperial, Necros, Wild}
+  alias Heros.Cards.{Card, Decks, Guild, Imperial, Necros, Wild}
 
   @type id :: binary
 
@@ -21,33 +21,58 @@ defmodule Heros.Cards.Card do
     }
   end
 
-  @spec price(atom) :: nil | integer
-  def price(:gem), do: 2
+  @spec cost(atom) :: nil | integer
+  def cost(:gem), do: 2
 
-  def price(key) do
-    Guild.price(key) ||
-      Imperial.price(key) ||
-      Necros.price(key) ||
-      Wild.price(key)
+  def cost(key) do
+    Guild.cost(key) ||
+      Imperial.cost(key) ||
+      Necros.cost(key) ||
+      Wild.cost(key)
   end
 
-  @spec champion(atom) :: nil | {:not_guard | :guard, integer}
-  def champion(key) do
-    Guild.champion(key) ||
-      Imperial.champion(key) ||
-      Necros.champion(key) ||
-      Wild.champion(key)
+  @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
+  def type(key) do
+    Decks.Base.type(key) ||
+      Guild.type(key) ||
+      Imperial.type(key) ||
+      Necros.type(key) ||
+      Wild.type(key)
+  end
+
+  @spec faction(atom) :: nil | :guild | :imperial | :necros | :wild
+  def faction(key) do
+    Guild.faction(key) ||
+      Imperial.faction(key) ||
+      Necros.faction(key) ||
+      Wild.faction(key)
   end
 
   @spec is_champion(atom) :: boolean
-  def is_champion(key), do: champion(key) != nil
+  def is_champion(key) do
+    case type(key) do
+      {:guard, _} -> true
+      {:not_guard, _} -> true
+      _ -> false
+    end
+  end
 
   @spec is_guard(atom) :: boolean
   def is_guard(key) do
-    case champion(key) do
+    case type(key) do
       {:guard, _} -> true
       _ -> false
     end
+  end
+
+  @spec primary_ability(Game.t(), atom, Player.id()) :: Game.t()
+  def primary_ability(game, key, player_id) do
+    # Guild.primary_ability(game, key, player_id) ||
+    # Imperial.primary_ability(game, key, player_id) ||
+    # Necros.primary_ability(game, key, player_id) ||
+    # Wild.primary_ability(game, key, player_id) ||
+    Decks.Base.primary_ability(game, key, player_id) ||
+      game
   end
 
   @spec expend(Card.t()) :: Card.t()

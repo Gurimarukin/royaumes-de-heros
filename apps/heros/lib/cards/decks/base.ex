@@ -1,5 +1,5 @@
 defmodule Heros.Cards.Decks.Base do
-  alias Heros.Cards
+  alias Heros.{Cards, Game, Player}
   alias Heros.Cards.Card
 
   @spec get :: list({Card.id(), Card.t()})
@@ -9,4 +9,12 @@ defmodule Heros.Cards.Decks.Base do
       Cards.with_id(:ruby) ++
       Cards.with_id(:gold, 7)
   end
+
+  @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
+  def type(:shortsword), do: :item
+  def type(_), do: nil
+
+  @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def primary_ability(game, :shortsword, player_id), do: game |> Game.add_combat(player_id, 2)
+  def primary_ability(_game, _, _player_id), do: nil
 end

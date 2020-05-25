@@ -1,7 +1,7 @@
 defmodule Heros.Game do
-  use GenServer, restart: :temporary
+  # use GenServer, restart: :temporary
 
-  require Logger
+  # require Logger
 
   alias Heros.{Cards, Game, KeyListUtils, Player}
   alias Heros.Cards.Card
@@ -28,181 +28,28 @@ defmodule Heros.Game do
     }
   end
 
-  #
-  # Client
-  #
-  @spec start({:from_player_ids, list(Player.id())} | {:from_game, Game.t()}) ::
-          :ignore | {:error, any} | {:ok, pid}
-  def start(construct) do
-    GenServer.start_link(__MODULE__, construct)
-  end
+  @spec init_from_players(list(Player.id())) :: {:ok, Game.t()} | :error
+  def init_from_players(player_ids) do
+    if valid_players?(player_ids) do
+      {market, market_deck} = init_market()
 
-  @spec get(atom | pid | {atom, any} | {:via, atom, any}) :: Game.t()
-  def get(game) do
-    GenServer.call(game, :get)
-  end
-
-  @spec play_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
-          :ok | atom
-  def play_card(game, player_id, card_id) do
-    GenServer.call(game, {:play_card, player_id, card_id})
-  end
-
-  @spec buy_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
-          :ok | atom
-  def buy_card(game, player_id, card_id) do
-    GenServer.call(game, {:buy_card, player_id, card_id})
-  end
-
-  @spec attack(
-          atom | pid | {atom, any} | {:via, atom, any},
-          Player.id(),
-          Player.id(),
-          :player | Card.id()
-        ) :: :ok | {:victory, Player.id()} | atom
-  def attack(game, attacker, defender, what) do
-    GenServer.call(game, {:attack, attacker, defender, what})
-  end
-
-  @spec discard_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: :ok | atom
-  def discard_phase(game, player_id) do
-    GenServer.call(game, {:discard_phase, player_id})
-  end
-
-  @spec draw_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: :ok | atom
-  def draw_phase(game, player_id) do
-    GenServer.call(game, {:draw_phase, player_id})
-  end
-
-  #
-  # Server
-  #
-  @impl true
-  @spec init(
-          {:from_player_ids, list(Player.t())}
-          | {:from_game, Game.t()}
-        ) ::
-          {:ok, Game.t()}
-          | {:stop, :invalid_players | :invalid_players_number}
-  def init({:from_player_ids, player_ids}) do
-    case check_init_players(player_ids) do
-      :ok -> {:ok, start_game(player_ids)}
-      {:error, error} -> {:stop, error}
-    end
-  end
-
-  def init({:from_game, game}) do
-    {:ok, game}
-  end
-
-  @impl true
-  def handle_call(:get, _from, game) do
-    {:reply, game, game}
-  end
-
-  def handle_call({:play_card, player_id, card_id}, _from, game) do
-    if_is_current_player(game, player_id, fn player ->
-      case Player.play_card(player, card_id) do
-        {:ok, player} ->
-          {:reply, :ok,
-           %{
-             game
-             | players: game.players |> KeyListUtils.replace(player_id, player)
-           }}
-
-        :error ->
-          {:reply, :not_found, game}
-      end
-    end)
-  end
-
-  def handle_call({:buy_card, player_id, card_id}, _from, game) do
-    if_is_current_player(game, player_id, fn player ->
-      case KeyListUtils.find(game.market, card_id) do
-        nil ->
-          case KeyListUtils.find(game.gems, card_id) do
-            nil -> {:reply, :not_found, game}
-            card -> buy_gem(game, {player_id, player}, {card_id, card})
-          end
-
-        card ->
-          buy_market_card(game, {player_id, player}, {card_id, card})
-      end
-    end)
-  end
-
-  def handle_call({:attack, attacker_id, defender_id, what}, _from, game) do
-    if_is_current_player(game, attacker_id, fn attacker ->
-      case KeyListUtils.find(game.players, defender_id) do
-        nil ->
-          {:reply, :not_found, game}
-
-        defender ->
-          if attacker.combat > 0 and is_next_to_current_player(game, defender_id) do
-            attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
-          else
-            {:reply, :forbidden, game}
-          end
-      end
-    end)
-  end
-
-  def handle_call({:discard_phase, player_id}, _from, game) do
-    if_is_current_player(game, player_id, fn _player ->
-      {:reply, :ok,
-       %{
-         game
-         | players: game.players |> KeyListUtils.update(player_id, &Player.discard_phase/1)
-           #  current_player: next_player_alive(game)
+      {:ok,
+       %Game{
+         players: init_players(player_ids),
+         current_player: hd(player_ids),
+         gems: Cards.gems(),
+         market: market,
+         market_deck: market_deck,
+         cemetery: []
        }}
-    end)
-  end
-
-  def handle_call({:draw_phase, player_id}, _from, game) do
-    if_is_current_player(game, player_id, fn _player ->
-      {
-        :reply,
-        :ok,
-        %{
-          game
-          | players: game.players |> KeyListUtils.update(player_id, &Player.draw_cards(&1, 5)),
-            current_player: next_player_alive(game)
-        }
-      }
-    end)
-  end
-
-  #
-  # Helpers
-  #
-  # init
-  @spec check_init_players(list(Player.t())) ::
-          :ok | {:error, :invalid_players | :invalid_players_number}
-  defp check_init_players(players) do
-    if is_list(players) do
-      n = length(players)
-
-      if 2 <= n && n <= 4 do
-        :ok
-      else
-        {:error, :invalid_players_number}
-      end
     else
-      {:error, :invalid_players}
+      :error
     end
   end
 
-  defp start_game(player_ids) do
-    {market, market_deck} = init_market()
-
-    %Game{
-      players: init_players(player_ids),
-      current_player: hd(player_ids),
-      gems: Cards.gems(),
-      market: market,
-      market_deck: market_deck,
-      cemetery: []
-    }
+  @spec valid_players?(list(Player.id())) :: boolean
+  defp valid_players?(player_ids) do
+    is_list(player_ids) and 2 <= length(player_ids)
   end
 
   defp init_players(player_ids) do
@@ -233,63 +80,91 @@ defmodule Heros.Game do
     |> Enum.split(5)
   end
 
-  defp if_is_current_player(game, player_id, f) do
-    if game.current_player == player_id do
-      case KeyListUtils.find(game.players, player_id) do
-        nil -> {:reply, :not_found, game}
-        player -> f.(player)
-      end
-    else
-      {:reply, :forbidden, game}
+  @spec play_card(Game.t(), {Player.id(), Player.t()}, {Card.id(), Card.t()}) :: Game.t()
+  def play_card(game, {player_id, player}, {card_id, card}) do
+    %{
+      game
+      | players:
+          game.players
+          |> KeyListUtils.replace(
+            player_id,
+            player
+            |> Player.remove_from_hand(card_id)
+            |> Player.add_to_fight_zone({card_id, card})
+          )
+    }
+    |> Card.primary_ability(card.key, player_id)
+  end
+
+  @spec buy_market_card(Game.t(), {Player.id(), Player.t()}, {Card.id(), Card.t()}) ::
+          {:ok, Game.t()} | :error
+  def buy_market_card(game, {player_id, player}, {card_id, card}) do
+    case Player.card_cost_for_player(player, card) do
+      nil ->
+        :error
+
+      cost ->
+        if player.gold >= cost do
+          {market_card, market_deck} =
+            case game.market_deck do
+              [] -> {nil, []}
+              [market_card | market_deck] -> {market_card, market_deck}
+            end
+
+          {:ok,
+           %{
+             game
+             | players:
+                 game.players |> player_buy_card({player_id, player}, {card_id, card}, cost),
+               market: game.market |> KeyListUtils.fullreplace(card_id, market_card),
+               market_deck: market_deck
+           }}
+        else
+          :error
+        end
     end
   end
 
-  # buy
-  defp buy_market_card(game, {player_id, player}, {card_id, card}) do
-    case Player.buy_card(player, {card_id, card}) do
-      {:ok, new_player} ->
-        {market_card, market_deck} =
-          case game.market_deck do
-            [] -> {nil, []}
-            [market_card | market_deck] -> {market_card, market_deck}
-          end
+  @spec buy_gem(Game.t(), {Player.id(), Player.t()}, {Card.id(), Card.t()}) ::
+          {:ok, Game.t()} | :error
+  def buy_gem(game, {player_id, player}, {card_id, card}) do
+    case Player.card_cost_for_player(player, card) do
+      nil ->
+        :error
 
-        {:reply, :ok,
-         %{
-           game
-           | players: game.players |> KeyListUtils.replace(player_id, new_player),
-             market: game.market |> KeyListUtils.fullreplace(card_id, market_card),
-             market_deck: market_deck
-         }}
-
-      :error ->
-        {:reply, :forbidden, game}
+      cost ->
+        if player.gold >= cost do
+          {:ok,
+           %{
+             game
+             | players:
+                 game.players |> player_buy_card({player_id, player}, {card_id, card}, cost),
+               gems: game.gems |> KeyListUtils.delete(card_id)
+           }}
+        else
+          :error
+        end
     end
   end
 
-  defp buy_gem(game, {player_id, player}, {card_id, card}) do
-    case Player.buy_card(player, {card_id, card}) do
-      {:ok, new_player} ->
-        {:reply, :ok,
-         %{
-           game
-           | players: game.players |> KeyListUtils.replace(player_id, new_player),
-             gems: game.gems |> KeyListUtils.delete(card_id)
-         }}
-
-      :error ->
-        {:reply, :forbidden, game}
-    end
+  defp player_buy_card(players, {player_id, player}, {card_id, card}, cost) do
+    players
+    |> KeyListUtils.replace(
+      player_id,
+      player |> Player.buy_card({card_id, card}, cost)
+    )
   end
 
-  defp next_player_alive(game) do
+  @spec next_player_alive(Game.t()) :: nil | Player.id()
+  def next_player_alive(game) do
     case Enum.find_index(game.players, fn {id, _} -> id == game.current_player end) do
       nil -> nil
       i -> next_player_alive_rec(game.players, i)
     end
   end
 
-  defp previous_player_alive(game) do
+  @spec previous_player_alive(Game.t()) :: nil | Player.id()
+  def previous_player_alive(game) do
     case Enum.find_index(game.players, fn {id, _} -> id == game.current_player end) do
       nil -> nil
       i -> previous_player_alive_rec(game.players, i)
@@ -313,7 +188,8 @@ defmodule Heros.Game do
     end
   end
 
-  defp is_next_to_current_player(game, player_id) do
+  @spec is_next_to_current_player(Game.t(), Player.id()) :: boolean
+  def is_next_to_current_player(game, player_id) do
     case next_player_alive(game) do
       nil ->
         false
@@ -331,43 +207,35 @@ defmodule Heros.Game do
   end
 
   # attack
-  defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, :player) do
-    attack_player(game, {attacker_id, attacker}, {defender_id, defender})
-  end
-
-  defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, card_id) do
-    case KeyListUtils.find(defender.fight_zone, card_id) do
-      nil -> {:reply, :not_found, game}
-      card -> attack_card(game, {attacker_id, attacker}, {defender_id, defender}, {card_id, card})
-    end
-  end
-
-  defp attack_player(game, {attacker_id, attacker}, {defender_id, defender}) do
+  @spec attack_player(Game.t(), {Player.id(), Player.t()}, {Player.id(), Player.t()}) ::
+          {:ok, Game.t()} | :error
+  def attack_player(game, {attacker_id, attacker}, {defender_id, defender}) do
     defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.is_guard(c.key) end)
 
     if defender_has_guard or not Player.is_alive(defender) do
-      {:reply, :forbidden, game}
+      :error
     else
       damages = min(attacker.combat, defender.hp)
 
-      players =
-        game.players
-        |> KeyListUtils.replace(attacker_id, attacker |> Player.decr_combat(damages))
-        |> KeyListUtils.replace(defender_id, defender |> Player.decr_hp(damages))
-
-      game = %{game | players: players}
-      players_alive = players |> Enum.count(fn {_, p} -> Player.is_alive(p) end)
-
-      if players_alive == 1 do
-        {:reply, {:victory, attacker_id}, game}
-      else
-        {:reply, :ok, game}
-      end
+      {:ok,
+       %{
+         game
+         | players:
+             game.players
+             |> KeyListUtils.replace(attacker_id, attacker |> Player.decr_combat(damages))
+             |> KeyListUtils.replace(defender_id, defender |> Player.decr_hp(damages))
+       }}
     end
   end
 
-  defp attack_card(game, {attacker_id, attacker}, {defender_id, defender}, {card_id, card}) do
-    case Card.champion(card.key) do
+  @spec attack_card(
+          Game.t(),
+          {Player.id(), Player.t()},
+          {Player.id(), Player.t()},
+          {Card.id(), Card.t()}
+        ) :: {:ok, Game.t()} | :error
+  def attack_card(game, {attacker_id, attacker}, {defender_id, defender}, {card_id, card}) do
+    case Card.type(card.key) do
       {:guard, defense} ->
         attack_card_bis(
           game,
@@ -381,7 +249,7 @@ defmodule Heros.Game do
         defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.is_guard(c.key) end)
 
         if defender_has_guard do
-          {:reply, :forbidden, game}
+          :error
         else
           attack_card_bis(
             game,
@@ -393,10 +261,17 @@ defmodule Heros.Game do
         end
 
       nil ->
-        {:reply, :forbidden, game}
+        :error
     end
   end
 
+  @spec attack_card_bis(
+          Game.t(),
+          {Player.id(), Player.t()},
+          {Player.id(), Player.t()},
+          {Card.id(), Card.t()},
+          integer
+        ) :: {:ok, Game.t()} | :error
   defp attack_card_bis(
          game,
          {attacker_id, attacker},
@@ -405,7 +280,7 @@ defmodule Heros.Game do
          defense
        ) do
     if attacker.combat >= defense do
-      {:reply, :ok,
+      {:ok,
        %{
          game
          | players:
@@ -418,7 +293,31 @@ defmodule Heros.Game do
              })
        }}
     else
-      {:reply, :forbidden, game}
+      :error
     end
+  end
+
+  @spec discard_phase(Game.t(), Player.id()) :: Game.t()
+  def discard_phase(game, player_id) do
+    %{game | players: game.players |> KeyListUtils.update(player_id, &Player.discard_phase/1)}
+  end
+
+  @spec draw_phase(Game.t(), Player.id()) :: Game.t()
+  def draw_phase(game, player_id) do
+    %{
+      game
+      | players: game.players |> KeyListUtils.update(player_id, &Player.draw_cards(&1, 5)),
+        current_player: next_player_alive(game)
+    }
+  end
+
+  #
+  # Helpers for abilities
+  #
+  def add_combat(game, player_id, amount) do
+    %{
+      game
+      | players: game.players |> KeyListUtils.update(player_id, &Player.incr_combat(&1, amount))
+    }
   end
 end

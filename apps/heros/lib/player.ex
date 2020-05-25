@@ -32,7 +32,7 @@ defmodule Heros.Player do
     }
   end
 
-  @spec init(non_neg_integer) :: Player.t()
+  @spec init(integer) :: Player.t()
   def init(n) do
     %{empty() | deck: Enum.shuffle(Cards.Decks.Base.get())}
     |> draw_cards(n)
@@ -69,33 +69,31 @@ defmodule Heros.Player do
     end
   end
 
-  @spec play_card(Player.t(), Card.id()) :: {:ok, Player.t()} | :error
-  def play_card(player, card_id) do
-    case KeyListUtils.find(player.hand, card_id) do
-      nil ->
-        :error
-
-      card ->
-        {:ok,
-         %{
-           player
-           | hand: player.hand |> KeyListUtils.delete(card_id),
-             fight_zone: player.fight_zone ++ [{card_id, card}]
-         }}
-    end
+  @spec buy_card(Player.t(), {Card.id(), Card.t()}, integer) :: Player.t()
+  def buy_card(player, {card_id, card}, cost) do
+    player
+    |> Player.decr_gold(cost)
+    |> Player.add_to_discard({card_id, card})
   end
 
-  @spec buy_card(Player.t(), {Card.id(), Card.t()}) :: {:ok, Player.t()} | :error
-  def buy_card(player, card) do
-    price = Card.price(elem(card, 1).key)
+  @spec remove_from_hand(Player.t(), Card.id()) :: Player.t()
+  def remove_from_hand(player, card_id) do
+    %{player | hand: player.hand |> KeyListUtils.delete(card_id)}
+  end
 
-    if player.gold >= price do
-      {:ok,
-       %{player | discard: [card | player.discard]}
-       |> decr_gold(price)}
-    else
-      :error
-    end
+  @spec add_to_fight_zone(Player.t(), {Card.id(), Card.t()}) :: Player.t()
+  def add_to_fight_zone(player, {card_id, card}) do
+    %{player | fight_zone: player.fight_zone ++ [{card_id, card}]}
+  end
+
+  @spec card_cost_for_player(Player.t(), Card.t()) :: nil | integer
+  def card_cost_for_player(_player, card) do
+    Card.cost(card.key)
+  end
+
+  @spec add_to_discard(Player.t(), {Card.id(), Card.t()}) :: Player.t()
+  def add_to_discard(player, {card_id, card}) do
+    %{player | discard: [{card_id, card} | player.discard]}
   end
 
   @spec discard_phase(Player.t()) :: Player.t()

@@ -19,29 +19,45 @@ defmodule Heros.Cards.Wild do
       Cards.with_id(:wolf_shaman, 2)
   end
 
-  @spec price(atom) :: nil | integer
-  def price(:broelyn), do: 4
-  def price(:cron), do: 6
-  def price(:dire_wolf), do: 5
-  def price(:elven_curse), do: 3
-  def price(:elven_gift), do: 2
-  def price(:grak), do: 8
-  def price(:natures_bounty), do: 4
-  def price(:orc_grunt), do: 3
-  def price(:rampage), do: 6
-  def price(:torgen), do: 7
-  def price(:spark), do: 1
-  def price(:wolf_form), do: 5
-  def price(:wolf_shaman), do: 2
-  def price(_), do: nil
+  @spec cost(atom) :: nil | integer
+  def cost(:broelyn), do: 4
+  def cost(:cron), do: 6
+  def cost(:dire_wolf), do: 5
+  def cost(:elven_curse), do: 3
+  def cost(:elven_gift), do: 2
+  def cost(:grak), do: 8
+  def cost(:natures_bounty), do: 4
+  def cost(:orc_grunt), do: 3
+  def cost(:rampage), do: 6
+  def cost(:torgen), do: 7
+  def cost(:spark), do: 1
+  def cost(:wolf_form), do: 5
+  def cost(:wolf_shaman), do: 2
+  def cost(_), do: nil
 
-  @spec champion(atom) :: nil | {:not_guard | :guard, integer}
-  def champion(:broelyn), do: {:not_guard, 6}
-  def champion(:cron), do: {:not_guard, 6}
-  def champion(:dire_wolf), do: {:guard, 5}
-  def champion(:grak), do: {:guard, 7}
-  def champion(:orc_grunt), do: {:guard, 3}
-  def champion(:torgen), do: {:guard, 7}
-  def champion(:wolf_shaman), do: {:not_guard, 4}
-  def champion(_), do: nil
+  @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
+  def type(:broelyn), do: {:not_guard, 6}
+  def type(:cron), do: {:not_guard, 6}
+  def type(:dire_wolf), do: {:guard, 5}
+  def type(:grak), do: {:guard, 7}
+  def type(:orc_grunt), do: {:guard, 3}
+  def type(:torgen), do: {:guard, 7}
+  def type(:wolf_shaman), do: {:not_guard, 4}
+  def type(_), do: nil
+
+  @spec faction(atom) :: nil | :wild
+  def faction(:broelyn), do: :wild
+  def faction(:cron), do: :wild
+  def faction(:dire_wolf), do: :wild
+  def faction(:elven_curse), do: :wild
+  def faction(:elven_gift), do: :wild
+  def faction(:grak), do: :wild
+  def faction(:natures_bounty), do: :wild
+  def faction(:orc_grunt), do: :wild
+  def faction(:rampage), do: :wild
+  def faction(:torgen), do: :wild
+  def faction(:spark), do: :wild
+  def faction(:wolf_form), do: :wild
+  def faction(:wolf_shaman), do: :wild
+  def faction(_), do: nil
 end
