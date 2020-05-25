@@ -30,4 +30,20 @@ defmodule Heros.Cards.Card do
       Necros.price(key) ||
       Wild.price(key)
   end
+
+  @spec champion(atom) :: nil | {:not_guard | :guard, integer}
+  def champion(key) do
+    Guild.champion(key) ||
+      Imperial.champion(key) ||
+      Necros.champion(key) ||
+      Wild.champion(key)
+  end
+
+  @spec is_guard(atom) :: boolean
+  def is_guard(key) do
+    case champion(key) do
+      {:guard, _} -> true
+      _ -> false
+    end
+  end
 end

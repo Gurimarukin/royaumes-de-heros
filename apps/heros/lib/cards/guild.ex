@@ -36,4 +36,13 @@ defmodule Heros.Cards.Guild do
   def price(:smash_and_grab), do: 6
   def price(:street_thug), do: 3
   def price(_), do: nil
+
+  @spec champion(atom) :: nil | {:not_guard | :guard, integer}
+  def champion(:borg), do: {:guard, 6}
+  def champion(:myros), do: {:guard, 3}
+  def champion(:parov), do: {:guard, 5}
+  def champion(:rake), do: {:not_guard, 7}
+  def champion(:rasmus), do: {:not_guard, 5}
+  def champion(:street_thug), do: {:not_guard, 4}
+  def champion(_), do: nil
 end

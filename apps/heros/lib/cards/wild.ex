@@ -34,4 +34,14 @@ defmodule Heros.Cards.Wild do
   def price(:wolf_form), do: 5
   def price(:wolf_shaman), do: 2
   def price(_), do: nil
+
+  @spec champion(atom) :: nil | {:not_guard | :guard, integer}
+  def champion(:broelyn), do: {:not_guard, 6}
+  def champion(:cron), do: {:not_guard, 6}
+  def champion(:dire_wolf), do: {:guard, 5}
+  def champion(:grak), do: {:guard, 7}
+  def champion(:orc_grunt), do: {:guard, 3}
+  def champion(:torgen), do: {:guard, 7}
+  def champion(:wolf_shaman), do: {:not_guard, 4}
+  def champion(_), do: nil
 end

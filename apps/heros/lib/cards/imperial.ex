@@ -36,4 +36,14 @@ defmodule Heros.Cards.Imperial do
   def price(:taxation), do: 1
   def price(:word_of_power), do: 6
   def price(_), do: nil
+
+  @spec champion(atom) :: nil | {:not_guard | :guard, integer}
+  def champion(:arkus), do: {:guard, 6}
+  def champion(:darian), do: {:not_guard, 5}
+  def champion(:cristov), do: {:guard, 5}
+  def champion(:kraka), do: {:not_guard, 6}
+  def champion(:man_at_arms), do: {:guard, 4}
+  def champion(:weyan), do: {:guard, 4}
+  def champion(:tithe_priest), do: {:not_guard, 3}
+  def champion(_), do: nil
 end

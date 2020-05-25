@@ -34,4 +34,14 @@ defmodule Heros.Cards.Necros do
   def price(:tyrannor), do: 8
   def price(:varrick), do: 5
   def price(_), do: nil
+
+  @spec champion(atom) :: nil | {:not_guard | :guard, integer}
+  def champion(:cult_priest), do: {:not_guard, 4}
+  def champion(:death_cultist), do: {:guard, 3}
+  def champion(:rayla), do: {:not_guard, 4}
+  def champion(:krythos), do: {:not_guard, 6}
+  def champion(:lys), do: {:guard, 5}
+  def champion(:tyrannor), do: {:guard, 6}
+  def champion(:varrick), do: {:not_guard, 3}
+  def champion(_), do: nil
 end

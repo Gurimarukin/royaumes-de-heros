@@ -185,4 +185,148 @@ defmodule Heros.GameTest do
     assert game.market == [cult_priest1, arkus, nil, filler, filler]
     assert game.market_deck == []
   end
+
+  test "attacking" do
+    [tithe_priest] = Cards.with_id(:tithe_priest)
+    [smash_and_grab] = Cards.with_id(:smash_and_grab)
+    [orc_grunt] = Cards.with_id(:orc_grunt)
+    [cult_priest] = Cards.with_id(:cult_priest)
+    [street_thug] = Cards.with_id(:street_thug)
+
+    p1 =
+      Player.empty()
+      |> put_in([:attack], 10)
+      |> put_in([:fight_zone], [tithe_priest])
+
+    p2 = put_in(Player.empty().fight_zone, [cult_priest, orc_grunt, smash_and_grab, street_thug])
+
+    game = %Game{
+      players: [{"p1", p1}, {"p2", p2}],
+      current_player: "p1",
+      gems: [],
+      market: [],
+      market_deck: [],
+      cemetery: []
+    }
+
+    {:ok, pid} = Game.start({:from_game, game})
+
+    # player doesn't exist
+    assert Game.attack(pid, "p1", "p3", :player) == :not_found
+    # not p2's turn
+    assert Game.attack(pid, "p2", "p1", elem(orc_grunt, 0)) == :forbidden
+    # not in enemy fight zone
+    assert Game.attack(pid, "p1", "p2", elem(tithe_priest, 0)) == :not_found
+    # can't attack self or own champion
+    assert Game.attack(pid, "p1", "p1", :player) == :forbidden
+    assert Game.attack(pid, "p1", "p1", elem(tithe_priest, 0)) == :forbidden
+    # can't attack non-champion card
+    assert Game.attack(pid, "p1", "p2", elem(smash_and_grab, 0)) == :forbidden
+    # can't attack player or non-guard champion if there is a guard
+    assert Game.attack(pid, "p1", "p2", :player) == :forbidden
+    assert Game.attack(pid, "p1", "p2", elem(cult_priest, 0)) == :forbidden
+    assert Game.attack(pid, "p1", "p2", elem(street_thug, 0)) == :forbidden
+
+    # attack orc_grunt
+    assert Game.attack(pid, "p1", "p2", elem(orc_grunt, 0)) == :ok
+    game = Game.get(pid)
+    p1 = put_in(p1.attack, 7)
+
+    p2 =
+      p2
+      |> put_in([:fight_zone], [cult_priest, smash_and_grab, street_thug])
+      |> put_in([:discard], [orc_grunt])
+
+    assert p1 == Utils.keyfind(game.players, "p1")
+    assert p2 == Utils.keyfind(game.players, "p2")
+
+    # attack street_thug
+    assert Game.attack(pid, "p1", "p2", elem(street_thug, 0)) == :ok
+    game = Game.get(pid)
+    p1 = put_in(p1.attack, 3)
+
+    p2 =
+      p2
+      |> put_in([:fight_zone], [cult_priest, smash_and_grab])
+      |> put_in([:discard], [street_thug, orc_grunt])
+
+    assert p1 == Utils.keyfind(game.players, "p1")
+    assert p2 == Utils.keyfind(game.players, "p2")
+
+    # not enough attack for cult_priest
+    assert Game.attack(pid, "p1", "p2", elem(cult_priest, 0)) == :forbidden
+
+    # attack player directly
+    assert Game.attack(pid, "p1", "p2", :player) == :ok
+    game = Game.get(pid)
+    p1 = put_in(p1.attack, 0)
+    p2 = put_in(p2.hp, 47)
+    assert p1 == Utils.keyfind(game.players, "p1")
+    assert p2 == Utils.keyfind(game.players, "p2")
+  end
+
+  test "attacking and killing a player" do
+    p1 = put_in(Player.empty().attack, 10)
+    p2 = put_in(Player.empty().hp, 8)
+
+    game = %Game{
+      players: [{"p1", p1}, {"p2", p2}],
+      current_player: "p1",
+      gems: [],
+      market: [],
+      market_deck: [],
+      cemetery: []
+    }
+
+    {:ok, pid} = Game.start({:from_game, game})
+
+    assert Game.attack(pid, "p1", "p2", :player) == :ok
+    game = Game.get(pid)
+    p1 = put_in(p1.attack, 2)
+    p2 = put_in(p2.hp, 0)
+    assert p1 == Utils.keyfind(game.players, "p1")
+    assert p2 == Utils.keyfind(game.players, "p2")
+
+    # can't attack dead player
+    assert Game.attack(pid, "p1", "p2", :player) == :forbidden
+  end
+
+  test "attacking when no attack" do
+    p1 = Player.empty()
+    p2 = Player.empty()
+
+    game = %Game{
+      players: [{"p1", p1}, {"p2", p2}],
+      current_player: "p1",
+      gems: [],
+      market: [],
+      market_deck: [],
+      cemetery: []
+    }
+
+    {:ok, pid} = Game.start({:from_game, game})
+
+    assert Game.attack(pid, "p1", "p2", :player) == :forbidden
+  end
+
+  test "attacking when 4 players" do
+    p1 = put_in(Player.empty().attack, 3)
+    p2 = Player.empty()
+    p3 = Player.empty()
+    p4 = Player.empty()
+
+    game = %Game{
+      players: [{"p1", p1}, {"p2", p2}, {"p3", p3}, {"p4", p4}],
+      current_player: "p1",
+      gems: [],
+      market: [],
+      market_deck: [],
+      cemetery: []
+    }
+
+    {:ok, pid} = Game.start({:from_game, game})
+
+    assert Game.attack(pid, "p1", "p3", :player) == :forbidden
+    assert Game.attack(pid, "p1", "p4", :player) == :ok
+  end
 end

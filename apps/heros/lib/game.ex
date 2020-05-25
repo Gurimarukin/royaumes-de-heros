@@ -3,7 +3,8 @@ defmodule Heros.Game do
 
   require Logger
 
-  alias Heros.{Card, Cards, Game, Player, Utils}
+  alias Heros.{Cards, Game, Player, Utils}
+  alias Heros.Cards.Card
 
   @type t :: %{
           players: list({Player.id(), Player.t()}),
@@ -27,7 +28,9 @@ defmodule Heros.Game do
   @impl Access
   def pop(game, key, default \\ nil), do: Map.pop(game, key, default)
 
+  #
   # Client
+  #
   @spec start({:from_player_ids, list(Player.id())} | {:from_game, Game.t()}) ::
           :ignore | {:error, any} | {:ok, pid}
   def start(construct) do
@@ -39,15 +42,31 @@ defmodule Heros.Game do
     GenServer.call(game, :get)
   end
 
+  @spec play_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
+          :ok | any
   def play_card(game, player_id, card_id) do
     GenServer.call(game, {:play_card, player_id, card_id})
   end
 
+  @spec buy_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
+          :ok | any
   def buy_card(game, player_id, card_id) do
     GenServer.call(game, {:buy_card, player_id, card_id})
   end
 
+  @spec attack(
+          atom | pid | {atom, any} | {:via, atom, any},
+          Player.id(),
+          Player.id(),
+          :player | Card.id()
+        ) :: :ok | any
+  def attack(game, attacker, defender, what) do
+    GenServer.call(game, {:attack, attacker, defender, what})
+  end
+
+  #
   # Server
+  #
   @impl true
   @spec init(
           {:from_player_ids, list(Player.t())}
@@ -93,7 +112,23 @@ defmodule Heros.Game do
     end)
   end
 
+  def handle_call({:attack, attacker_id, defender_id, what}, _from, game) do
+    if_is_current_player(game, attacker_id, fn attacker ->
+      if attacker.attack > 0 and player_can_attack(game, attacker_id, defender_id) do
+        case Utils.keyfind(game.players, defender_id) do
+          nil -> {:reply, :not_found, game}
+          defender -> attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
+        end
+      else
+        {:reply, :forbidden, game}
+      end
+    end)
+  end
+
+  #
   # Helpers
+  #
+  # init
   @spec check_init_players(list(Player.t())) ::
           :ok | {:error, :invalid_players | :invalid_players_number}
   defp check_init_players(players) do
@@ -162,6 +197,7 @@ defmodule Heros.Game do
     end
   end
 
+  # buy
   defp buy_market_card(game, {player_id, player}, {card_id, card}) do
     case Player.buy_card(player, {card_id, card}) do
       {:ok, new_player} ->
@@ -196,6 +232,111 @@ defmodule Heros.Game do
 
       {status, _} ->
         {:reply, status, game}
+    end
+  end
+
+  # attack
+  defp player_can_attack(game, attacker_id, defender_id) do
+    case {
+      Enum.find_index(game.players, fn {id, _} -> id == attacker_id end),
+      Enum.find_index(game.players, fn {id, _} -> id == defender_id end)
+    } do
+      {nil, _} -> true
+      {_, nil} -> true
+      {0, j} -> j == 1 or j == length(game.players) - 1
+      {i, 0} -> i == 1 or i == length(game.players) - 1
+      {i, j} -> abs(i - j) == 1
+    end
+  end
+
+  defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, :player) do
+    attack_player(game, {attacker_id, attacker}, {defender_id, defender})
+  end
+
+  defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, card_id) do
+    case Utils.keyfind(defender.fight_zone, card_id) do
+      nil -> {:reply, :not_found, game}
+      card -> attack_card(game, {attacker_id, attacker}, {defender_id, defender}, {card_id, card})
+    end
+  end
+
+  defp attack_player(game, {attacker_id, attacker}, {defender_id, defender}) do
+    defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.is_guard(c.key) end)
+
+    if defender_has_guard or not Player.is_alive(defender) do
+      {:reply, :forbidden, game}
+    else
+      damages = min(attacker.attack, defender.hp)
+      new_attacker = update_in(attacker.attack, &(&1 - damages))
+      new_defender = update_in(defender.hp, &(&1 - damages))
+
+      new_game =
+        update_in(game.players, fn players ->
+          players
+          |> Utils.keyreplace(attacker_id, new_attacker)
+          |> Utils.keyreplace(defender_id, new_defender)
+        end)
+
+      {:reply, :ok, new_game}
+    end
+  end
+
+  defp attack_card(game, {attacker_id, attacker}, {defender_id, defender}, {card_id, card}) do
+    case Card.champion(card.key) do
+      {:guard, defense} ->
+        attack_card_bis(
+          game,
+          {attacker_id, attacker},
+          {defender_id, defender},
+          {card_id, card},
+          defense
+        )
+
+      {:not_guard, defense} ->
+        defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.is_guard(c.key) end)
+
+        if defender_has_guard do
+          {:reply, :forbidden, game}
+        else
+          attack_card_bis(
+            game,
+            {attacker_id, attacker},
+            {defender_id, defender},
+            {card_id, card},
+            defense
+          )
+        end
+
+      nil ->
+        {:reply, :forbidden, game}
+    end
+  end
+
+  defp attack_card_bis(
+         game,
+         {attacker_id, attacker},
+         {defender_id, defender},
+         {card_id, card},
+         defense
+       ) do
+    if attacker.attack >= defense do
+      new_attacker = update_in(attacker.attack, &(&1 - defense))
+
+      new_defender =
+        defender
+        |> update_in([:discard], &([{card_id, card}] ++ &1))
+        |> update_in([:fight_zone], &Utils.keydelete(&1, card_id))
+
+      new_game =
+        update_in(game.players, fn players ->
+          players
+          |> Utils.keyreplace(attacker_id, new_attacker)
+          |> Utils.keyreplace(defender_id, new_defender)
+        end)
+
+      {:reply, :ok, new_game}
+    else
+      {:reply, :forbidden, game}
     end
   end
 end
