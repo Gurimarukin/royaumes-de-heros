@@ -13,10 +13,12 @@ defmodule Heros.Cards.Decks.Base do
   @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
   def type(:shortsword), do: :item
   def type(:dagger), do: :item
+  def type(:ruby), do: :item
   def type(_), do: nil
 
   @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def primary_ability(game, :shortsword, player_id), do: game |> Game.add_combat(player_id, 2)
   def primary_ability(game, :dagger, player_id), do: game |> Game.add_combat(player_id, 1)
+  def primary_ability(game, :ruby, player_id), do: game |> Game.add_gold(player_id, 2)
   def primary_ability(_game, _, _player_id), do: nil
 end

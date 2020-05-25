@@ -314,10 +314,18 @@ defmodule Heros.Game do
   #
   # Helpers for abilities
   #
+
   def add_combat(game, player_id, amount) do
     %{
       game
       | players: game.players |> KeyListUtils.update(player_id, &Player.incr_combat(&1, amount))
+    }
+  end
+
+  def add_gold(game, player_id, amount) do
+    %{
+      game
+      | players: game.players |> KeyListUtils.update(player_id, &Player.incr_gold(&1, amount))
     }
   end
 end
