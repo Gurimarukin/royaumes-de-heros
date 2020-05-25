@@ -10,8 +10,8 @@ defmodule Heros.KeyListUtils do
   # find(list({A, B}), A, B) :: list({A, B})
   def replace(list, key, value), do: List.keyreplace(list, key, 0, {key, value})
 
-  # replace_with_key(list({A, B}), A, {A, B}) :: list({A, B})
-  def replace_with_key(list, key, value) do
+  # fullreplace(list({A, B}), A, {A, B}) :: list({A, B})
+  def fullreplace(list, key, value) do
     case Enum.find_index(list, matches_key(key)) do
       nil -> list
       index -> List.replace_at(list, index, value)

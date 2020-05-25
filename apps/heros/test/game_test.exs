@@ -114,19 +114,21 @@ defmodule Heros.GameTest do
     [myros] = Cards.with_id(:myros)
     [filler] = Cards.with_id(:whatever)
 
-    p1 =
+    p1 = %{
       Player.empty()
-      |> put_in([:gold], 8)
-      |> put_in([:discard], [myros])
+      | gold: 8,
+        discard: [myros]
+    }
 
     p2 = Player.empty()
 
-    game =
+    game = %{
       Game.empty([{"p1", p1}, {"p2", p2}], "p1")
-      |> put_in([:gems], gems)
-      |> put_in([:market], [orc_grunt1, arkus, orc_grunt2, filler, filler])
-      |> put_in([:market_deck], [cult_priest1])
-      |> put_in([:cemetery], [cult_priest2])
+      | gems: gems,
+        market: [orc_grunt1, arkus, orc_grunt2, filler, filler],
+        market_deck: [cult_priest1],
+        cemetery: [cult_priest2]
+    }
 
     {:ok, pid} = Game.start({:from_game, game})
 
@@ -176,12 +178,13 @@ defmodule Heros.GameTest do
     [cult_priest] = Cards.with_id(:cult_priest)
     [street_thug] = Cards.with_id(:street_thug)
 
-    p1 =
+    p1 = %{
       Player.empty()
-      |> put_in([:combat], 10)
-      |> put_in([:fight_zone], [tithe_priest])
+      | combat: 10,
+        fight_zone: [tithe_priest]
+    }
 
-    p2 = put_in(Player.empty().fight_zone, [cult_priest, orc_grunt, smash_and_grab, street_thug])
+    p2 = %{Player.empty() | fight_zone: [cult_priest, orc_grunt, smash_and_grab, street_thug]}
 
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
 
@@ -206,12 +209,14 @@ defmodule Heros.GameTest do
     # attack orc_grunt
     assert Game.attack(pid, "p1", "p2", elem(orc_grunt, 0)) == :ok
     game = Game.get(pid)
-    p1 = put_in(p1.combat, 7)
 
-    p2 =
+    p1 = %{p1 | combat: 7}
+
+    p2 = %{
       p2
-      |> put_in([:fight_zone], [cult_priest, smash_and_grab, street_thug])
-      |> put_in([:discard], [orc_grunt])
+      | fight_zone: [cult_priest, smash_and_grab, street_thug],
+        discard: [orc_grunt]
+    }
 
     assert p1 == KeyListUtils.find(game.players, "p1")
     assert p2 == KeyListUtils.find(game.players, "p2")
@@ -219,12 +224,14 @@ defmodule Heros.GameTest do
     # attack street_thug
     assert Game.attack(pid, "p1", "p2", elem(street_thug, 0)) == :ok
     game = Game.get(pid)
-    p1 = put_in(p1.combat, 3)
 
-    p2 =
+    p1 = %{p1 | combat: 3}
+
+    p2 = %{
       p2
-      |> put_in([:fight_zone], [cult_priest, smash_and_grab])
-      |> put_in([:discard], [street_thug, orc_grunt])
+      | fight_zone: [cult_priest, smash_and_grab],
+        discard: [street_thug, orc_grunt]
+    }
 
     assert p1 == KeyListUtils.find(game.players, "p1")
     assert p2 == KeyListUtils.find(game.players, "p2")
@@ -235,15 +242,17 @@ defmodule Heros.GameTest do
     # attack player directly
     assert Game.attack(pid, "p1", "p2", :player) == :ok
     game = Game.get(pid)
-    p1 = put_in(p1.combat, 0)
-    p2 = put_in(p2.hp, 47)
+
+    p1 = %{p1 | combat: 0}
+    p2 = %{p2 | hp: 47}
+
     assert p1 == KeyListUtils.find(game.players, "p1")
     assert p2 == KeyListUtils.find(game.players, "p2")
   end
 
   test "attacking and killing a player" do
-    p1 = put_in(Player.empty().combat, 10)
-    p2 = put_in(Player.empty().hp, 8)
+    p1 = %{Player.empty() | combat: 10}
+    p2 = %{Player.empty() | hp: 8}
 
     game = %Game{
       players: [{"p1", p1}, {"p2", p2}],
@@ -258,8 +267,8 @@ defmodule Heros.GameTest do
 
     assert Game.attack(pid, "p1", "p2", :player) == :ok
     game = Game.get(pid)
-    p1 = put_in(p1.combat, 2)
-    p2 = put_in(p2.hp, 0)
+    p1 = %{p1 | combat: 2}
+    p2 = %{p2 | hp: 0}
     assert p1 == KeyListUtils.find(game.players, "p1")
     assert p2 == KeyListUtils.find(game.players, "p2")
 
@@ -278,7 +287,7 @@ defmodule Heros.GameTest do
   end
 
   test "attacking when 4 players" do
-    p1 = put_in(Player.empty().combat, 3)
+    p1 = %{Player.empty() | combat: 3}
     p2 = Player.empty()
     p3 = Player.empty()
     p4 = Player.empty()
@@ -300,20 +309,19 @@ defmodule Heros.GameTest do
     [myros] = Cards.with_id(:myros)
     [gem1, gem2, gem3] = Cards.with_id(:gem, 3)
 
-    p1 =
-      Player.empty()
-      |> put_in([:hp], 0)
+    p1 = %{Player.empty() | hp: 0}
 
     p2 = Player.empty()
 
-    p3 =
+    p3 = %{
       Player.empty()
-      |> put_in([:gold], 1)
-      |> put_in([:combat], 3)
-      |> put_in([:hand], [arkus])
-      |> put_in([:deck], [orc_grunt, gem1])
-      |> put_in([:discard], [myros, gem2])
-      |> put_in([:fight_zone], [expended_lys, gem3, cult_priest, smash_and_grab])
+      | gold: 1,
+        combat: 3,
+        hand: [arkus],
+        deck: [orc_grunt, gem1],
+        discard: [myros, gem2],
+        fight_zone: [expended_lys, gem3, cult_priest, smash_and_grab]
+    }
 
     game = Game.empty([{"p1", p1}, {"p2", p2}, {"p3", p3}], "p3")
 
@@ -326,14 +334,15 @@ defmodule Heros.GameTest do
     assert Game.discard_phase(pid, "p3") == :ok
     game = Game.get(pid)
 
-    p3 =
+    p3 = %{
       p3
-      |> put_in([:gold], 0)
-      |> put_in([:combat], 0)
-      |> put_in([:hand], [])
-      |> put_in([:deck], [orc_grunt, gem1])
-      |> put_in([:discard], [arkus, smash_and_grab, gem3, myros, gem2])
-      |> put_in([:fight_zone], [lys, cult_priest])
+      | gold: 0,
+        combat: 0,
+        hand: [],
+        deck: [orc_grunt, gem1],
+        discard: [arkus, smash_and_grab, gem3, myros, gem2],
+        fight_zone: [lys, cult_priest]
+    }
 
     assert p1 == KeyListUtils.find(game.players, "p1")
     assert p2 == KeyListUtils.find(game.players, "p2")

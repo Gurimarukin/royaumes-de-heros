@@ -17,17 +17,6 @@ defmodule Heros.Game do
   @enforce_keys [:players, :current_player, :gems, :market, :market_deck, :cemetery]
   defstruct [:players, :current_player, :gems, :market, :market_deck, :cemetery]
 
-  @behaviour Access
-
-  @impl Access
-  def fetch(game, key), do: Map.fetch(game, key)
-
-  @impl Access
-  def get_and_update(game, key, fun), do: Map.get_and_update(game, key, fun)
-
-  @impl Access
-  def pop(game, key, default \\ nil), do: Map.pop(game, key, default)
-
   def empty(players, current_player) do
     %Game{
       players: players,
@@ -108,9 +97,17 @@ defmodule Heros.Game do
 
   def handle_call({:play_card, player_id, card_id}, _from, game) do
     if_is_current_player(game, player_id, fn player ->
-      {status, new_player} = Player.play_card(player, card_id)
+      case Player.play_card(player, card_id) do
+        {:ok, player} ->
+          {:reply, :ok,
+           %{
+             game
+             | players: game.players |> KeyListUtils.replace(player_id, player)
+           }}
 
-      {:reply, status, update_in(game.players, &KeyListUtils.replace(&1, player_id, new_player))}
+        :error ->
+          {:reply, :not_found, game}
+      end
     end)
   end
 
@@ -147,13 +144,12 @@ defmodule Heros.Game do
 
   def handle_call({:discard_phase, player_id}, _from, game) do
     if_is_current_player(game, player_id, fn _player ->
-      new_game = %{
-        game
-        | players: KeyListUtils.update(game.players, player_id, &Player.discard_phase/1),
-          current_player: next_player_alive(game)
-      }
-
-      {:reply, :ok, new_game}
+      {:reply, :ok,
+       %{
+         game
+         | players: game.players |> KeyListUtils.update(player_id, &Player.discard_phase/1),
+           current_player: next_player_alive(game)
+       }}
     end)
   end
 
@@ -233,37 +229,37 @@ defmodule Heros.Game do
   defp buy_market_card(game, {player_id, player}, {card_id, card}) do
     case Player.buy_card(player, {card_id, card}) do
       {:ok, new_player} ->
-        {new_market_card, new_market_deck} =
+        {market_card, market_deck} =
           case game.market_deck do
             [] -> {nil, []}
-            [new_market_card | new_market_deck] -> {new_market_card, new_market_deck}
+            [market_card | market_deck] -> {market_card, market_deck}
           end
 
-        new_game =
-          game
-          |> update_in([:players], &KeyListUtils.replace(&1, player_id, new_player))
-          |> update_in([:market], &KeyListUtils.replace_with_key(&1, card_id, new_market_card))
-          |> put_in([:market_deck], new_market_deck)
+        {:reply, :ok,
+         %{
+           game
+           | players: game.players |> KeyListUtils.replace(player_id, new_player),
+             market: game.market |> KeyListUtils.fullreplace(card_id, market_card),
+             market_deck: market_deck
+         }}
 
-        {:reply, :ok, new_game}
-
-      {status, _} ->
-        {:reply, status, game}
+      :error ->
+        {:reply, :forbidden, game}
     end
   end
 
   defp buy_gem(game, {player_id, player}, {card_id, card}) do
     case Player.buy_card(player, {card_id, card}) do
       {:ok, new_player} ->
-        new_game =
-          game
-          |> update_in([:players], &KeyListUtils.replace(&1, player_id, new_player))
-          |> update_in([:gems], &KeyListUtils.delete(&1, card_id))
+        {:reply, :ok,
+         %{
+           game
+           | players: game.players |> KeyListUtils.replace(player_id, new_player),
+             gems: game.gems |> KeyListUtils.delete(card_id)
+         }}
 
-        {:reply, :ok, new_game}
-
-      {status, _} ->
-        {:reply, status, game}
+      :error ->
+        {:reply, :forbidden, game}
     end
   end
 
@@ -334,17 +330,16 @@ defmodule Heros.Game do
       {:reply, :forbidden, game}
     else
       damages = min(attacker.combat, defender.hp)
-      new_attacker = update_in(attacker.combat, &(&1 - damages))
-      new_defender = update_in(defender.hp, &(&1 - damages))
 
-      new_game =
-        update_in(game.players, fn players ->
-          players
-          |> KeyListUtils.replace(attacker_id, new_attacker)
-          |> KeyListUtils.replace(defender_id, new_defender)
-        end)
+      game = %{
+        game
+        | players:
+            game.players
+            |> KeyListUtils.replace(attacker_id, attacker |> Player.decr_combat(damages))
+            |> KeyListUtils.replace(defender_id, defender |> Player.decr_hp(damages))
+      }
 
-      {:reply, :ok, new_game}
+      {:reply, :ok, game}
     end
   end
 
@@ -387,21 +382,18 @@ defmodule Heros.Game do
          defense
        ) do
     if attacker.combat >= defense do
-      new_attacker = update_in(attacker.combat, &(&1 - defense))
-
-      new_defender =
-        defender
-        |> update_in([:discard], &([{card_id, card}] ++ &1))
-        |> update_in([:fight_zone], &KeyListUtils.delete(&1, card_id))
-
-      new_game =
-        update_in(game.players, fn players ->
-          players
-          |> KeyListUtils.replace(attacker_id, new_attacker)
-          |> KeyListUtils.replace(defender_id, new_defender)
-        end)
-
-      {:reply, :ok, new_game}
+      {:reply, :ok,
+       %{
+         game
+         | players:
+             game.players
+             |> KeyListUtils.replace(attacker_id, attacker |> Player.decr_combat(defense))
+             |> KeyListUtils.replace(defender_id, %{
+               defender
+               | discard: [{card_id, card} | defender.discard],
+                 fight_zone: defender.fight_zone |> KeyListUtils.delete(card_id)
+             })
+       }}
     else
       {:reply, :forbidden, game}
     end

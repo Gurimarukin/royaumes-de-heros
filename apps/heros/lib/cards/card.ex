@@ -61,5 +61,5 @@ defmodule Heros.Cards.Card do
   end
 
   @spec expend(Card.t()) :: Card.t()
-  def expend(card), do: put_in(card.expend_ability_used, true)
+  def expend(card), do: %{card | expend_ability_used: true}
 end

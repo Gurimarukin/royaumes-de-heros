@@ -19,17 +19,6 @@ defmodule Heros.Player do
   @enforce_keys [:hp, :max_hp, :gold, :combat, :hand, :deck, :discard, :fight_zone]
   defstruct [:hp, :max_hp, :gold, :combat, :hand, :deck, :discard, :fight_zone]
 
-  @behaviour Access
-
-  @impl Access
-  def fetch(player, key), do: Map.fetch(player, key)
-
-  @impl Access
-  def get_and_update(player, key, fun), do: Map.get_and_update(player, key, fun)
-
-  @impl Access
-  def pop(player, key, default \\ nil), do: Map.pop(player, key, default)
-
   def empty do
     %Player{
       hp: 50,
@@ -43,63 +32,66 @@ defmodule Heros.Player do
     }
   end
 
-  @spec init(integer) :: Player.t()
+  @spec init(non_neg_integer) :: Player.t()
   def init(n) do
-    empty()
-    |> put_in([:deck], Enum.shuffle(Cards.Decks.Base.get()))
+    %{empty() | deck: Enum.shuffle(Cards.Decks.Base.get())}
     |> draw_cards(n)
   end
 
   @spec is_alive(Player.t()) :: boolean
   def is_alive(player), do: player.hp > 0
 
-  @spec draw_cards(Player.t(), integer) :: Player.t()
+  @spec draw_cards(Player.t(), non_neg_integer) :: Player.t()
   def draw_cards(player, 0), do: player
 
   def draw_cards(player, n) do
-    if length(player.deck) == 0 do
-      if length(player.discard) == 0 do
+    case {player.deck, player.discard} do
+      {[], []} ->
         player
-      else
-        player
-        |> put_in([:deck], Enum.shuffle(player.discard))
-        |> put_in([:discard], [])
-      end
-    else
-      [head | tail] = player.deck
 
-      player
-      |> update_in([:hand], &(&1 ++ [head]))
-      |> put_in([:deck], tail)
-      |> draw_cards(n - 1)
+      {[], discard} ->
+        %{
+          player
+          | deck: Enum.shuffle(discard),
+            discard: []
+        }
+
+      {[head | tail], _} ->
+        %{
+          player
+          | hand: player.hand ++ [head],
+            deck: tail
+        }
+        |> draw_cards(n - 1)
     end
   end
 
-  @spec play_card(Player.t(), Card.id()) :: {atom, Player.t()}
+  @spec play_card(Player.t(), Card.id()) :: {:ok, Player.t()} | :error
   def play_card(player, card_id) do
     case KeyListUtils.find(player.hand, card_id) do
       nil ->
-        {:not_found, player}
+        :error
 
       card ->
         {:ok,
-         player
-         |> update_in([:hand], &KeyListUtils.delete(&1, card_id))
-         |> update_in([:fight_zone], &(&1 ++ [{card_id, card}]))}
+         %{
+           player
+           | hand: player.hand |> KeyListUtils.delete(card_id),
+             fight_zone: player.fight_zone ++ [{card_id, card}]
+         }}
     end
   end
 
-  @spec buy_card(Player.t(), {Card.id(), Card.t()}) :: {atom, Player.t()}
+  @spec buy_card(Player.t(), {Card.id(), Card.t()}) :: {:ok, Player.t()} | :error
   def buy_card(player, card) do
     price = Card.price(elem(card, 1).key)
 
     if player.gold >= price do
       {:ok,
-       player
-       |> update_in([:gold], &(&1 - price))
-       |> update_in([:discard], &([card] ++ &1))}
+       %{player | discard: [card | player.discard]}
+       |> decr_gold(price)}
     else
-      {:forbidden, player}
+      :error
     end
   end
 
@@ -118,4 +110,13 @@ defmodule Heros.Player do
         fight_zone: champions |> KeyListUtils.map(&Card.reset_state/1)
     }
   end
+
+  def incr_hp(player, amount), do: %{player | hp: player.hp + amount}
+  def decr_hp(player, amount), do: %{player | hp: player.hp - amount}
+
+  def incr_gold(player, amount), do: %{player | gold: player.gold + amount}
+  def decr_gold(player, amount), do: %{player | gold: player.gold - amount}
+
+  def incr_combat(player, amount), do: %{player | combat: player.combat + amount}
+  def decr_combat(player, amount), do: %{player | combat: player.combat - amount}
 end
