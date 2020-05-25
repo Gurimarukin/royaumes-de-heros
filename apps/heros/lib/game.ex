@@ -28,6 +28,17 @@ defmodule Heros.Game do
   @impl Access
   def pop(game, key, default \\ nil), do: Map.pop(game, key, default)
 
+  def empty(players, current_player) do
+    %Game{
+      players: players,
+      current_player: current_player,
+      gems: [],
+      market: [],
+      market_deck: [],
+      cemetery: []
+    }
+  end
+
   #
   # Client
   #

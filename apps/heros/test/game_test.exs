@@ -114,36 +114,19 @@ defmodule Heros.GameTest do
     [myros] = Cards.with_id(:myros)
     [filler] = Cards.with_id(:whatever)
 
-    p1 = %Player{
-      hp: 50,
-      max_hp: 50,
-      gold: 8,
-      attack: 0,
-      hand: [],
-      deck: [],
-      discard: [myros],
-      fight_zone: []
-    }
+    p1 =
+      Player.empty()
+      |> put_in([:gold], 8)
+      |> put_in([:discard], [myros])
 
-    p2 = %Player{
-      hp: 50,
-      max_hp: 50,
-      gold: 0,
-      attack: 0,
-      hand: [],
-      deck: [],
-      discard: [],
-      fight_zone: []
-    }
+    p2 = Player.empty()
 
-    game = %Game{
-      players: [{"p1", p1}, {"p2", p2}],
-      current_player: "p1",
-      gems: gems,
-      market: [orc_grunt1, arkus, orc_grunt2, filler, filler],
-      market_deck: [cult_priest1],
-      cemetery: [cult_priest2]
-    }
+    game =
+      Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+      |> put_in([:gems], gems)
+      |> put_in([:market], [orc_grunt1, arkus, orc_grunt2, filler, filler])
+      |> put_in([:market_deck], [cult_priest1])
+      |> put_in([:cemetery], [cult_priest2])
 
     {:ok, pid} = Game.start({:from_game, game})
 
@@ -200,14 +183,7 @@ defmodule Heros.GameTest do
 
     p2 = put_in(Player.empty().fight_zone, [cult_priest, orc_grunt, smash_and_grab, street_thug])
 
-    game = %Game{
-      players: [{"p1", p1}, {"p2", p2}],
-      current_player: "p1",
-      gems: [],
-      market: [],
-      market_deck: [],
-      cemetery: []
-    }
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
 
     {:ok, pid} = Game.start({:from_game, game})
 
@@ -294,15 +270,7 @@ defmodule Heros.GameTest do
   test "attacking when no attack" do
     p1 = Player.empty()
     p2 = Player.empty()
-
-    game = %Game{
-      players: [{"p1", p1}, {"p2", p2}],
-      current_player: "p1",
-      gems: [],
-      market: [],
-      market_deck: [],
-      cemetery: []
-    }
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
 
     {:ok, pid} = Game.start({:from_game, game})
 
@@ -314,15 +282,7 @@ defmodule Heros.GameTest do
     p2 = Player.empty()
     p3 = Player.empty()
     p4 = Player.empty()
-
-    game = %Game{
-      players: [{"p1", p1}, {"p2", p2}, {"p3", p3}, {"p4", p4}],
-      current_player: "p1",
-      gems: [],
-      market: [],
-      market_deck: [],
-      cemetery: []
-    }
+    game = Game.empty([{"p1", p1}, {"p2", p2}, {"p3", p3}, {"p4", p4}], "p1")
 
     {:ok, pid} = Game.start({:from_game, game})
 
