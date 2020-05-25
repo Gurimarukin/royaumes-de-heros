@@ -125,7 +125,7 @@ defmodule Heros.Game do
 
   def handle_call({:attack, attacker_id, defender_id, what}, _from, game) do
     if_is_current_player(game, attacker_id, fn attacker ->
-      if attacker.attack > 0 and player_can_attack(game, attacker_id, defender_id) do
+      if attacker.combat > 0 and are_neighbours(game, attacker_id, defender_id) do
         case Utils.keyfind(game.players, defender_id) do
           nil -> {:reply, :not_found, game}
           defender -> attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
@@ -247,7 +247,7 @@ defmodule Heros.Game do
   end
 
   # attack
-  defp player_can_attack(game, attacker_id, defender_id) do
+  defp are_neighbours(game, attacker_id, defender_id) do
     case {
       Enum.find_index(game.players, fn {id, _} -> id == attacker_id end),
       Enum.find_index(game.players, fn {id, _} -> id == defender_id end)
@@ -277,8 +277,8 @@ defmodule Heros.Game do
     if defender_has_guard or not Player.is_alive(defender) do
       {:reply, :forbidden, game}
     else
-      damages = min(attacker.attack, defender.hp)
-      new_attacker = update_in(attacker.attack, &(&1 - damages))
+      damages = min(attacker.combat, defender.hp)
+      new_attacker = update_in(attacker.combat, &(&1 - damages))
       new_defender = update_in(defender.hp, &(&1 - damages))
 
       new_game =
@@ -330,8 +330,8 @@ defmodule Heros.Game do
          {card_id, card},
          defense
        ) do
-    if attacker.attack >= defense do
-      new_attacker = update_in(attacker.attack, &(&1 - defense))
+    if attacker.combat >= defense do
+      new_attacker = update_in(attacker.combat, &(&1 - defense))
 
       new_defender =
         defender

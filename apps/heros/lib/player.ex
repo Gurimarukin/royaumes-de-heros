@@ -8,7 +8,7 @@ defmodule Heros.Player do
           hp: integer,
           max_hp: integer,
           gold: integer,
-          attack: integer,
+          combat: integer,
           hand: list(Card.t()),
           deck: list(Card.t()),
           discard: list(Card.t()),
@@ -16,8 +16,8 @@ defmodule Heros.Player do
           # inventory: list(Card.t())
           # enemy_fight_zone: list(Card.t())
         }
-  @enforce_keys [:hp, :max_hp, :gold, :attack, :hand, :deck, :discard, :fight_zone]
-  defstruct [:hp, :max_hp, :gold, :attack, :hand, :deck, :discard, :fight_zone]
+  @enforce_keys [:hp, :max_hp, :gold, :combat, :hand, :deck, :discard, :fight_zone]
+  defstruct [:hp, :max_hp, :gold, :combat, :hand, :deck, :discard, :fight_zone]
 
   @behaviour Access
 
@@ -35,7 +35,7 @@ defmodule Heros.Player do
       hp: 50,
       max_hp: 50,
       gold: 0,
-      attack: 0,
+      combat: 0,
       hand: [],
       deck: [],
       discard: [],

@@ -18,7 +18,7 @@ defmodule Heros.GameTest do
       assert player.hp == 50
       assert player.max_hp == 50
       assert player.gold == 0
-      assert player.attack == 0
+      assert player.combat == 0
 
       assert player.discard == []
       assert player.fight_zone == []
@@ -178,7 +178,7 @@ defmodule Heros.GameTest do
 
     p1 =
       Player.empty()
-      |> put_in([:attack], 10)
+      |> put_in([:combat], 10)
       |> put_in([:fight_zone], [tithe_priest])
 
     p2 = put_in(Player.empty().fight_zone, [cult_priest, orc_grunt, smash_and_grab, street_thug])
@@ -206,7 +206,7 @@ defmodule Heros.GameTest do
     # attack orc_grunt
     assert Game.attack(pid, "p1", "p2", elem(orc_grunt, 0)) == :ok
     game = Game.get(pid)
-    p1 = put_in(p1.attack, 7)
+    p1 = put_in(p1.combat, 7)
 
     p2 =
       p2
@@ -219,7 +219,7 @@ defmodule Heros.GameTest do
     # attack street_thug
     assert Game.attack(pid, "p1", "p2", elem(street_thug, 0)) == :ok
     game = Game.get(pid)
-    p1 = put_in(p1.attack, 3)
+    p1 = put_in(p1.combat, 3)
 
     p2 =
       p2
@@ -229,20 +229,20 @@ defmodule Heros.GameTest do
     assert p1 == Utils.keyfind(game.players, "p1")
     assert p2 == Utils.keyfind(game.players, "p2")
 
-    # not enough attack for cult_priest
+    # not enough combat for cult_priest
     assert Game.attack(pid, "p1", "p2", elem(cult_priest, 0)) == :forbidden
 
     # attack player directly
     assert Game.attack(pid, "p1", "p2", :player) == :ok
     game = Game.get(pid)
-    p1 = put_in(p1.attack, 0)
+    p1 = put_in(p1.combat, 0)
     p2 = put_in(p2.hp, 47)
     assert p1 == Utils.keyfind(game.players, "p1")
     assert p2 == Utils.keyfind(game.players, "p2")
   end
 
   test "attacking and killing a player" do
-    p1 = put_in(Player.empty().attack, 10)
+    p1 = put_in(Player.empty().combat, 10)
     p2 = put_in(Player.empty().hp, 8)
 
     game = %Game{
@@ -258,7 +258,7 @@ defmodule Heros.GameTest do
 
     assert Game.attack(pid, "p1", "p2", :player) == :ok
     game = Game.get(pid)
-    p1 = put_in(p1.attack, 2)
+    p1 = put_in(p1.combat, 2)
     p2 = put_in(p2.hp, 0)
     assert p1 == Utils.keyfind(game.players, "p1")
     assert p2 == Utils.keyfind(game.players, "p2")
@@ -267,7 +267,7 @@ defmodule Heros.GameTest do
     assert Game.attack(pid, "p1", "p2", :player) == :forbidden
   end
 
-  test "attacking when no attack" do
+  test "attacking when no combat" do
     p1 = Player.empty()
     p2 = Player.empty()
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
@@ -278,7 +278,7 @@ defmodule Heros.GameTest do
   end
 
   test "attacking when 4 players" do
-    p1 = put_in(Player.empty().attack, 3)
+    p1 = put_in(Player.empty().combat, 3)
     p2 = Player.empty()
     p3 = Player.empty()
     p4 = Player.empty()
