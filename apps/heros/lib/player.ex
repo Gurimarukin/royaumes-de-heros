@@ -64,8 +64,8 @@ defmodule Heros.Player do
     |> draw_cards(n)
   end
 
-  @spec is_alive(Player.t()) :: boolean
-  def is_alive(player), do: player.hp > 0
+  @spec alive?(Player.t()) :: boolean
+  def alive?(player), do: player.hp > 0
 
   @spec draw_cards(Player.t(), integer) :: Player.t()
   def draw_cards(player, n) do
@@ -131,7 +131,7 @@ defmodule Heros.Player do
   def discard_phase(player) do
     {champions, non_champions} =
       player.fight_zone
-      |> Enum.split_with(fn {_, c} -> Card.is_champion(c.key) end)
+      |> Enum.split_with(fn {_, c} -> Card.champion?(c.key) end)
 
     %{
       player

@@ -254,7 +254,7 @@ defmodule Heros.Game do
   def attack(game, attacker_id, defender_id, what) do
     main_phase_action(game, attacker_id, fn attacker ->
       with_member(game.players, defender_id, fn defender ->
-        if attacker.combat > 0 and is_next_to_current_player(game, defender_id) do
+        if attacker.combat > 0 and next_to_current_player?(game, defender_id) do
           attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
         else
           :error
@@ -264,9 +264,9 @@ defmodule Heros.Game do
   end
 
   defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, :player) do
-    defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.is_guard(c.key) end)
+    defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.guard?(c.key) end)
 
-    if defender_has_guard or not Player.is_alive(defender) do
+    if defender_has_guard or not Player.alive?(defender) do
       :error
     else
       damages = min(attacker.combat, defender.hp)
@@ -289,7 +289,7 @@ defmodule Heros.Game do
   end
 
   defp check_victory(game, attacker_id) do
-    players_alive = game.players |> KeyListUtils.count(&Player.is_alive/1)
+    players_alive = game.players |> KeyListUtils.count(&Player.alive?/1)
 
     if players_alive == 1 do
       {:victory, attacker_id, game}
@@ -305,7 +305,7 @@ defmodule Heros.Game do
         attack_card_bis(game, {attacker_id, attacker}, defender_id, {card_id, card}, defense)
 
       {:not_guard, defense} ->
-        defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.is_guard(c.key) end)
+        defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.guard?(c.key) end)
 
         if defender_has_guard do
           :error
@@ -369,7 +369,7 @@ defmodule Heros.Game do
   defp interaction(game, player_id, {:prepare_champion, _}, {:prepare_champion, card_id}) do
     with_member(game.players, player_id, fn player ->
       with_member(player.fight_zone, card_id, fn card ->
-        if Card.is_champion(card.key) and card.expend_ability_used do
+        if Card.champion?(card.key) and card.expend_ability_used do
           game
           |> update_player(player_id, &Player.prepare(&1, card_id))
           |> Option.some()
@@ -477,13 +477,13 @@ defmodule Heros.Game do
 
   defp step_if_dead(players, i, f) do
     case Enum.fetch(players, i) do
-      {:ok, {k, p}} -> if Player.is_alive(p), do: k, else: f.(players, i)
+      {:ok, {k, p}} -> if Player.alive?(p), do: k, else: f.(players, i)
       :error -> nil
     end
   end
 
-  @spec is_next_to_current_player(Game.t(), Player.id()) :: boolean
-  defp is_next_to_current_player(game, player_id) do
+  @spec next_to_current_player?(Game.t(), Player.id()) :: boolean
+  defp next_to_current_player?(game, player_id) do
     case next_player_alive(game) do
       nil ->
         false

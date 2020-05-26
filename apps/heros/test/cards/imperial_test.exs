@@ -8,8 +8,8 @@ defmodule Heros.Cards.ImperialTest do
     assert Card.cost(:arkus) == 8
     assert Card.type(:arkus) == {:guard, 6}
     assert Card.faction(:arkus) == :imperial
-    assert Card.is_champion(:arkus)
-    assert Card.is_guard(:arkus)
+    assert Card.champion?(:arkus)
+    assert Card.guard?(:arkus)
 
     [arkus] = Cards.with_id(:arkus)
     [weyan] = Cards.with_id(:weyan)
@@ -110,8 +110,8 @@ defmodule Heros.Cards.ImperialTest do
     assert Card.cost(:close_ranks) == 3
     assert Card.type(:close_ranks) == :action
     assert Card.faction(:close_ranks) == :imperial
-    assert not Card.is_champion(:action)
-    assert not Card.is_guard(:action)
+    assert not Card.champion?(:action)
+    assert not Card.guard?(:action)
 
     [close_ranks] = Cards.with_id(:close_ranks)
     [arkus] = Cards.with_id(:arkus)
@@ -195,8 +195,8 @@ defmodule Heros.Cards.ImperialTest do
     assert Card.cost(:command) == 5
     assert Card.type(:command) == :action
     assert Card.faction(:command) == :imperial
-    assert not Card.is_champion(:command)
-    assert not Card.is_guard(:command)
+    assert not Card.champion?(:command)
+    assert not Card.guard?(:command)
 
     [command] = Cards.with_id(:command)
     [gem1, gem2] = Cards.with_id(:gem, 2)
@@ -228,8 +228,8 @@ defmodule Heros.Cards.ImperialTest do
     assert Card.cost(:darian) == 4
     assert Card.type(:darian) == {:not_guard, 5}
     assert Card.faction(:darian) == :imperial
-    assert Card.is_champion(:darian)
-    assert not Card.is_guard(:darian)
+    assert Card.champion?(:darian)
+    assert not Card.guard?(:darian)
 
     [darian] = Cards.with_id(:darian)
     [gem1, gem2, gem3] = Cards.with_id(:gem, 3)
@@ -308,8 +308,8 @@ defmodule Heros.Cards.ImperialTest do
     assert Card.cost(:domination) == 7
     assert Card.type(:domination) == :action
     assert Card.faction(:domination) == :imperial
-    assert not Card.is_champion(:domination)
-    assert not Card.is_guard(:domination)
+    assert not Card.champion?(:domination)
+    assert not Card.guard?(:domination)
 
     [domination] = Cards.with_id(:domination)
     [arkus] = Cards.with_id(:arkus)

@@ -46,8 +46,8 @@ defmodule Heros.Cards.Card do
       Wild.faction(key)
   end
 
-  @spec is_champion(atom) :: boolean
-  def is_champion(key) do
+  @spec champion?(atom) :: boolean
+  def champion?(key) do
     case type(key) do
       {:guard, _} -> true
       {:not_guard, _} -> true
@@ -55,8 +55,8 @@ defmodule Heros.Cards.Card do
     end
   end
 
-  @spec is_guard(atom) :: boolean
-  def is_guard(key) do
+  @spec guard?(atom) :: boolean
+  def guard?(key) do
     case type(key) do
       {:guard, _} -> true
       _ -> false

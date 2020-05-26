@@ -73,7 +73,7 @@ defmodule Heros.Cards.Imperial do
   def primary_ability(game, :close_ranks, player_id) do
     game
     |> Game.update_player(player_id, fn player ->
-      n_champions = KeyListUtils.count(player.fight_zone, &Card.is_champion(&1.key))
+      n_champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
       player |> Player.incr_combat(5 + n_champions * 2)
     end)
   end
@@ -126,7 +126,7 @@ defmodule Heros.Cards.Imperial do
       expended_champions =
         KeyListUtils.count(
           player.fight_zone,
-          fn c -> Card.is_champion(c.key) and c.expend_ability_used end
+          fn c -> Card.champion?(c.key) and c.expend_ability_used end
         )
 
       if expended_champions == 0 do
