@@ -20,6 +20,10 @@ defmodule Heros.Game do
   @type option :: {:ok, Game.t()} | :error
   @type update :: option() | {:victory, Player.id(), Game.t()}
 
+  #
+  # Init
+  #
+
   def empty(players, current_player) do
     %Game{
       players: players,
@@ -82,34 +86,45 @@ defmodule Heros.Game do
     |> Enum.split(5)
   end
 
-  @spec play_card(Game.t(), {Player.id(), Player.t()}, Card.id()) :: update()
-  def play_card(game, {player_id, player}, card_id) do
-    with_element(player.hand, card_id, fn card ->
-      %{
-        game
-        | players:
-            game.players
-            |> KeyListUtils.update(
-              player_id,
-              &(&1
-                |> Player.remove_from_hand(card_id)
-                |> Player.add_to_fight_zone({card_id, card}))
-            )
-      }
-      |> Card.primary_ability(card.key, player_id)
-      |> Option.some()
+  #
+  # Callable actions
+  #
+
+  # Main phase
+
+  @spec play_card(Game.t(), Player.id(), Card.id()) :: update()
+  def play_card(game, player_id, card_id) do
+    # TODO: main_phase_action
+    current_player_action(game, player_id, fn player ->
+      with_element(player.hand, card_id, fn card ->
+        %{
+          game
+          | players:
+              game.players
+              |> KeyListUtils.update(
+                player_id,
+                &(&1
+                  |> Player.remove_from_hand(card_id)
+                  |> Player.add_to_fight_zone({card_id, card}))
+              )
+        }
+        |> Card.primary_ability(card.key, player_id)
+        |> Option.some()
+      end)
     end)
   end
 
-  @spec use_expend_ability(Game.t(), {Player.id(), Player.t()}, Card.id()) ::
-          update()
-  def use_expend_ability(game, {player_id, player}, card_id) do
-    with_element(player.fight_zone, card_id, fn card ->
-      if card.expend_ability_used do
-        :error
-      else
-        use_expend_ability_bis(game, player_id, {card_id, card})
-      end
+  @spec use_expend_ability(Game.t(), Player.id(), Card.id()) :: update()
+  def use_expend_ability(game, player_id, card_id) do
+    # TODO: main_phase_action
+    current_player_action(game, player_id, fn player ->
+      with_element(player.fight_zone, card_id, fn card ->
+        if card.expend_ability_used do
+          :error
+        else
+          use_expend_ability_bis(game, player_id, {card_id, card})
+        end
+      end)
     end)
   end
 
@@ -134,21 +149,23 @@ defmodule Heros.Game do
     end)
   end
 
-  @spec use_ally_ability(Game.t(), {Player.id(), Player.t()}, Card.id()) ::
-          update()
-  def use_ally_ability(game, {player_id, player}, card_id) do
-    with_element(player.fight_zone, card_id, fn card ->
-      case Card.faction(card.key) do
-        nil ->
-          :error
-
-        faction ->
-          if card.ally_ability_used or count_from_faction(player.fight_zone, faction) < 2 do
+  @spec use_ally_ability(Game.t(), Player.id(), Card.id()) :: update()
+  def use_ally_ability(game, player_id, card_id) do
+    # TODO: main_phase_action
+    current_player_action(game, player_id, fn player ->
+      with_element(player.fight_zone, card_id, fn card ->
+        case Card.faction(card.key) do
+          nil ->
             :error
-          else
-            use_ally_ability_bis(game, player_id, {card_id, card})
-          end
-      end
+
+          faction ->
+            if card.ally_ability_used or count_from_faction(player.fight_zone, faction) < 2 do
+              :error
+            else
+              use_ally_ability_bis(game, player_id, {card_id, card})
+            end
+        end
+      end)
     end)
   end
 
@@ -179,17 +196,20 @@ defmodule Heros.Game do
     end)
   end
 
-  @spec buy_card(Game.t(), {Player.id(), Player.t()}, Card.id()) :: update()
-  def buy_card(game, {player_id, player}, card_id) do
-    case KeyListUtils.find(game.market, card_id) do
-      nil ->
-        with_element(game.gems, card_id, fn card ->
-          buy_gem(game, {player_id, player}, {card_id, card})
-        end)
+  @spec buy_card(Game.t(), Player.id(), Card.id()) :: update()
+  def buy_card(game, player_id, card_id) do
+    # TODO: main_phase_action
+    current_player_action(game, player_id, fn player ->
+      case KeyListUtils.find(game.market, card_id) do
+        nil ->
+          with_element(game.gems, card_id, fn card ->
+            buy_gem(game, {player_id, player}, {card_id, card})
+          end)
 
-      card ->
-        buy_market_card(game, {player_id, player}, {card_id, card})
-    end
+        card ->
+          buy_market_card(game, {player_id, player}, {card_id, card})
+      end
+    end)
   end
 
   defp buy_market_card(game, {player_id, player}, {card_id, card}) do
@@ -234,13 +254,17 @@ defmodule Heros.Game do
     )
   end
 
-  def attack(game, {attacker_id, attacker}, defender_id, what) do
-    with_element(game.players, defender_id, fn defender ->
-      if attacker.combat > 0 and Game.is_next_to_current_player(game, defender_id) do
-        attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
-      else
-        :error
-      end
+  @spec attack(Game.t(), Player.id(), Player.id(), :attack | Card.id()) :: update()
+  def attack(game, attacker_id, defender_id, what) do
+    # TODO: main_phase_action
+    current_player_action(game, attacker_id, fn attacker ->
+      with_element(game.players, defender_id, fn defender ->
+        if attacker.combat > 0 and is_next_to_current_player(game, defender_id) do
+          attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
+        else
+          :error
+        end
+      end)
     end)
   end
 
@@ -319,22 +343,27 @@ defmodule Heros.Game do
     end
   end
 
-  @spec perform_interaction(Game.t(), {Player.id(), Player}, {atom, any}) :: update()
-  def perform_interaction(game, {player_id, player}, interaction) do
-    {name, _} = interaction
+  # Interactions (when user needs to perform an additionnal action, like
+  # choosing between two effects or choosing a card to discard or to sacrifice)
 
-    case player.pending_interactions do
-      [] ->
-        :error
+  @spec perform_interaction(Game.t(), Player.id(), {atom, any}) :: update()
+  def perform_interaction(game, player_id, interaction) do
+    current_player_action(game, player_id, fn player ->
+      {name, _} = interaction
 
-      [{^name, value} | tail] ->
-        game
-        |> replace_player(player_id, %{player | pending_interactions: tail})
-        |> interaction(player_id, {name, value}, interaction)
+      case player.pending_interactions do
+        [] ->
+          :error
 
-      _ ->
-        :error
-    end
+        [{^name, value} | tail] ->
+          game
+          |> replace_player(player_id, %{player | pending_interactions: tail})
+          |> interaction(player_id, {name, value}, interaction)
+
+        _ ->
+          :error
+      end
+    end)
   end
 
   defp interaction(game, player_id, {:select_effect, effects}, {:select_effect, index}) do
@@ -344,23 +373,35 @@ defmodule Heros.Game do
 
   defp interaction(_game, _player_id, _pending, _interaction), do: Option.none()
 
+  # Discard phase (no real reason to separate it from Draw phase, but well...)
+
   @spec discard_phase(Game.t(), Player.id()) :: update()
   def discard_phase(game, player_id) do
-    # TODO: check not already done$
-    %{game | players: game.players |> KeyListUtils.update(player_id, &Player.discard_phase/1)}
-    |> Option.some()
+    # TODO: check not already done
+    current_player_action(game, player_id, fn _player ->
+      %{game | players: game.players |> KeyListUtils.update(player_id, &Player.discard_phase/1)}
+      |> Option.some()
+    end)
   end
+
+  # Draw phase
 
   @spec draw_phase(Game.t(), Player.id()) :: update()
   def draw_phase(game, player_id) do
     # TODO: check discard_phase done
-    %{
-      game
-      | players: game.players |> KeyListUtils.update(player_id, &Player.draw_cards(&1, 5)),
-        current_player: next_player_alive(game)
-    }
-    |> Option.some()
+    current_player_action(game, player_id, fn _player ->
+      %{
+        game
+        | players: game.players |> KeyListUtils.update(player_id, &Player.draw_cards(&1, 5)),
+          current_player: next_player_alive(game)
+      }
+      |> Option.some()
+    end)
   end
+
+  #
+  # Helpers
+  #
 
   defp with_element(list, key, f) do
     KeyListUtils.find(list, key)
@@ -368,8 +409,30 @@ defmodule Heros.Game do
     |> Option.chain(f)
   end
 
+  # # player_id needs to be current player and no interaction is pending
+  # defp main_phase_action(game, player_id, f) do
+  #   current_player_action(game, player_id, fn player ->
+  #     case player.pending_interactions do
+  #       [] -> f.(player)
+  #       _ -> error(game)
+  #     end
+  #   end)
+  # end
+
+  # player_id needs to be current player
+  defp current_player_action(game, player_id, f) do
+    if game.current_player == player_id do
+      case KeyListUtils.find(game.players, player_id) do
+        nil -> Option.none()
+        player -> f.(player)
+      end
+    else
+      Option.none()
+    end
+  end
+
   @spec next_player_alive(Game.t()) :: nil | Player.id()
-  def next_player_alive(game) do
+  defp next_player_alive(game) do
     case Enum.find_index(game.players, fn {id, _} -> id == game.current_player end) do
       nil -> nil
       i -> next_player_alive_rec(game.players, i)
@@ -377,7 +440,7 @@ defmodule Heros.Game do
   end
 
   @spec previous_player_alive(Game.t()) :: nil | Player.id()
-  def previous_player_alive(game) do
+  defp previous_player_alive(game) do
     case Enum.find_index(game.players, fn {id, _} -> id == game.current_player end) do
       nil -> nil
       i -> previous_player_alive_rec(game.players, i)
@@ -402,7 +465,7 @@ defmodule Heros.Game do
   end
 
   @spec is_next_to_current_player(Game.t(), Player.id()) :: boolean
-  def is_next_to_current_player(game, player_id) do
+  defp is_next_to_current_player(game, player_id) do
     case next_player_alive(game) do
       nil ->
         false
@@ -417,18 +480,6 @@ defmodule Heros.Game do
           _ -> false
         end
     end
-  end
-
-  #
-  # Helpers for abilities
-  #
-
-  def replace_player(game, player_id, player) do
-    %{game | players: game.players |> KeyListUtils.replace(player_id, player)}
-  end
-
-  def update_player(game, player_id, f) do
-    %{game | players: game.players |> KeyListUtils.update(player_id, f)}
   end
 
   @spec perform_effect(Game.t(), Player.id(), {atom, any}) :: {:ok, Game.t()} | :error
@@ -450,6 +501,18 @@ defmodule Heros.Game do
 
   defp perform_effect(_game, _player_id, _effect), do: :error
 
+  #
+  # Helpers for card abilities
+  #
+
+  def replace_player(game, player_id, player) do
+    %{game | players: game.players |> KeyListUtils.replace(player_id, player)}
+  end
+
+  def update_player(game, player_id, f) do
+    %{game | players: game.players |> KeyListUtils.update(player_id, f)}
+  end
+
   def heal(game, player_id, amount) do
     {:ok, game} = perform_effect(game, player_id, {:heal, amount})
     game
@@ -466,10 +529,10 @@ defmodule Heros.Game do
   end
 
   def draw_card(game, player_id, amount) do
-    game |> update_player(player_id, &Player.draw_cards(&1, amount))
+    update_player(game, player_id, &Player.draw_cards(&1, amount))
   end
 
   def queue_interaction(game, player_id, interaction) do
-    game |> update_player(player_id, &Player.queue_interaction(&1, interaction))
+    update_player(game, player_id, &Player.queue_interaction(&1, interaction))
   end
 end

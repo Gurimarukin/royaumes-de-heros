@@ -3,7 +3,7 @@ defmodule Heros.Game.GenServer do
 
   require Logger
 
-  alias Heros.{Cards, Game, KeyListUtils, Player}
+  alias Heros.{Game, Player}
   alias Heros.Cards.Card
 
   #
@@ -99,89 +99,47 @@ defmodule Heros.Game.GenServer do
   end
 
   def handle_call({:play_card, player_id, card_id}, _from, game) do
-    # TODO: main_phase_action
-    current_player_action(game, player_id, fn player ->
-      Game.play_card(game, {player_id, player}, card_id)
-    end)
+    Game.play_card(game, player_id, card_id)
+    |> to_reply(game)
   end
 
   def handle_call({:use_expend_ability, player_id, card_id}, _from, game) do
-    # TODO: main_phase_action
-    current_player_action(game, player_id, fn player ->
-      Game.use_expend_ability(game, {player_id, player}, card_id)
-    end)
+    Game.use_expend_ability(game, player_id, card_id)
+    |> to_reply(game)
   end
 
   def handle_call({:use_ally_ability, player_id, card_id}, _from, game) do
-    # TODO: main_phase_action
-    current_player_action(game, player_id, fn player ->
-      Game.use_ally_ability(game, {player_id, player}, card_id)
-    end)
+    Game.use_ally_ability(game, player_id, card_id)
+    |> to_reply(game)
   end
 
   def handle_call({:buy_card, player_id, card_id}, _from, game) do
-    # TODO: main_phase_action
-    current_player_action(game, player_id, fn player ->
-      Game.buy_card(game, {player_id, player}, card_id)
-    end)
+    Game.buy_card(game, player_id, card_id)
+    |> to_reply(game)
   end
 
   def handle_call({:attack, attacker_id, defender_id, what}, _from, game) do
-    # TODO: main_phase_action
-    current_player_action(game, attacker_id, fn attacker ->
-      Game.attack(game, {attacker_id, attacker}, defender_id, what)
-    end)
+    Game.attack(game, attacker_id, defender_id, what)
+    |> to_reply(game)
   end
 
   def handle_call({:perform_interaction, player_id, interaction}, _from, game) do
-    current_player_action(game, player_id, fn player ->
-      Game.perform_interaction(game, {player_id, player}, interaction)
-    end)
+    Game.perform_interaction(game, player_id, interaction)
+    |> to_reply(game)
   end
 
   def handle_call({:discard_phase, player_id}, _from, game) do
-    # TODO: check not already done
-    current_player_action(game, player_id, fn _player ->
-      Game.discard_phase(game, player_id)
-    end)
+    Game.discard_phase(game, player_id)
+    |> to_reply(game)
   end
 
   def handle_call({:draw_phase, player_id}, _from, game) do
-    current_player_action(game, player_id, fn _player ->
-      Game.draw_phase(game, player_id)
-    end)
+    Game.draw_phase(game, player_id)
+    |> to_reply(game)
   end
-
-  #
-  # Helpers
-  #
-
-  defp error(game), do: {:reply, :error, game}
-
-  defp ok(game), do: {:reply, {:ok, game}, game}
 
   @spec to_reply(Game.update(), Game.t()) :: {:reply, Game.update(), Game.t()}
-  defp to_reply({:ok, game}, _), do: ok(game)
+  defp to_reply({:ok, game}, _), do: {:reply, {:ok, game}, game}
   defp to_reply({:victory, winner, game}, _), do: {:reply, {:victory, winner, game}, game}
   defp to_reply(:error, game), do: {:reply, :error, game}
-
-  # defp main_phase_action(game, player_id, f) do
-  #   current_player_action(game, player_id, fn player ->
-  #     case player.pending_interactions do
-  #       [] -> f.(player)
-  #       _ -> error(game)
-  #     end
-  #   end)
-  # end
-
-  defp current_player_action(game, player_id, f) do
-    if game.current_player == player_id do
-      case KeyListUtils.find(game.players, player_id) do
-        nil -> error(game)
-        player -> to_reply(f.(player), game)
-      end
-    else
-      error(game)
-    end
-  end
 end
