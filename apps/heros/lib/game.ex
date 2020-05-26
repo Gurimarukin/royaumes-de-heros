@@ -357,7 +357,7 @@ defmodule Heros.Game do
 
         [{^name, value} | tail] ->
           game
-          |> replace_player(player_id, %{player | pending_interactions: tail})
+          |> update_player(player_id, &%{&1 | pending_interactions: tail})
           |> interaction(player_id, {name, value}, interaction)
 
         _ ->
@@ -506,10 +506,6 @@ defmodule Heros.Game do
   #
   # Helpers for card abilities
   #
-
-  def replace_player(game, player_id, player) do
-    %{game | players: game.players |> KeyListUtils.replace(player_id, player)}
-  end
 
   def update_player(game, player_id, f) do
     %{game | players: game.players |> KeyListUtils.update(player_id, f)}
