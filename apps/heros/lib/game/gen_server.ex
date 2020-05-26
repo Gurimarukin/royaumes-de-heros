@@ -27,6 +27,18 @@ defmodule Heros.Game.GenServer do
     GenServer.call(game, {:play_card, player_id, card_id})
   end
 
+  @spec use_expend_ability(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
+          :ok | atom
+  def use_expend_ability(game, player_id, card_id) do
+    GenServer.call(game, {:use_expend_ability, player_id, card_id})
+  end
+
+  @spec use_ally_ability(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
+          :ok | atom
+  def use_ally_ability(game, player_id, card_id) do
+    GenServer.call(game, {:use_ally_ability, player_id, card_id})
+  end
+
   @spec buy_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
           :ok | atom
   def buy_card(game, player_id, card_id) do
@@ -93,6 +105,48 @@ defmodule Heros.Game.GenServer do
     end)
   end
 
+  def handle_call({:use_expend_ability, player_id, card_id}, _from, game) do
+    if_is_current_player(game, player_id, fn player ->
+      case KeyListUtils.find(player.fight_zone, card_id) do
+        nil ->
+          {:reply, :not_found, game}
+
+        card ->
+          if card.expend_ability_used do
+            {:reply, :forbidden, game}
+          else
+            game
+            |> Game.use_expend_ability({player_id, player}, {card_id, card})
+            |> ok_or(:not_found, game)
+          end
+      end
+    end)
+  end
+
+  def handle_call({:use_ally_ability, player_id, card_id}, _from, game) do
+    if_is_current_player(game, player_id, fn player ->
+      case KeyListUtils.find(player.fight_zone, card_id) do
+        nil ->
+          {:reply, :not_found, game}
+
+        card ->
+          case Card.faction(card.key) do
+            nil ->
+              {:reply, :not_found, game}
+
+            faction ->
+              if card.ally_ability_used or count_from_faction(player.fight_zone, faction) < 2 do
+                {:reply, :forbidden, game}
+              else
+                game
+                |> Game.use_ally_ability({player_id, player}, {card_id, card})
+                |> ok_or(:not_found, game)
+              end
+          end
+      end
+    end)
+  end
+
   def handle_call({:buy_card, player_id, card_id}, _from, game) do
     if_is_current_player(game, player_id, fn player ->
       case KeyListUtils.find(game.market, card_id) do
@@ -104,13 +158,13 @@ defmodule Heros.Game.GenServer do
             card ->
               game
               |> Game.buy_gem({player_id, player}, {card_id, card})
-              |> ok_or_forbidden(game)
+              |> ok_or(:forbidden, game)
           end
 
         card ->
           game
           |> Game.buy_market_card({player_id, player}, {card_id, card})
-          |> ok_or_forbidden(game)
+          |> ok_or(:forbidden, game)
       end
     end)
   end
@@ -158,10 +212,10 @@ defmodule Heros.Game.GenServer do
     end
   end
 
-  @spec ok_or_forbidden({:ok, Game.t()} | :error, Game.t()) ::
-          {:reply, :ok | :forbidden, Game.t()}
-  defp ok_or_forbidden({:ok, game}, _), do: {:reply, :ok, game}
-  defp ok_or_forbidden(:error, game), do: {:reply, :forbidden, game}
+  @spec ok_or({:ok, Game.t()} | :error, atom, Game.t()) ::
+          {:reply, :ok | atom, Game.t()}
+  defp ok_or({:ok, game}, _, _), do: {:reply, :ok, game}
+  defp ok_or(:error, reply, game), do: {:reply, reply, game}
 
   defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, :player) do
     game
@@ -177,7 +231,7 @@ defmodule Heros.Game.GenServer do
       card ->
         game
         |> Game.attack_card({attacker_id, attacker}, {defender_id, defender}, {card_id, card})
-        |> ok_or_forbidden(game)
+        |> ok_or(:forbidden, game)
     end
   end
 
@@ -192,4 +246,9 @@ defmodule Heros.Game.GenServer do
   end
 
   defp check_victory(:error, game, _), do: {:reply, :forbidden, game}
+
+  @spec count_from_faction(list({Card.id(), Card.t()}), atom) :: integer
+  defp count_from_faction(cards, faction) do
+    Enum.count(cards, fn {_, c} -> Card.faction(c.key) == faction end)
+  end
 end

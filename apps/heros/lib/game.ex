@@ -96,6 +96,61 @@ defmodule Heros.Game do
     |> Card.primary_ability(card.key, player_id)
   end
 
+  @spec use_expend_ability(Game.t(), {Player.id(), Player.t()}, {Card.id(), Card.t()}) ::
+          {:ok, Game.t()} | :error
+  def use_expend_ability(game, {player_id, _player}, {card_id, card}) do
+    case Card.expend_ability(game, card.key, player_id) do
+      nil ->
+        :error
+
+      game ->
+        {:ok,
+         %{
+           game
+           | players:
+               game.players
+               |> KeyListUtils.update(
+                 player_id,
+                 fn player ->
+                   %{
+                     player
+                     | fight_zone:
+                         player.fight_zone |> KeyListUtils.update(card_id, &Card.expend/1)
+                   }
+                 end
+               )
+         }}
+    end
+  end
+
+  @spec use_ally_ability(Game.t(), {Player.id(), Player.t()}, {Card.id(), Card.t()}) ::
+          {:ok, Game.t()} | :error
+  def use_ally_ability(game, {player_id, _player}, {card_id, card}) do
+    case Card.ally_ability(game, card.key, player_id) do
+      nil ->
+        :error
+
+      game ->
+        {:ok,
+         %{
+           game
+           | players:
+               game.players
+               |> KeyListUtils.update(
+                 player_id,
+                 fn player ->
+                   %{
+                     player
+                     | fight_zone:
+                         player.fight_zone
+                         |> KeyListUtils.update(card_id, &Card.consume_ally_ability/1)
+                   }
+                 end
+               )
+         }}
+    end
+  end
+
   @spec buy_market_card(Game.t(), {Player.id(), Player.t()}, {Card.id(), Card.t()}) ::
           {:ok, Game.t()} | :error
   def buy_market_card(game, {player_id, player}, {card_id, card}) do
@@ -315,10 +370,10 @@ defmodule Heros.Game do
   # Helpers for abilities
   #
 
-  def add_combat(game, player_id, amount) do
+  def heal(game, player_id, amount) do
     %{
       game
-      | players: game.players |> KeyListUtils.update(player_id, &Player.incr_combat(&1, amount))
+      | players: game.players |> KeyListUtils.update(player_id, &Player.incr_hp(&1, amount))
     }
   end
 
@@ -326,6 +381,20 @@ defmodule Heros.Game do
     %{
       game
       | players: game.players |> KeyListUtils.update(player_id, &Player.incr_gold(&1, amount))
+    }
+  end
+
+  def add_combat(game, player_id, amount) do
+    %{
+      game
+      | players: game.players |> KeyListUtils.update(player_id, &Player.incr_combat(&1, amount))
+    }
+  end
+
+  def draw_card(game, player_id, amount) do
+    %{
+      game
+      | players: game.players |> KeyListUtils.update(player_id, &Player.draw_cards(&1, amount))
     }
   end
 end

@@ -6,18 +6,16 @@ defmodule Heros.Cards.Card do
   @type t :: %{
           key: atom,
           expend_ability_used: boolean,
-          ally_ability_used: boolean,
-          sacrifice_ability_used: boolean
+          ally_ability_used: boolean
         }
-  @enforce_keys [:key, :expend_ability_used, :ally_ability_used, :sacrifice_ability_used]
-  defstruct [:key, :expend_ability_used, :ally_ability_used, :sacrifice_ability_used]
+  @enforce_keys [:key, :expend_ability_used, :ally_ability_used]
+  defstruct [:key, :expend_ability_used, :ally_ability_used]
 
   def get(key) do
     %Card{
       key: key,
       expend_ability_used: false,
-      ally_ability_used: false,
-      sacrifice_ability_used: false
+      ally_ability_used: false
     }
   end
 
@@ -67,17 +65,36 @@ defmodule Heros.Cards.Card do
 
   @spec primary_ability(Game.t(), atom, Player.id()) :: Game.t()
   def primary_ability(game, key, player_id) do
+    Decks.Base.primary_ability(game, key, player_id) ||
+      game
+
     # Guild.primary_ability(game, key, player_id) ||
     # Imperial.primary_ability(game, key, player_id) ||
     # Necros.primary_ability(game, key, player_id) ||
     # Wild.primary_ability(game, key, player_id) ||
-    Decks.Base.primary_ability(game, key, player_id) ||
-      game
   end
 
-  @spec expend(Card.t()) :: Card.t()
+  @spec expend_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def expend_ability(game, key, player_id) do
+    # Guild.expend_ability(game, key, player_id) ||
+    Imperial.expend_ability(game, key, player_id)
+    # Necros.expend_ability(game, key, player_id) ||
+    # Wild.expend_ability(game, key, player_id)
+  end
+
+  @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def ally_ability(game, key, player_id) do
+    # Guild.ally_ability(game, key, player_id) ||
+    Imperial.ally_ability(game, key, player_id)
+    # Necros.ally_ability(game, key, player_id) ||
+    # Wild.ally_ability(game, key, player_id)
+  end
+
   def expend(card), do: %{card | expend_ability_used: true}
 
-  @spec prepare(Card.t()) :: Card.t()
   def prepare(card), do: %{card | expend_ability_used: false}
+
+  def consume_ally_ability(card), do: %{card | ally_ability_used: true}
+
+  def reset_ally_ability(card), do: %{card | ally_ability_used: false}
 end

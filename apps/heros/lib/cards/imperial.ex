@@ -1,5 +1,5 @@
 defmodule Heros.Cards.Imperial do
-  alias Heros.Cards
+  alias Heros.{Cards, Game}
   alias Heros.Cards.Card
 
   @spec get :: list({Card.id(), Card.t()})
@@ -63,4 +63,19 @@ defmodule Heros.Cards.Imperial do
   def faction(:taxation), do: :imperial
   def faction(:word_of_power), do: :imperial
   def faction(_), do: nil
+
+  # @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+
+  @spec expend_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def expend_ability(game, :arkus, player_id) do
+    game
+    |> Game.add_combat(player_id, 5)
+    |> Game.draw_card(player_id, 1)
+  end
+
+  def expend_ability(_game, _, _player_id), do: nil
+
+  @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def ally_ability(game, :arkus, player_id), do: game |> Game.heal(player_id, 6)
+  def ally_ability(_game, _, _player_id), do: nil
 end
