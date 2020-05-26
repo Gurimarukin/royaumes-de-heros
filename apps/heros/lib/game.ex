@@ -373,7 +373,12 @@ defmodule Heros.Game do
   def heal(game, player_id, amount) do
     %{
       game
-      | players: game.players |> KeyListUtils.update(player_id, &Player.incr_hp(&1, amount))
+      | players:
+          game.players
+          |> KeyListUtils.update(player_id, fn player ->
+            hp = player.hp + amount
+            %{player | hp: min(hp, player.max_hp)}
+          end)
     }
   end
 

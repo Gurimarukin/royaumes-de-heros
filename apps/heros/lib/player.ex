@@ -112,7 +112,6 @@ defmodule Heros.Player do
     }
   end
 
-  def incr_hp(player, amount), do: %{player | hp: player.hp + amount}
   def decr_hp(player, amount), do: %{player | hp: player.hp - amount}
 
   def incr_gold(player, amount), do: %{player | gold: player.gold + amount}
