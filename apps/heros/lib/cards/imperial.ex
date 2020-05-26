@@ -1,5 +1,5 @@
 defmodule Heros.Cards.Imperial do
-  alias Heros.{Cards, Game, Player}
+  alias Heros.{Cards, Game, KeyListUtils, Player}
   alias Heros.Cards.Card
 
   @spec get :: list({Card.id(), Card.t()})
@@ -42,6 +42,7 @@ defmodule Heros.Cards.Imperial do
   def type(:close_ranks), do: :action
   def type(:command), do: :action
   def type(:darian), do: {:not_guard, 5}
+  def type(:domination), do: :action
   def type(:cristov), do: {:guard, 5}
   def type(:kraka), do: {:not_guard, 6}
   def type(:man_at_arms), do: {:guard, 4}
@@ -72,7 +73,7 @@ defmodule Heros.Cards.Imperial do
   def primary_ability(game, :close_ranks, player_id) do
     game
     |> Game.update_player(player_id, fn player ->
-      n_champions = Enum.count(player.fight_zone, fn {_, c} -> Card.is_champion(c.key) end)
+      n_champions = KeyListUtils.count(player.fight_zone, &Card.is_champion(&1.key))
       player |> Player.incr_combat(5 + n_champions * 2)
     end)
   end
@@ -82,6 +83,13 @@ defmodule Heros.Cards.Imperial do
     |> Game.add_gold(player_id, 2)
     |> Game.add_combat(player_id, 3)
     |> Game.heal(player_id, 4)
+    |> Game.draw_card(player_id, 1)
+  end
+
+  def primary_ability(game, :domination, player_id) do
+    game
+    |> Game.add_combat(player_id, 6)
+    |> Game.heal(player_id, 6)
     |> Game.draw_card(player_id, 1)
   end
 
@@ -105,7 +113,29 @@ defmodule Heros.Cards.Imperial do
   # Ally abilities
 
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def ally_ability(game, :arkus, player_id), do: game |> Game.heal(player_id, 6)
-  def ally_ability(game, :close_ranks, player_id), do: game |> Game.heal(player_id, 6)
+  def ally_ability(game, :arkus, player_id) do
+    game |> Game.heal(player_id, 6)
+  end
+
+  def ally_ability(game, :close_ranks, player_id) do
+    game |> Game.heal(player_id, 6)
+  end
+
+  def ally_ability(game, :domination, player_id) do
+    Game.update_player(game, player_id, fn player ->
+      expended_champions =
+        KeyListUtils.count(
+          player.fight_zone,
+          fn c -> Card.is_champion(c.key) and c.expend_ability_used end
+        )
+
+      if expended_champions == 0 do
+        player
+      else
+        player |> Player.queue_interaction({:prepare_champion, nil})
+      end
+    end)
+  end
+
   def ally_ability(_game, _, _player_id), do: nil
 end

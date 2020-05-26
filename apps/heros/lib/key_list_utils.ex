@@ -45,4 +45,7 @@ defmodule Heros.KeyListUtils do
 
   # delete(list({A, B}), A) :: boolean
   def member?(list, key), do: List.keymember?(list, key, 0)
+
+  # delete(list({A, B}), (B -> boolean)) :: number
+  def count(list, pred), do: Enum.count(list, fn {_, val} -> pred.(val) end)
 end

@@ -303,4 +303,88 @@ defmodule Heros.Cards.ImperialTest do
     assert p1.deck == [gem3, gem2]
     assert p1.pending_interactions == []
   end
+
+  test "domination" do
+    assert Card.cost(:domination) == 7
+    assert Card.type(:domination) == :action
+    assert Card.faction(:domination) == :imperial
+    assert not Card.is_champion(:domination)
+    assert not Card.is_guard(:domination)
+
+    [domination] = Cards.with_id(:domination)
+    [arkus] = Cards.with_id(:arkus)
+    [weyan] = Cards.with_id(:weyan)
+    [gem1, gem2] = Cards.with_id(:gem, 2)
+
+    {id, card} = domination
+    expended_domination = {id, %{card | ally_ability_used: true}}
+
+    {id, card} = arkus
+    expended_arkus = {id, %{card | expend_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hp: 10,
+        hand: [domination],
+        fight_zone: [expended_arkus, weyan],
+        deck: [gem1, gem2]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(domination, 0))
+
+    p1 = %{
+      p1
+      | combat: 6,
+        hp: 16,
+        fight_zone: [expended_arkus, weyan, domination],
+        hand: [gem1],
+        deck: [gem2]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    before_ally = {game, p1}
+
+    # ally (without expended champion)
+    game = Game.update_player(game, "p1", &%{&1 | fight_zone: [weyan, domination]})
+
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(domination, 0))
+
+    p1 = %{
+      p1
+      | pending_interactions: [],
+        fight_zone: [weyan, expended_domination]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    {game, p1} = before_ally
+
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(domination, 0))
+
+    p1 = %{
+      p1
+      | pending_interactions: [prepare_champion: nil],
+        fight_zone: [expended_arkus, weyan, expended_domination]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    assert :error = Game.perform_interaction(game, "p1", {:prepare_champion, elem(weyan, 0)})
+    assert {:ok, game} = Game.perform_interaction(game, "p1", {:prepare_champion, elem(arkus, 0)})
+
+    p1 = %{
+      p1
+      | pending_interactions: [],
+        fight_zone: [arkus, weyan, expended_domination]
+    }
+
+    assert Game.player(game, "p1") == p1
+  end
 end

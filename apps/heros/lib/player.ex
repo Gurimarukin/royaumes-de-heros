@@ -162,4 +162,11 @@ defmodule Heros.Player do
 
   def incr_combat(player, amount), do: %{player | combat: player.combat + amount}
   def decr_combat(player, amount), do: %{player | combat: player.combat - amount}
+
+  def prepare(player, card_id) do
+    %{
+      player
+      | fight_zone: player.fight_zone |> KeyListUtils.update(card_id, &Card.prepare/1)
+    }
+  end
 end

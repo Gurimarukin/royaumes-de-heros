@@ -95,7 +95,7 @@ defmodule Heros.Game do
   @spec play_card(Game.t(), Player.id(), Card.id()) :: update()
   def play_card(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
-      with_element(player.hand, card_id, fn card ->
+      with_member(player.hand, card_id, fn card ->
         %{
           game
           | players:
@@ -116,7 +116,7 @@ defmodule Heros.Game do
   @spec use_expend_ability(Game.t(), Player.id(), Card.id()) :: update()
   def use_expend_ability(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
-      with_element(player.fight_zone, card_id, fn card ->
+      with_member(player.fight_zone, card_id, fn card ->
         if card.expend_ability_used do
           :error
         else
@@ -150,7 +150,7 @@ defmodule Heros.Game do
   @spec use_ally_ability(Game.t(), Player.id(), Card.id()) :: update()
   def use_ally_ability(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
-      with_element(player.fight_zone, card_id, fn card ->
+      with_member(player.fight_zone, card_id, fn card ->
         case Card.faction(card.key) do
           nil ->
             :error
@@ -167,7 +167,7 @@ defmodule Heros.Game do
   end
 
   defp count_from_faction(cards, faction) do
-    Enum.count(cards, fn {_, c} -> Card.faction(c.key) == faction end)
+    KeyListUtils.count(cards, &(Card.faction(&1.key) == faction))
   end
 
   defp use_ally_ability_bis(game, player_id, {card_id, card}) do
@@ -198,7 +198,7 @@ defmodule Heros.Game do
     main_phase_action(game, player_id, fn player ->
       case KeyListUtils.find(game.market, card_id) do
         nil ->
-          with_element(game.gems, card_id, fn card ->
+          with_member(game.gems, card_id, fn card ->
             buy_gem(game, {player_id, player}, {card_id, card})
           end)
 
@@ -253,7 +253,7 @@ defmodule Heros.Game do
   @spec attack(Game.t(), Player.id(), Player.id(), :attack | Card.id()) :: update()
   def attack(game, attacker_id, defender_id, what) do
     main_phase_action(game, attacker_id, fn attacker ->
-      with_element(game.players, defender_id, fn defender ->
+      with_member(game.players, defender_id, fn defender ->
         if attacker.combat > 0 and is_next_to_current_player(game, defender_id) do
           attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
         else
@@ -283,13 +283,13 @@ defmodule Heros.Game do
   end
 
   defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, card_id) do
-    with_element(defender.fight_zone, card_id, fn card ->
+    with_member(defender.fight_zone, card_id, fn card ->
       attack_card(game, {attacker_id, attacker}, {defender_id, defender}, {card, card_id})
     end)
   end
 
   defp check_victory(game, attacker_id) do
-    players_alive = game.players |> Enum.count(fn {_, p} -> Player.is_alive(p) end)
+    players_alive = game.players |> KeyListUtils.count(&Player.is_alive/1)
 
     if players_alive == 1 do
       {:victory, attacker_id, game}
@@ -366,13 +366,26 @@ defmodule Heros.Game do
     |> Option.chain(fn effect -> perform_effect(game, player_id, effect) end)
   end
 
+  defp interaction(game, player_id, {:prepare_champion, _}, {:prepare_champion, card_id}) do
+    with_member(game.players, player_id, fn player ->
+      with_member(player.fight_zone, card_id, fn card ->
+        if Card.is_champion(card.key) and card.expend_ability_used do
+          game
+          |> update_player(player_id, &Player.prepare(&1, card_id))
+          |> Option.some()
+        else
+          :error
+        end
+      end)
+    end)
+  end
+
   defp interaction(_game, _player_id, _pending, _interaction), do: Option.none()
 
   # Discard phase (no real reason to separate it from Draw phase, but well...)
 
   @spec discard_phase(Game.t(), Player.id()) :: update()
   def discard_phase(game, player_id) do
-    # TODO: check not already done
     current_player_action(game, player_id, fn player ->
       if player.discard_phase_done do
         :error
@@ -404,7 +417,7 @@ defmodule Heros.Game do
   # Helpers
   #
 
-  defp with_element(list, key, f) do
+  defp with_member(list, key, f) do
     KeyListUtils.find(list, key)
     |> Option.from_nilable()
     |> Option.chain(f)
