@@ -8,6 +8,8 @@ defmodule Heros.Cards.Decks.BaseTest do
     assert Card.cost(:shortsword) == nil
     assert Card.type(:shortsword) == :item
     assert Card.faction(:shortsword) == nil
+    assert not Card.is_champion(:shortsword)
+    assert not Card.is_guard(:shortsword)
 
     [shortsword] = Cards.with_id(:shortsword)
 
@@ -28,6 +30,8 @@ defmodule Heros.Cards.Decks.BaseTest do
     assert Card.cost(:dagger) == nil
     assert Card.type(:dagger) == :item
     assert Card.faction(:dagger) == nil
+    assert not Card.is_champion(:dagger)
+    assert not Card.is_guard(:dagger)
 
     [dagger] = Cards.with_id(:dagger)
 
@@ -48,6 +52,8 @@ defmodule Heros.Cards.Decks.BaseTest do
     assert Card.cost(:ruby) == nil
     assert Card.type(:ruby) == :item
     assert Card.faction(:ruby) == nil
+    assert not Card.is_champion(:ruby)
+    assert not Card.is_guard(:ruby)
 
     [ruby] = Cards.with_id(:ruby)
 
@@ -68,6 +74,8 @@ defmodule Heros.Cards.Decks.BaseTest do
     assert Card.cost(:gold) == nil
     assert Card.type(:gold) == :item
     assert Card.faction(:gold) == nil
+    assert not Card.is_champion(:gold)
+    assert not Card.is_guard(:gold)
 
     [gold] = Cards.with_id(:gold)
 

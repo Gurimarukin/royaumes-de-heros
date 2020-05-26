@@ -370,36 +370,27 @@ defmodule Heros.Game do
   # Helpers for abilities
   #
 
+  def update_player(game, player_id, f) do
+    %{game | players: game.players |> KeyListUtils.update(player_id, f)}
+  end
+
   def heal(game, player_id, amount) do
-    %{
-      game
-      | players:
-          game.players
-          |> KeyListUtils.update(player_id, fn player ->
-            hp = player.hp + amount
-            %{player | hp: min(hp, player.max_hp)}
-          end)
-    }
+    game
+    |> update_player(player_id, fn player ->
+      hp = player.hp + amount
+      %{player | hp: min(hp, player.max_hp)}
+    end)
   end
 
   def add_gold(game, player_id, amount) do
-    %{
-      game
-      | players: game.players |> KeyListUtils.update(player_id, &Player.incr_gold(&1, amount))
-    }
+    game |> update_player(player_id, &Player.incr_gold(&1, amount))
   end
 
   def add_combat(game, player_id, amount) do
-    %{
-      game
-      | players: game.players |> KeyListUtils.update(player_id, &Player.incr_combat(&1, amount))
-    }
+    game |> update_player(player_id, &Player.incr_combat(&1, amount))
   end
 
   def draw_card(game, player_id, amount) do
-    %{
-      game
-      | players: game.players |> KeyListUtils.update(player_id, &Player.draw_cards(&1, amount))
-    }
+    game |> update_player(player_id, &Player.draw_cards(&1, amount))
   end
 end

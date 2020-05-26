@@ -66,10 +66,10 @@ defmodule Heros.Cards.Card do
   @spec primary_ability(Game.t(), atom, Player.id()) :: Game.t()
   def primary_ability(game, key, player_id) do
     Decks.Base.primary_ability(game, key, player_id) ||
+      Imperial.primary_ability(game, key, player_id) ||
       game
 
     # Guild.primary_ability(game, key, player_id) ||
-    # Imperial.primary_ability(game, key, player_id) ||
     # Necros.primary_ability(game, key, player_id) ||
     # Wild.primary_ability(game, key, player_id) ||
   end

@@ -1,5 +1,5 @@
 defmodule Heros.Cards.Imperial do
-  alias Heros.{Cards, Game}
+  alias Heros.{Cards, Game, Player}
   alias Heros.Cards.Card
 
   @spec get :: list({Card.id(), Card.t()})
@@ -39,6 +39,7 @@ defmodule Heros.Cards.Imperial do
 
   @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
   def type(:arkus), do: {:guard, 6}
+  def type(:close_ranks), do: :action
   def type(:darian), do: {:not_guard, 5}
   def type(:cristov), do: {:guard, 5}
   def type(:kraka), do: {:not_guard, 6}
@@ -64,7 +65,16 @@ defmodule Heros.Cards.Imperial do
   def faction(:word_of_power), do: :imperial
   def faction(_), do: nil
 
-  # @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def primary_ability(game, :close_ranks, player_id) do
+    game
+    |> Game.update_player(player_id, fn player ->
+      n_champions = Enum.count(player.fight_zone, fn {_, c} -> Card.is_champion(c.key) end)
+      player |> Player.incr_combat(5 + n_champions * 2)
+    end)
+  end
+
+  def primary_ability(_game, _, _player_id), do: nil
 
   @spec expend_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def expend_ability(game, :arkus, player_id) do
@@ -77,5 +87,6 @@ defmodule Heros.Cards.Imperial do
 
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def ally_ability(game, :arkus, player_id), do: game |> Game.heal(player_id, 6)
+  def ally_ability(game, :close_ranks, player_id), do: game |> Game.heal(player_id, 6)
   def ally_ability(_game, _, _player_id), do: nil
 end
