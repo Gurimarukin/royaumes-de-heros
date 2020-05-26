@@ -67,36 +67,35 @@ defmodule Heros.GameTest do
     p2 = KeyListUtils.find(game.players, "p2")
 
     [{id, _}, _, _, _, _] = p2.hand
+
     # b can't play as he isn't current player
-    assert Game.GenServer.play_card(pid, "p2", id) == :forbidden
+    assert Game.GenServer.play_card(pid, "p2", id) == :error
     # a can't play b's card
-    assert Game.GenServer.play_card(pid, "p1", id) == :not_found
+    assert Game.GenServer.play_card(pid, "p1", id) == :error
 
     [{id1, card1}, {id2, card2}, {id3, card3}] = p1.hand
 
     # player not found, he isn't current player
-    assert Game.GenServer.play_card(pid, "p3", id1) == :forbidden
+    assert Game.GenServer.play_card(pid, "p3", id1) == :error
     # card not found
-    assert Game.GenServer.play_card(pid, "p1", "whatever") == :not_found
+    assert Game.GenServer.play_card(pid, "p1", "whatever") == :error
 
-    assert Game.GenServer.play_card(pid, "p1", id1) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", id1)
+
     p1 = KeyListUtils.find(game.players, "p1")
 
     assert [{^id2, ^card2}, {^id3, ^card3}] = p1.hand
     assert p1.fight_zone == [{id1, card1}]
 
-    assert Game.GenServer.play_card(pid, "p1", id1) == :not_found
+    assert Game.GenServer.play_card(pid, "p1", id1) == :error
 
-    assert Game.GenServer.play_card(pid, "p1", id3) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", id3)
     p1 = KeyListUtils.find(game.players, "p1")
 
     assert [{^id2, ^card2}] = p1.hand
     assert p1.fight_zone == [{id1, card1}, {id3, card3}]
 
-    assert Game.GenServer.play_card(pid, "p1", id2) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", id2)
     p1 = KeyListUtils.find(game.players, "p1")
 
     assert [] = p1.hand
@@ -132,14 +131,13 @@ defmodule Heros.GameTest do
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
     # not p2's turn
-    assert Game.GenServer.buy_card(pid, "p2", elem(orc_grunt1, 0)) == :forbidden
+    assert Game.GenServer.buy_card(pid, "p2", elem(orc_grunt1, 0)) == :error
     # not in market
-    assert Game.GenServer.buy_card(pid, "p1", elem(cult_priest1, 0)) == :not_found
-    assert Game.GenServer.buy_card(pid, "p1", elem(cult_priest2, 0)) == :not_found
+    assert Game.GenServer.buy_card(pid, "p1", elem(cult_priest1, 0)) == :error
+    assert Game.GenServer.buy_card(pid, "p1", elem(cult_priest2, 0)) == :error
 
     # buying orc_grunt1
-    assert Game.GenServer.buy_card(pid, "p1", elem(orc_grunt1, 0)) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.buy_card(pid, "p1", elem(orc_grunt1, 0))
     p1 = KeyListUtils.find(game.players, "p1")
     assert p1.gold == 5
     assert p1.discard == [orc_grunt1, myros]
@@ -147,11 +145,10 @@ defmodule Heros.GameTest do
     assert game.market_deck == []
 
     # to expensive
-    assert Game.GenServer.buy_card(pid, "p1", elem(arkus, 0)) == :forbidden
+    assert Game.GenServer.buy_card(pid, "p1", elem(arkus, 0)) == :error
 
     # buying orc_grunt2
-    assert Game.GenServer.buy_card(pid, "p1", elem(orc_grunt2, 0)) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.buy_card(pid, "p1", elem(orc_grunt2, 0))
     p1 = KeyListUtils.find(game.players, "p1")
     assert p1.gold == 2
     assert p1.discard == [orc_grunt2, orc_grunt1, myros]
@@ -160,9 +157,11 @@ defmodule Heros.GameTest do
 
     # buying gem
     [gem | tail] = gems
-    assert Game.GenServer.buy_card(pid, "p1", elem(gem, 0)) == :ok
-    game = Game.GenServer.get(pid)
+
+    assert {:ok, game} = Game.GenServer.buy_card(pid, "p1", elem(gem, 0))
+
     p1 = KeyListUtils.find(game.players, "p1")
+
     assert p1.gold == 0
     assert p1.discard == [gem, orc_grunt2, orc_grunt1, myros]
     assert game.gems == tail
@@ -190,24 +189,23 @@ defmodule Heros.GameTest do
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
     # player doesn't exist
-    assert Game.GenServer.attack(pid, "p1", "p3", :player) == :not_found
+    assert Game.GenServer.attack(pid, "p1", "p3", :player) == :error
     # not p2's turn
-    assert Game.GenServer.attack(pid, "p2", "p1", elem(orc_grunt, 0)) == :forbidden
+    assert Game.GenServer.attack(pid, "p2", "p1", elem(orc_grunt, 0)) == :error
     # not in enemy fight zone
-    assert Game.GenServer.attack(pid, "p1", "p2", elem(tithe_priest, 0)) == :not_found
+    assert Game.GenServer.attack(pid, "p1", "p2", elem(tithe_priest, 0)) == :error
     # can't attack self or own champion
-    assert Game.GenServer.attack(pid, "p1", "p1", :player) == :forbidden
-    assert Game.GenServer.attack(pid, "p1", "p1", elem(tithe_priest, 0)) == :forbidden
+    assert Game.GenServer.attack(pid, "p1", "p1", :player) == :error
+    assert Game.GenServer.attack(pid, "p1", "p1", elem(tithe_priest, 0)) == :error
     # can't attack non-champion card
-    assert Game.GenServer.attack(pid, "p1", "p2", elem(smash_and_grab, 0)) == :forbidden
+    assert Game.GenServer.attack(pid, "p1", "p2", elem(smash_and_grab, 0)) == :error
     # can't attack player or non-guard champion if there is a guard
-    assert Game.GenServer.attack(pid, "p1", "p2", :player) == :forbidden
-    assert Game.GenServer.attack(pid, "p1", "p2", elem(cult_priest, 0)) == :forbidden
-    assert Game.GenServer.attack(pid, "p1", "p2", elem(street_thug, 0)) == :forbidden
+    assert Game.GenServer.attack(pid, "p1", "p2", :player) == :error
+    assert Game.GenServer.attack(pid, "p1", "p2", elem(cult_priest, 0)) == :error
+    assert Game.GenServer.attack(pid, "p1", "p2", elem(street_thug, 0)) == :error
 
     # attack orc_grunt
-    assert Game.GenServer.attack(pid, "p1", "p2", elem(orc_grunt, 0)) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.attack(pid, "p1", "p2", elem(orc_grunt, 0))
 
     p1 = %{p1 | combat: 7}
 
@@ -221,8 +219,7 @@ defmodule Heros.GameTest do
     assert p2 == KeyListUtils.find(game.players, "p2")
 
     # attack street_thug
-    assert Game.GenServer.attack(pid, "p1", "p2", elem(street_thug, 0)) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.attack(pid, "p1", "p2", elem(street_thug, 0))
 
     p1 = %{p1 | combat: 3}
 
@@ -236,11 +233,10 @@ defmodule Heros.GameTest do
     assert p2 == KeyListUtils.find(game.players, "p2")
 
     # not enough combat for cult_priest
-    assert Game.GenServer.attack(pid, "p1", "p2", elem(cult_priest, 0)) == :forbidden
+    assert Game.GenServer.attack(pid, "p1", "p2", elem(cult_priest, 0)) == :error
 
     # attack player directly
-    assert Game.GenServer.attack(pid, "p1", "p2", :player) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.attack(pid, "p1", "p2", :player)
 
     p1 = %{p1 | combat: 0}
     p2 = %{p2 | hp: 47}
@@ -264,15 +260,15 @@ defmodule Heros.GameTest do
 
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.attack(pid, "p1", "p2", :player) == {:victory, "p1"}
-    game = Game.GenServer.get(pid)
+    assert {:victory, "p1", game} = Game.GenServer.attack(pid, "p1", "p2", :player)
+
     p1 = %{p1 | combat: 2}
     p2 = %{p2 | hp: 0}
     assert p1 == KeyListUtils.find(game.players, "p1")
     assert p2 == KeyListUtils.find(game.players, "p2")
 
     # can't attack dead player
-    assert Game.GenServer.attack(pid, "p1", "p2", :player) == :forbidden
+    assert Game.GenServer.attack(pid, "p1", "p2", :player) == :error
   end
 
   test "attacking when no combat" do
@@ -282,7 +278,7 @@ defmodule Heros.GameTest do
 
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.attack(pid, "p1", "p2", :player) == :forbidden
+    assert Game.GenServer.attack(pid, "p1", "p2", :player) == :error
   end
 
   test "attacking when 4 players" do
@@ -294,8 +290,8 @@ defmodule Heros.GameTest do
 
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.attack(pid, "p1", "p3", :player) == :forbidden
-    assert Game.GenServer.attack(pid, "p1", "p4", :player) == :ok
+    assert Game.GenServer.attack(pid, "p1", "p3", :player) == :error
+    assert {:ok, _} = Game.GenServer.attack(pid, "p1", "p4", :player)
   end
 
   test "end turn" do
@@ -327,11 +323,10 @@ defmodule Heros.GameTest do
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
     # not p1 or p2's turn
-    assert Game.GenServer.discard_phase(pid, "p1") == :forbidden
-    assert Game.GenServer.discard_phase(pid, "p2") == :forbidden
+    assert Game.GenServer.discard_phase(pid, "p1") == :error
+    assert Game.GenServer.discard_phase(pid, "p2") == :error
 
-    assert Game.GenServer.discard_phase(pid, "p3") == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.discard_phase(pid, "p3")
 
     p3 = %{
       p3
@@ -349,11 +344,10 @@ defmodule Heros.GameTest do
 
     assert game.current_player == "p3"
 
-    assert Game.GenServer.draw_phase(pid, "p1") == :forbidden
-    assert Game.GenServer.draw_phase(pid, "p2") == :forbidden
+    assert Game.GenServer.draw_phase(pid, "p1") == :error
+    assert Game.GenServer.draw_phase(pid, "p2") == :error
 
-    assert Game.GenServer.draw_phase(pid, "p3") == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.draw_phase(pid, "p3")
 
     assert p1 == KeyListUtils.find(game.players, "p1")
     assert p2 == KeyListUtils.find(game.players, "p2")
@@ -416,7 +410,7 @@ defmodule Heros.GameTest do
 
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.attack(pid, "p3", "p2", :player) == :not_found
+    assert Game.GenServer.attack(pid, "p3", "p2", :player) == :error
   end
 
   test "can't buy gem if no gold" do
@@ -429,7 +423,7 @@ defmodule Heros.GameTest do
 
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.buy_card(pid, "p1", gems |> hd() |> elem(0)) == :forbidden
+    assert Game.GenServer.buy_card(pid, "p1", gems |> hd() |> elem(0)) == :error
   end
 
   test "game end" do
@@ -441,8 +435,9 @@ defmodule Heros.GameTest do
 
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.attack(pid, "p2", "p3", :player) == :ok
-    assert Game.GenServer.attack(pid, "p2", "p1", :player) == {:victory, "p2"}
-    assert [{_, %{hp: 0}}, _, {_, %{hp: 0}}] = Game.GenServer.get(pid).players
+    assert {:ok, _} = Game.GenServer.attack(pid, "p2", "p3", :player)
+
+    assert {:victory, "p2", game} = Game.GenServer.attack(pid, "p2", "p1", :player)
+    assert [{_, %{hp: 0}}, _, {_, %{hp: 0}}] = game.players
   end
 end

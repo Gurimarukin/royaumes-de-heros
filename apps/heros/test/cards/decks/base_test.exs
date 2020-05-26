@@ -19,8 +19,8 @@ defmodule Heros.Cards.Decks.BaseTest do
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(shortsword, 0)) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(shortsword, 0))
+
     p1 = KeyListUtils.find(game.players, "p1")
 
     assert p1.combat == 2
@@ -41,8 +41,8 @@ defmodule Heros.Cards.Decks.BaseTest do
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(dagger, 0)) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(dagger, 0))
+
     p1 = KeyListUtils.find(game.players, "p1")
 
     assert p1.combat == 1
@@ -63,8 +63,8 @@ defmodule Heros.Cards.Decks.BaseTest do
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(ruby, 0)) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(ruby, 0))
+
     p1 = KeyListUtils.find(game.players, "p1")
 
     assert p1.gold == 2
@@ -85,8 +85,8 @@ defmodule Heros.Cards.Decks.BaseTest do
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(gold, 0)) == :ok
-    game = Game.GenServer.get(pid)
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(gold, 0))
+
     p1 = KeyListUtils.find(game.players, "p1")
 
     assert p1.gold == 1

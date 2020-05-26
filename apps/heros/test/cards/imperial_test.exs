@@ -32,20 +32,20 @@ defmodule Heros.Cards.ImperialTest do
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
     # can't use expend or ally abilities, when card isn't in fight zone
-    assert Game.GenServer.use_expend_ability(pid, "p1", elem(arkus, 0)) == :not_found
-    assert Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0)) == :not_found
+    assert Game.GenServer.use_expend_ability(pid, "p1", elem(arkus, 0)) == :error
+    assert Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0)) == :error
 
-    assert Game.GenServer.play_card(pid, "p1", elem(arkus, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(arkus, 0))
 
     # can't use ally ability, as there aren't any allies on board
-    assert Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0)) == :forbidden
+    assert Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0)) == :error
 
     # p2 can't do that
-    assert Game.GenServer.use_expend_ability(pid, "p2", elem(arkus, 0)) == :forbidden
+    assert Game.GenServer.use_expend_ability(pid, "p2", elem(arkus, 0)) == :error
 
-    assert Game.GenServer.use_expend_ability(pid, "p1", elem(arkus, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.use_expend_ability(pid, "p1", elem(arkus, 0))
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
 
     assert p1.combat == 5
     assert p1.hp == 10
@@ -54,18 +54,18 @@ defmodule Heros.Cards.ImperialTest do
     assert p1.deck == [gem2]
 
     # can't use expend ability as it was alredy used
-    assert Game.GenServer.use_expend_ability(pid, "p1", elem(arkus, 0)) == :forbidden
+    assert Game.GenServer.use_expend_ability(pid, "p1", elem(arkus, 0)) == :error
 
-    assert Game.GenServer.play_card(pid, "p1", elem(weyan, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(weyan, 0))
 
-    assert Game.GenServer.use_ally_ability(pid, "p1", elem(weyan, 0)) == :not_found
+    assert Game.GenServer.use_ally_ability(pid, "p1", elem(weyan, 0)) == :error
 
     # p2 can't do that
-    assert Game.GenServer.use_ally_ability(pid, "p2", elem(arkus, 0)) == :forbidden
+    assert Game.GenServer.use_ally_ability(pid, "p2", elem(arkus, 0)) == :error
 
-    assert Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0))
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
 
     assert p1.combat == 5
     assert p1.hp == 16
@@ -74,8 +74,8 @@ defmodule Heros.Cards.ImperialTest do
     assert p1.deck == [gem2]
 
     # can't use abilities as they were alredy used
-    assert Game.GenServer.use_expend_ability(pid, "p1", elem(arkus, 0)) == :forbidden
-    assert Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0)) == :forbidden
+    assert Game.GenServer.use_expend_ability(pid, "p1", elem(arkus, 0)) == :error
+    assert Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0)) == :error
   end
 
   test "heal" do
@@ -95,11 +95,11 @@ defmodule Heros.Cards.ImperialTest do
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(weyan, 0)) == :ok
-    assert Game.GenServer.play_card(pid, "p1", elem(arkus, 0)) == :ok
-    assert Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(weyan, 0))
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(arkus, 0))
+    assert {:ok, game} = Game.GenServer.use_ally_ability(pid, "p1", elem(arkus, 0))
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
 
     assert p1.combat == 0
     assert p1.hp == 50
@@ -133,29 +133,30 @@ defmodule Heros.Cards.ImperialTest do
     initial_game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
     {:ok, pid} = Game.GenServer.start({:from_game, initial_game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(close_ranks, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(close_ranks, 0))
 
-    assert Game.GenServer.use_expend_ability(pid, "p1", elem(close_ranks, 0)) == :not_found
-    assert Game.GenServer.use_ally_ability(pid, "p1", elem(close_ranks, 0)) == :forbidden
+    assert Game.GenServer.use_expend_ability(pid, "p1", elem(close_ranks, 0)) == :error
+    assert Game.GenServer.use_ally_ability(pid, "p1", elem(close_ranks, 0)) == :error
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
+
     assert p1.fight_zone == [close_ranks]
     assert p1.hand == [arkus, rasmus]
     assert p1.combat == 5
     assert p1.hp == 10
 
-    assert Game.GenServer.play_card(pid, "p1", elem(arkus, 0)) == :ok
-    assert Game.GenServer.use_ally_ability(pid, "p1", elem(close_ranks, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(arkus, 0))
+    assert {:ok, game} = Game.GenServer.use_ally_ability(pid, "p1", elem(close_ranks, 0))
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
     assert p1.fight_zone == [expended_close_ranks, arkus]
     assert p1.hand == [rasmus]
     assert p1.combat == 5
     assert p1.hp == 16
 
-    assert Game.GenServer.play_card(pid, "p1", elem(rasmus, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(rasmus, 0))
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
     assert p1.fight_zone == [expended_close_ranks, arkus, rasmus]
     assert p1.hand == []
     assert p1.combat == 5
@@ -164,10 +165,11 @@ defmodule Heros.Cards.ImperialTest do
     # with 1 champion in play
     {:ok, pid} = Game.GenServer.start({:from_game, initial_game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(rasmus, 0)) == :ok
-    assert Game.GenServer.play_card(pid, "p1", elem(close_ranks, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(rasmus, 0))
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(close_ranks, 0))
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
+
     assert p1.fight_zone == [rasmus, close_ranks]
     assert p1.hand == [arkus]
     assert p1.combat == 7
@@ -176,11 +178,11 @@ defmodule Heros.Cards.ImperialTest do
     # with 2 champions in play
     {:ok, pid} = Game.GenServer.start({:from_game, initial_game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(arkus, 0)) == :ok
-    assert Game.GenServer.play_card(pid, "p1", elem(rasmus, 0)) == :ok
-    assert Game.GenServer.play_card(pid, "p1", elem(close_ranks, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(arkus, 0))
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(rasmus, 0))
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(close_ranks, 0))
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
     assert p1.fight_zone == [arkus, rasmus, close_ranks]
     assert p1.hand == []
     assert p1.combat == 9
@@ -209,9 +211,9 @@ defmodule Heros.Cards.ImperialTest do
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
     {:ok, pid} = Game.GenServer.start({:from_game, game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(command, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(command, 0))
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
 
     assert p1.gold == 2
     assert p1.combat == 3
@@ -245,9 +247,9 @@ defmodule Heros.Cards.ImperialTest do
     init_game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
     {:ok, pid} = Game.GenServer.start({:from_game, init_game})
 
-    assert Game.GenServer.play_card(pid, "p1", elem(darian, 0)) == :ok
+    assert {:ok, game} = Game.GenServer.play_card(pid, "p1", elem(darian, 0))
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
 
     assert p1.gold == 0
     assert p1.combat == 0
@@ -257,9 +259,8 @@ defmodule Heros.Cards.ImperialTest do
     assert p1.deck == [gem3, gem2]
     assert p1.pending_interactions == []
 
-    assert Game.GenServer.use_expend_ability(pid, "p1", elem(darian, 0)) == :ok
-
-    before_interaction = Game.GenServer.get(pid)
+    assert {:ok, before_interaction} =
+             Game.GenServer.use_expend_ability(pid, "p1", elem(darian, 0))
 
     p1 = before_interaction.players |> KeyListUtils.find("p1")
 
@@ -267,16 +268,16 @@ defmodule Heros.Cards.ImperialTest do
     assert p1.pending_interactions == [select_effect: [add_combat: 3, heal: 4]]
 
     # not p2's turn
-    assert Game.GenServer.perform_interaction(pid, "p2", {:select_effect, 0}) == :forbidden
+    assert Game.GenServer.perform_interaction(pid, "p2", {:select_effect, 0}) == :error
     # not the pending interaction
-    assert Game.GenServer.perform_interaction(pid, "p1", {:discard, elem(gem1, 0)}) == :not_found
+    assert Game.GenServer.perform_interaction(pid, "p1", {:discard, elem(gem1, 0)}) == :error
     # effect doesn't exist
-    assert Game.GenServer.perform_interaction(pid, "p1", {:select_effect, 2}) == :forbidden
+    assert Game.GenServer.perform_interaction(pid, "p1", {:select_effect, 2}) == :error
 
     # effect 0: combat
-    assert Game.GenServer.perform_interaction(pid, "p1", {:select_effect, 0}) == :ok
+    assert {:ok, game} = Game.GenServer.perform_interaction(pid, "p1", {:select_effect, 0})
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
 
     assert p1.gold == 0
     assert p1.combat == 3
@@ -289,9 +290,9 @@ defmodule Heros.Cards.ImperialTest do
     # effect 1: heal
     {:ok, pid} = Game.GenServer.start({:from_game, before_interaction})
 
-    assert Game.GenServer.perform_interaction(pid, "p1", {:select_effect, 1}) == :ok
+    assert {:ok, game} = Game.GenServer.perform_interaction(pid, "p1", {:select_effect, 1})
 
-    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+    p1 = game.players |> KeyListUtils.find("p1")
 
     assert p1.gold == 0
     assert p1.combat == 0

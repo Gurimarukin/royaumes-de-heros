@@ -6,6 +6,8 @@ defmodule Heros.Game.GenServer do
   alias Heros.{Cards, Game, KeyListUtils, Player}
   alias Heros.Cards.Card
 
+  @type option_game :: {:ok, Game.t()} | :error
+
   #
   # Client
   #
@@ -22,25 +24,25 @@ defmodule Heros.Game.GenServer do
   end
 
   @spec play_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
-          :ok | atom
+          option_game()
   def play_card(game, player_id, card_id) do
     GenServer.call(game, {:play_card, player_id, card_id})
   end
 
   @spec use_expend_ability(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
-          :ok | atom
+          option_game()
   def use_expend_ability(game, player_id, card_id) do
     GenServer.call(game, {:use_expend_ability, player_id, card_id})
   end
 
   @spec use_ally_ability(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
-          :ok | atom
+          option_game()
   def use_ally_ability(game, player_id, card_id) do
     GenServer.call(game, {:use_ally_ability, player_id, card_id})
   end
 
   @spec buy_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
-          :ok | atom
+          option_game()
   def buy_card(game, player_id, card_id) do
     GenServer.call(game, {:buy_card, player_id, card_id})
   end
@@ -50,23 +52,23 @@ defmodule Heros.Game.GenServer do
           Player.id(),
           Player.id(),
           :player | Card.id()
-        ) :: :ok | {:victory, Player.id()} | atom
+        ) :: option_game() | {:victory, Player.id(), Game.t()}
   def attack(game, attacker, defender, what) do
     GenServer.call(game, {:attack, attacker, defender, what})
   end
 
   @spec buy_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), {atom, any}) ::
-          :ok | atom
+          option_game()
   def perform_interaction(game, player_id, interaction) do
     GenServer.call(game, {:perform_interaction, player_id, interaction})
   end
 
-  @spec discard_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: :ok | atom
+  @spec discard_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: option_game()
   def discard_phase(game, player_id) do
     GenServer.call(game, {:discard_phase, player_id})
   end
 
-  @spec draw_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: :ok | atom
+  @spec draw_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: option_game()
   def draw_phase(game, player_id) do
     GenServer.call(game, {:draw_phase, player_id})
   end
@@ -99,54 +101,58 @@ defmodule Heros.Game.GenServer do
   end
 
   def handle_call({:play_card, player_id, card_id}, _from, game) do
-    if_is_current_player(game, player_id, fn player ->
+    # TODO: main_phase_action
+    current_player_action(game, player_id, fn player ->
       case KeyListUtils.find(player.hand, card_id) do
         nil ->
-          {:reply, :not_found, game}
+          error(game)
 
         card ->
-          game = game |> Game.play_card({player_id, player}, {card_id, card})
-          {:reply, :ok, game}
+          game
+          |> Game.play_card({player_id, player}, {card_id, card})
+          |> ok()
       end
     end)
   end
 
   def handle_call({:use_expend_ability, player_id, card_id}, _from, game) do
-    if_is_current_player(game, player_id, fn player ->
+    # TODO: main_phase_action
+    current_player_action(game, player_id, fn player ->
       case KeyListUtils.find(player.fight_zone, card_id) do
         nil ->
-          {:reply, :not_found, game}
+          error(game)
 
         card ->
           if card.expend_ability_used do
-            {:reply, :forbidden, game}
+            error(game)
           else
             game
             |> Game.use_expend_ability({player_id, player}, {card_id, card})
-            |> ok_or(:not_found, game)
+            |> ok_or_error(game)
           end
       end
     end)
   end
 
   def handle_call({:use_ally_ability, player_id, card_id}, _from, game) do
-    if_is_current_player(game, player_id, fn player ->
+    # TODO: main_phase_action
+    current_player_action(game, player_id, fn player ->
       case KeyListUtils.find(player.fight_zone, card_id) do
         nil ->
-          {:reply, :not_found, game}
+          error(game)
 
         card ->
           case Card.faction(card.key) do
             nil ->
-              {:reply, :not_found, game}
+              error(game)
 
             faction ->
               if card.ally_ability_used or count_from_faction(player.fight_zone, faction) < 2 do
-                {:reply, :forbidden, game}
+                error(game)
               else
                 game
                 |> Game.use_ally_ability({player_id, player}, {card_id, card})
-                |> ok_or(:not_found, game)
+                |> ok_or_error(game)
               end
           end
       end
@@ -154,72 +160,80 @@ defmodule Heros.Game.GenServer do
   end
 
   def handle_call({:buy_card, player_id, card_id}, _from, game) do
-    if_is_current_player(game, player_id, fn player ->
+    # TODO: main_phase_action
+    current_player_action(game, player_id, fn player ->
       case KeyListUtils.find(game.market, card_id) do
         nil ->
           case KeyListUtils.find(game.gems, card_id) do
             nil ->
-              {:reply, :not_found, game}
+              error(game)
 
             card ->
               game
               |> Game.buy_gem({player_id, player}, {card_id, card})
-              |> ok_or(:forbidden, game)
+              |> ok_or_error(game)
           end
 
         card ->
           game
           |> Game.buy_market_card({player_id, player}, {card_id, card})
-          |> ok_or(:forbidden, game)
+          |> ok_or_error(game)
       end
     end)
   end
 
   def handle_call({:attack, attacker_id, defender_id, what}, _from, game) do
-    if_is_current_player(game, attacker_id, fn attacker ->
+    # TODO: main_phase_action
+    current_player_action(game, attacker_id, fn attacker ->
       case KeyListUtils.find(game.players, defender_id) do
         nil ->
-          {:reply, :not_found, game}
+          error(game)
 
         defender ->
           if attacker.combat > 0 and Game.is_next_to_current_player(game, defender_id) do
             attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
           else
-            {:reply, :forbidden, game}
+            error(game)
           end
       end
     end)
   end
 
   def handle_call({:perform_interaction, player_id, interaction}, _from, game) do
-    if_is_current_player(game, player_id, fn player ->
+    current_player_action(game, player_id, fn player ->
       {name, _} = interaction
 
       case player.pending_interactions do
         [] ->
-          {:reply, :not_found, game}
+          error(game)
 
         [{^name, value} | tail] ->
           game
           |> Game.replace_player(player_id, %{player | pending_interactions: tail})
           |> Game.perform_interaction(player_id, {name, value}, interaction)
-          |> ok_or(:forbidden, game)
+          |> ok_or_error(game)
 
         _ ->
-          {:reply, :not_found, game}
+          error(game)
       end
     end)
   end
 
   def handle_call({:discard_phase, player_id}, _from, game) do
-    if_is_current_player(game, player_id, fn _player ->
-      {:reply, :ok, game |> Game.discard_phase(player_id)}
+    # TODO: check not already done
+    current_player_action(game, player_id, fn _player ->
+      game
+      |> Game.discard_phase(player_id)
+      |> ok()
     end)
   end
 
   def handle_call({:draw_phase, player_id}, _from, game) do
-    if_is_current_player(game, player_id, fn _player ->
-      {:reply, :ok, game |> Game.draw_phase(player_id)}
+    # TODO: check discard_phase done
+    current_player_action(game, player_id, fn _player ->
+      game
+      |> Game.draw_phase(player_id)
+      |> ok()
     end)
   end
 
@@ -227,21 +241,36 @@ defmodule Heros.Game.GenServer do
   # Helpers
   #
 
-  defp if_is_current_player(game, player_id, f) do
+  defp error(game), do: {:reply, :error, game}
+
+  defp ok(game), do: {:reply, {:ok, game}, game}
+
+  defp victory(game, attacker_id), do: {:reply, {:victory, attacker_id, game}, game}
+
+  @spec ok_or_error({:ok, Game.t()} | :error, Game.t()) ::
+          {:reply, option_game(), Game.t()}
+  defp ok_or_error({:ok, game}, _), do: ok(game)
+  defp ok_or_error(:error, game), do: {:reply, :error, game}
+
+  # defp main_phase_action(game, player_id, f) do
+  #   current_player_action(game, player_id, fn player ->
+  #     case player.pending_interactions do
+  #       [] -> f.(player)
+  #       _ -> error(game)
+  #     end
+  #   end)
+  # end
+
+  defp current_player_action(game, player_id, f) do
     if game.current_player == player_id do
       case KeyListUtils.find(game.players, player_id) do
-        nil -> {:reply, :not_found, game}
+        nil -> error(game)
         player -> f.(player)
       end
     else
-      {:reply, :forbidden, game}
+      error(game)
     end
   end
-
-  @spec ok_or({:ok, Game.t()} | :error, atom, Game.t()) ::
-          {:reply, :ok | atom, Game.t()}
-  defp ok_or({:ok, game}, _, _), do: {:reply, :ok, game}
-  defp ok_or(:error, reply, game), do: {:reply, reply, game}
 
   defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, :player) do
     game
@@ -252,12 +281,12 @@ defmodule Heros.Game.GenServer do
   defp attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, card_id) do
     case KeyListUtils.find(defender.fight_zone, card_id) do
       nil ->
-        {:reply, :not_found, game}
+        error(game)
 
       card ->
         game
         |> Game.attack_card({attacker_id, attacker}, {defender_id, defender}, {card_id, card})
-        |> ok_or(:forbidden, game)
+        |> ok_or_error(game)
     end
   end
 
@@ -265,13 +294,13 @@ defmodule Heros.Game.GenServer do
     players_alive = game.players |> Enum.count(fn {_, p} -> Player.is_alive(p) end)
 
     if players_alive == 1 do
-      {:reply, {:victory, attacker_id}, game}
+      victory(game, attacker_id)
     else
-      {:reply, :ok, game}
+      ok(game)
     end
   end
 
-  defp check_victory(:error, game, _), do: {:reply, :forbidden, game}
+  defp check_victory(:error, game, _), do: error(game)
 
   @spec count_from_faction(list({Card.id(), Card.t()}), atom) :: integer
   defp count_from_faction(cards, faction) do
