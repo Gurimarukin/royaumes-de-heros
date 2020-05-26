@@ -352,6 +352,17 @@ defmodule Heros.Game do
     end
   end
 
+  @spec perform_interaction(Game.t(), Player.id(), {atom, any}, {atom, any}) ::
+          {:ok, Game.t()} | :error
+  def perform_interaction(game, player_id, {:select_effect, effects}, {:select_effect, index}) do
+    case Enum.fetch(effects, index) do
+      {:ok, effect} -> perform_effect(game, player_id, effect)
+      :error -> :error
+    end
+  end
+
+  def perform_interaction(_game, _player_id, _pending, _interaction), do: :error
+
   @spec discard_phase(Game.t(), Player.id()) :: Game.t()
   def discard_phase(game, player_id) do
     %{game | players: game.players |> KeyListUtils.update(player_id, &Player.discard_phase/1)}
@@ -370,27 +381,53 @@ defmodule Heros.Game do
   # Helpers for abilities
   #
 
+  def replace_player(game, player_id, player) do
+    %{game | players: game.players |> KeyListUtils.replace(player_id, player)}
+  end
+
   def update_player(game, player_id, f) do
     %{game | players: game.players |> KeyListUtils.update(player_id, f)}
   end
 
+  @spec perform_effect(Game.t(), Player.id(), {atom, any}) :: {:ok, Game.t()} | :error
+  defp perform_effect(game, player_id, {:heal, amount}) do
+    {:ok,
+     update_player(game, player_id, fn player ->
+       hp = player.hp + amount
+       %{player | hp: min(hp, player.max_hp)}
+     end)}
+  end
+
+  defp perform_effect(game, player_id, {:add_gold, amount}) do
+    {:ok, update_player(game, player_id, &Player.incr_gold(&1, amount))}
+  end
+
+  defp perform_effect(game, player_id, {:add_combat, amount}) do
+    {:ok, update_player(game, player_id, &Player.incr_combat(&1, amount))}
+  end
+
+  defp perform_effect(_game, _player_id, _effect), do: :error
+
   def heal(game, player_id, amount) do
+    {:ok, game} = perform_effect(game, player_id, {:heal, amount})
     game
-    |> update_player(player_id, fn player ->
-      hp = player.hp + amount
-      %{player | hp: min(hp, player.max_hp)}
-    end)
   end
 
   def add_gold(game, player_id, amount) do
-    game |> update_player(player_id, &Player.incr_gold(&1, amount))
+    {:ok, game} = perform_effect(game, player_id, {:add_gold, amount})
+    game
   end
 
   def add_combat(game, player_id, amount) do
-    game |> update_player(player_id, &Player.incr_combat(&1, amount))
+    {:ok, game} = perform_effect(game, player_id, {:add_combat, amount})
+    game
   end
 
   def draw_card(game, player_id, amount) do
     game |> update_player(player_id, &Player.draw_cards(&1, amount))
+  end
+
+  def queue_interaction(game, player_id, interaction) do
+    game |> update_player(player_id, &Player.queue_interaction(&1, interaction))
   end
 end

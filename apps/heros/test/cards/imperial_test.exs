@@ -220,4 +220,92 @@ defmodule Heros.Cards.ImperialTest do
     assert p1.hand == [gem1]
     assert p1.deck == [gem2]
   end
+
+  test "darian" do
+    assert Card.cost(:darian) == 4
+    assert Card.type(:darian) == {:not_guard, 5}
+    assert Card.faction(:darian) == :imperial
+    assert Card.is_champion(:darian)
+    assert not Card.is_guard(:darian)
+
+    [darian] = Cards.with_id(:darian)
+    [gem1, gem2, gem3] = Cards.with_id(:gem, 3)
+
+    expended_darian = {elem(darian, 0), %{elem(darian, 1) | expend_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hp: 10,
+        hand: [gem1, darian],
+        deck: [gem3, gem2]
+    }
+
+    p2 = Player.empty()
+
+    init_game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+    {:ok, pid} = Game.GenServer.start({:from_game, init_game})
+
+    assert Game.GenServer.play_card(pid, "p1", elem(darian, 0)) == :ok
+
+    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+
+    assert p1.gold == 0
+    assert p1.combat == 0
+    assert p1.hp == 10
+    assert p1.fight_zone == [darian]
+    assert p1.hand == [gem1]
+    assert p1.deck == [gem3, gem2]
+    assert p1.pending_interactions == []
+
+    assert Game.GenServer.use_expend_ability(pid, "p1", elem(darian, 0)) == :ok
+
+    before_interaction = Game.GenServer.get(pid)
+
+    p1 = before_interaction.players |> KeyListUtils.find("p1")
+
+    assert p1.fight_zone == [expended_darian]
+    assert p1.pending_interactions == [select_effect: [add_combat: 3, heal: 4]]
+
+    # not p2's turn
+    assert Game.GenServer.perform_interaction(pid, "p2", {:select_effect, 0}) == :forbidden
+    # not the pending interaction
+    assert Game.GenServer.perform_interaction(pid, "p1", {:discard, elem(gem1, 0)}) == :not_found
+    # effect doesn't exist
+    assert Game.GenServer.perform_interaction(pid, "p1", {:select_effect, 2}) == :forbidden
+
+    # effect 0: combat
+    assert Game.GenServer.perform_interaction(pid, "p1", {:select_effect, 0}) == :ok
+
+    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+
+    assert p1.gold == 0
+    assert p1.combat == 3
+    assert p1.hp == 10
+    assert p1.fight_zone == [expended_darian]
+    assert p1.hand == [gem1]
+    assert p1.deck == [gem3, gem2]
+    assert p1.pending_interactions == []
+
+    # effect 1: heal
+    {:ok, pid} = Game.GenServer.start({:from_game, before_interaction})
+
+    assert Game.GenServer.perform_interaction(pid, "p1", {:select_effect, 1}) == :ok
+
+    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+
+    assert p1.gold == 0
+    assert p1.combat == 0
+    assert p1.hp == 14
+    assert p1.fight_zone == [expended_darian]
+    assert p1.hand == [gem1]
+    assert p1.deck == [gem3, gem2]
+    assert p1.pending_interactions == []
+
+    # you have to interact:
+    # play_card, use_expend_ability, use_ally_ability, buy_card and attack aren't possible
+    # TODO
+
+    # but you can end your turn (discard_phase) and it resets the pending interactions
+    # TODO
+  end
 end

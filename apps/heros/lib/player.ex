@@ -5,6 +5,7 @@ defmodule Heros.Player do
   @type id :: String.t()
 
   @type t :: %{
+          pending_interactions: list(tuple),
           hp: integer,
           max_hp: integer,
           gold: integer,
@@ -16,11 +17,32 @@ defmodule Heros.Player do
           # inventory: list(Card.t())
           # enemy_fight_zone: list(Card.t())
         }
-  @enforce_keys [:hp, :max_hp, :gold, :combat, :hand, :deck, :discard, :fight_zone]
-  defstruct [:hp, :max_hp, :gold, :combat, :hand, :deck, :discard, :fight_zone]
+  @enforce_keys [
+    :pending_interactions,
+    :hp,
+    :max_hp,
+    :gold,
+    :combat,
+    :hand,
+    :deck,
+    :discard,
+    :fight_zone
+  ]
+  defstruct [
+    :pending_interactions,
+    :hp,
+    :max_hp,
+    :gold,
+    :combat,
+    :hand,
+    :deck,
+    :discard,
+    :fight_zone
+  ]
 
   def empty do
     %Player{
+      pending_interactions: [],
       hp: 50,
       max_hp: 50,
       gold: 0,
@@ -110,6 +132,10 @@ defmodule Heros.Player do
         discard: Enum.reverse(player.hand) ++ Enum.reverse(non_champions) ++ player.discard,
         fight_zone: champions |> KeyListUtils.map(&Card.prepare/1)
     }
+  end
+
+  def queue_interaction(player, interaction) do
+    %{player | pending_interactions: player.pending_interactions ++ [interaction]}
   end
 
   def decr_hp(player, amount), do: %{player | hp: player.hp - amount}

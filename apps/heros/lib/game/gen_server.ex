@@ -55,6 +55,12 @@ defmodule Heros.Game.GenServer do
     GenServer.call(game, {:attack, attacker, defender, what})
   end
 
+  @spec buy_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), {atom, any}) ::
+          :ok | atom
+  def perform_interaction(game, player_id, interaction) do
+    GenServer.call(game, {:perform_interaction, player_id, interaction})
+  end
+
   @spec discard_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: :ok | atom
   def discard_phase(game, player_id) do
     GenServer.call(game, {:discard_phase, player_id})
@@ -181,6 +187,26 @@ defmodule Heros.Game.GenServer do
           else
             {:reply, :forbidden, game}
           end
+      end
+    end)
+  end
+
+  def handle_call({:perform_interaction, player_id, interaction}, _from, game) do
+    if_is_current_player(game, player_id, fn player ->
+      {name, _} = interaction
+
+      case player.pending_interactions do
+        [] ->
+          {:reply, :not_found, game}
+
+        [{^name, value} | tail] ->
+          game
+          |> Game.replace_player(player_id, %{player | pending_interactions: tail})
+          |> Game.perform_interaction(player_id, {name, value}, interaction)
+          |> ok_or(:forbidden, game)
+
+        _ ->
+          {:reply, :not_found, game}
       end
     end)
   end

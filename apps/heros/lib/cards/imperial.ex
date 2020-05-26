@@ -66,6 +66,8 @@ defmodule Heros.Cards.Imperial do
   def faction(:word_of_power), do: :imperial
   def faction(_), do: nil
 
+  # Primary ablilities
+
   @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def primary_ability(game, :close_ranks, player_id) do
     game
@@ -85,6 +87,8 @@ defmodule Heros.Cards.Imperial do
 
   def primary_ability(_game, _, _player_id), do: nil
 
+  # Expend abilities
+
   @spec expend_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def expend_ability(game, :arkus, player_id) do
     game
@@ -92,7 +96,13 @@ defmodule Heros.Cards.Imperial do
     |> Game.draw_card(player_id, 1)
   end
 
+  def expend_ability(game, :darian, player_id) do
+    game |> Game.queue_interaction(player_id, {:select_effect, [add_combat: 3, heal: 4]})
+  end
+
   def expend_ability(_game, _, _player_id), do: nil
+
+  # Ally abilities
 
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def ally_ability(game, :arkus, player_id), do: game |> Game.heal(player_id, 6)
