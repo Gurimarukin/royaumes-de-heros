@@ -40,6 +40,7 @@ defmodule Heros.Cards.Imperial do
   @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
   def type(:arkus), do: {:guard, 6}
   def type(:close_ranks), do: :action
+  def type(:command), do: :action
   def type(:darian), do: {:not_guard, 5}
   def type(:cristov), do: {:guard, 5}
   def type(:kraka), do: {:not_guard, 6}
@@ -72,6 +73,14 @@ defmodule Heros.Cards.Imperial do
       n_champions = Enum.count(player.fight_zone, fn {_, c} -> Card.is_champion(c.key) end)
       player |> Player.incr_combat(5 + n_champions * 2)
     end)
+  end
+
+  def primary_ability(game, :command, player_id) do
+    game
+    |> Game.add_gold(player_id, 2)
+    |> Game.add_combat(player_id, 3)
+    |> Game.heal(player_id, 4)
+    |> Game.draw_card(player_id, 1)
   end
 
   def primary_ability(_game, _, _player_id), do: nil

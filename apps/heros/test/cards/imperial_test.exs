@@ -186,4 +186,38 @@ defmodule Heros.Cards.ImperialTest do
     assert p1.combat == 9
     assert p1.hp == 10
   end
+
+  test "command" do
+    assert Card.cost(:command) == 5
+    assert Card.type(:command) == :action
+    assert Card.faction(:command) == :imperial
+    assert not Card.is_champion(:command)
+    assert not Card.is_guard(:command)
+
+    [command] = Cards.with_id(:command)
+    [gem1, gem2] = Cards.with_id(:gem, 2)
+
+    p1 = %{
+      Player.empty()
+      | hp: 10,
+        hand: [command],
+        deck: [gem1, gem2]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+    {:ok, pid} = Game.GenServer.start({:from_game, game})
+
+    assert Game.GenServer.play_card(pid, "p1", elem(command, 0)) == :ok
+
+    p1 = Game.GenServer.get(pid).players |> KeyListUtils.find("p1")
+
+    assert p1.gold == 2
+    assert p1.combat == 3
+    assert p1.hp == 14
+    assert p1.fight_zone == [command]
+    assert p1.hand == [gem1]
+    assert p1.deck == [gem2]
+  end
 end
