@@ -3,7 +3,7 @@ defmodule Heros.Cards.Card do
 
   @type id :: binary
 
-  @type t :: %{
+  @type t :: %__MODULE__{
           key: atom,
           expend_ability_used: boolean,
           ally_ability_used: boolean
