@@ -305,7 +305,8 @@ defmodule Heros.GameTest do
 
     p3 = %{
       Player.empty()
-      | gold: 1,
+      | pending_interactions: [awesome: "interaction"],
+        gold: 1,
         combat: 3,
         hand: [arkus],
         deck: [orc_grunt, gem1, myros, gem2],
@@ -319,16 +320,29 @@ defmodule Heros.GameTest do
     assert Game.discard_phase(game, "p1") == :error
     assert Game.discard_phase(game, "p2") == :error
 
+    # can't draw card yet
+    assert Game.draw_phase(game, "p3") == :error
+
     assert {:ok, game} = Game.discard_phase(game, "p3")
 
-    p3 = %{
-      p3
-      | gold: 0,
-        combat: 0,
-        hand: [],
-        deck: [orc_grunt, gem1, myros, gem2],
-        discard: [arkus, smash_and_grab, gem3],
-        fight_zone: [lys, cult_priest]
+    # can't discard cards again
+    assert Game.discard_phase(game, "p3") == :error
+
+    # can't do anything else than calling draw_phase
+    assert Game.use_expend_ability(game, "p3", elem(lys, 0)) ==
+             :error
+
+    p3 = %Player{
+      pending_interactions: [],
+      discard_phase_done: true,
+      hp: 50,
+      max_hp: 50,
+      gold: 0,
+      combat: 0,
+      hand: [],
+      deck: [orc_grunt, gem1, myros, gem2],
+      discard: [arkus, smash_and_grab, gem3],
+      fight_zone: [lys, cult_priest]
     }
 
     assert p1 == Game.player(game, "p1")
@@ -342,10 +356,23 @@ defmodule Heros.GameTest do
 
     assert {:ok, game} = Game.draw_phase(game, "p3")
 
+    # can't draw cards again nor discard
+    assert Game.discard_phase(game, "p3") == :error
+    assert Game.draw_phase(game, "p3") == :error
+
     assert p1 == Game.player(game, "p1")
     assert p2 == Game.player(game, "p2")
 
     p3 = Game.player(game, "p3")
+
+    assert p3.pending_interactions == []
+    assert p3.discard_phase_done == false
+    assert p3.hp == 50
+    assert p3.max_hp == 50
+    assert p3.gold == 0
+    assert p3.combat == 0
+    assert p3.fight_zone == [lys, cult_priest]
+
     assert [^orc_grunt, ^gem1, ^myros, ^gem2, hand5] = p3.hand
     assert [deck1, deck2] = p3.deck
     assert [] = p3.discard
@@ -392,5 +419,62 @@ defmodule Heros.GameTest do
     assert {:victory, "p2", game} = Game.attack(game, "p2", "p1", :player)
 
     assert [{_, %{hp: 0}}, _, {_, %{hp: 0}}] = game.players
+  end
+
+  test "pending interactions" do
+    [cron] = Cards.with_id(:cron)
+    [arkus] = Cards.with_id(:arkus)
+    [weyan] = Cards.with_id(:weyan)
+    [gem] = Cards.with_id(:gem)
+
+    p1 = %{
+      Player.empty()
+      | pending_interactions: [
+          select_effect: [add_combat: 1, heal: 2],
+          discard_card: nil
+        ],
+        gold: 20,
+        combat: 10,
+        hp: 10,
+        hand: [gem],
+        fight_zone: [arkus, weyan]
+    }
+
+    p2 = Player.empty()
+
+    game_init = %{
+      Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+      | market: [cron]
+    }
+
+    game = game_init
+
+    # you have to interact, main phase actions aren't possible
+    assert Game.play_card(game, "p1", elem(gem, 0)) == :error
+    assert Game.use_expend_ability(game, "p1", elem(arkus, 0)) == :error
+    assert Game.use_ally_ability(game, "p1", elem(arkus, 0)) == :error
+    assert Game.buy_card(game, "p1", elem(cron, 0)) == :error
+    assert Game.attack(game, "p1", "p2", :player) == :error
+
+    # and you can't draw phase
+    assert Game.draw_phase(game, "p1") == :error
+
+    # but you can end your turn (discard_phase)
+    # and it resets the pending interactions
+    assert {:ok, game} = Game.discard_phase(game, "p1")
+    assert Game.player(game, "p1").pending_interactions == []
+
+    # consuming interactions
+    game = game_init
+
+    assert {:ok, game} = Game.perform_interaction(game, "p1", {:select_effect, 1})
+
+    p1 = Game.player(game, "p1")
+
+    assert p1.hp == 12
+    assert p1.pending_interactions == [discard_card: nil]
+
+    assert Game.perform_interaction(game, "p1", {:select_effect, 1}) == :error
+    assert Game.perform_interaction(game, "p1", {:discard_card, elem(gem, 0)}) == :error
   end
 end

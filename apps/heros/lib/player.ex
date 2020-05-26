@@ -6,6 +6,7 @@ defmodule Heros.Player do
 
   @type t :: %__MODULE__{
           pending_interactions: list(tuple),
+          discard_phase_done: boolean,
           hp: integer,
           max_hp: integer,
           gold: integer,
@@ -19,6 +20,7 @@ defmodule Heros.Player do
         }
   @enforce_keys [
     :pending_interactions,
+    :discard_phase_done,
     :hp,
     :max_hp,
     :gold,
@@ -30,6 +32,7 @@ defmodule Heros.Player do
   ]
   defstruct [
     :pending_interactions,
+    :discard_phase_done,
     :hp,
     :max_hp,
     :gold,
@@ -43,6 +46,7 @@ defmodule Heros.Player do
   def empty do
     %Player{
       pending_interactions: [],
+      discard_phase_done: false,
       hp: 50,
       max_hp: 50,
       gold: 0,
@@ -131,12 +135,20 @@ defmodule Heros.Player do
 
     %{
       player
-      | gold: 0,
+      | pending_interactions: [],
+        discard_phase_done: true,
+        gold: 0,
         combat: 0,
         hand: [],
         discard: Enum.reverse(player.hand) ++ Enum.reverse(non_champions) ++ player.discard,
         fight_zone: champions |> KeyListUtils.map(&Card.prepare/1)
     }
+  end
+
+  @spec draw_phase(Player.t()) :: Player.t()
+  def draw_phase(player) do
+    %{player | discard_phase_done: false}
+    |> draw_cards(5)
   end
 
   def queue_interaction(player, interaction) do

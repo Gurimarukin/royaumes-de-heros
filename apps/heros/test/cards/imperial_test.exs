@@ -302,12 +302,5 @@ defmodule Heros.Cards.ImperialTest do
     assert p1.hand == [gem1]
     assert p1.deck == [gem3, gem2]
     assert p1.pending_interactions == []
-
-    # you have to interact:
-    # play_card, use_expend_ability, use_ally_ability, buy_card and attack aren't possible
-    # TODO
-
-    # but you can end your turn (discard_phase) and it resets the pending interactions
-    # TODO
   end
 end

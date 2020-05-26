@@ -94,8 +94,7 @@ defmodule Heros.Game do
 
   @spec play_card(Game.t(), Player.id(), Card.id()) :: update()
   def play_card(game, player_id, card_id) do
-    # TODO: main_phase_action
-    current_player_action(game, player_id, fn player ->
+    main_phase_action(game, player_id, fn player ->
       with_element(player.hand, card_id, fn card ->
         %{
           game
@@ -116,8 +115,7 @@ defmodule Heros.Game do
 
   @spec use_expend_ability(Game.t(), Player.id(), Card.id()) :: update()
   def use_expend_ability(game, player_id, card_id) do
-    # TODO: main_phase_action
-    current_player_action(game, player_id, fn player ->
+    main_phase_action(game, player_id, fn player ->
       with_element(player.fight_zone, card_id, fn card ->
         if card.expend_ability_used do
           :error
@@ -151,8 +149,7 @@ defmodule Heros.Game do
 
   @spec use_ally_ability(Game.t(), Player.id(), Card.id()) :: update()
   def use_ally_ability(game, player_id, card_id) do
-    # TODO: main_phase_action
-    current_player_action(game, player_id, fn player ->
+    main_phase_action(game, player_id, fn player ->
       with_element(player.fight_zone, card_id, fn card ->
         case Card.faction(card.key) do
           nil ->
@@ -198,8 +195,7 @@ defmodule Heros.Game do
 
   @spec buy_card(Game.t(), Player.id(), Card.id()) :: update()
   def buy_card(game, player_id, card_id) do
-    # TODO: main_phase_action
-    current_player_action(game, player_id, fn player ->
+    main_phase_action(game, player_id, fn player ->
       case KeyListUtils.find(game.market, card_id) do
         nil ->
           with_element(game.gems, card_id, fn card ->
@@ -256,8 +252,7 @@ defmodule Heros.Game do
 
   @spec attack(Game.t(), Player.id(), Player.id(), :attack | Card.id()) :: update()
   def attack(game, attacker_id, defender_id, what) do
-    # TODO: main_phase_action
-    current_player_action(game, attacker_id, fn attacker ->
+    main_phase_action(game, attacker_id, fn attacker ->
       with_element(game.players, defender_id, fn defender ->
         if attacker.combat > 0 and is_next_to_current_player(game, defender_id) do
           attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
@@ -378,9 +373,13 @@ defmodule Heros.Game do
   @spec discard_phase(Game.t(), Player.id()) :: update()
   def discard_phase(game, player_id) do
     # TODO: check not already done
-    current_player_action(game, player_id, fn _player ->
-      %{game | players: game.players |> KeyListUtils.update(player_id, &Player.discard_phase/1)}
-      |> Option.some()
+    current_player_action(game, player_id, fn player ->
+      if player.discard_phase_done do
+        :error
+      else
+        update_player(game, player_id, &Player.discard_phase/1)
+        |> Option.some()
+      end
     end)
   end
 
@@ -388,14 +387,16 @@ defmodule Heros.Game do
 
   @spec draw_phase(Game.t(), Player.id()) :: update()
   def draw_phase(game, player_id) do
-    # TODO: check discard_phase done
-    current_player_action(game, player_id, fn _player ->
-      %{
+    current_player_action(game, player_id, fn player ->
+      if player.discard_phase_done do
+        game = game |> update_player(player_id, &Player.draw_phase/1)
+
         game
-        | players: game.players |> KeyListUtils.update(player_id, &Player.draw_cards(&1, 5)),
-          current_player: next_player_alive(game)
-      }
-      |> Option.some()
+        |> set_current_player(next_player_alive(game))
+        |> Option.some()
+      else
+        :error
+      end
     end)
   end
 
@@ -409,15 +410,15 @@ defmodule Heros.Game do
     |> Option.chain(f)
   end
 
-  # # player_id needs to be current player and no interaction is pending
-  # defp main_phase_action(game, player_id, f) do
-  #   current_player_action(game, player_id, fn player ->
-  #     case player.pending_interactions do
-  #       [] -> f.(player)
-  #       _ -> error(game)
-  #     end
-  #   end)
-  # end
+  # player_id needs to be current player and no interaction is pending
+  defp main_phase_action(game, player_id, f) do
+    current_player_action(game, player_id, fn player ->
+      case player.pending_interactions do
+        [] -> f.(player)
+        _ -> Option.none()
+      end
+    end)
+  end
 
   # player_id needs to be current player
   defp current_player_action(game, player_id, f) do
@@ -432,6 +433,8 @@ defmodule Heros.Game do
   end
 
   def player(game, player_id), do: KeyListUtils.find(game.players, player_id)
+
+  def set_current_player(game, player_id), do: %{game | current_player: player_id}
 
   @spec next_player_alive(Game.t()) :: nil | Player.id()
   defp next_player_alive(game) do
