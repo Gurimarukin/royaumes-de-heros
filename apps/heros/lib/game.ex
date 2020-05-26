@@ -422,14 +422,16 @@ defmodule Heros.Game do
   # player_id needs to be current player
   defp current_player_action(game, player_id, f) do
     if game.current_player == player_id do
-      case KeyListUtils.find(game.players, player_id) do
+      case player(game, player_id) do
         nil -> Option.none()
-        player -> f.(player)
+        p -> f.(p)
       end
     else
       Option.none()
     end
   end
+
+  def player(game, player_id), do: KeyListUtils.find(game.players, player_id)
 
   @spec next_player_alive(Game.t()) :: nil | Player.id()
   defp next_player_alive(game) do

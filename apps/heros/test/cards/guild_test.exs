@@ -1,7 +1,7 @@
 defmodule Heros.Cards.GuildTest do
   use ExUnit.Case, async: true
 
-  # alias Heros.{Cards, Game, KeyListUtils, Player}
+  # alias Heros.{Cards, Game, Player}
   alias Heros.Cards.Card
 
   test "rasmus" do

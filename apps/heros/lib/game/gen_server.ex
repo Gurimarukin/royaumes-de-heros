@@ -85,7 +85,7 @@ defmodule Heros.Game.GenServer do
   def init({:from_player_ids, player_ids}) do
     case Game.init_from_players(player_ids) do
       {:ok, game} -> {:ok, game}
-      :error -> {:stop, :invalid_players}
+      :error -> {:stop, :error}
     end
   end
 
