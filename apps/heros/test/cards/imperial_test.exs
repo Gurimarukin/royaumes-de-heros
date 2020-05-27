@@ -370,7 +370,7 @@ defmodule Heros.Cards.ImperialTest do
 
     p1 = %{
       p1
-      | pending_interactions: [prepare_champion: nil],
+      | pending_interactions: [:prepare_champion],
         fight_zone: [expended_arkus, weyan, expended_domination]
     }
 
@@ -651,7 +651,7 @@ defmodule Heros.Cards.ImperialTest do
 
     p1 = %{
       p1
-      | pending_interactions: [prepare_champion: nil],
+      | pending_interactions: [:prepare_champion],
         fight_zone: [expended_arkus, expended_rally_troops]
     }
 

@@ -40,6 +40,7 @@ defmodule Heros.Cards.Guild do
   @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
   def type(:borg), do: {:guard, 6}
   def type(:bribe), do: :action
+  def type(:death_threat), do: :action
   def type(:myros), do: {:guard, 3}
   def type(:parov), do: {:guard, 5}
   def type(:rake), do: {:not_guard, 7}
@@ -87,6 +88,21 @@ defmodule Heros.Cards.Guild do
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def ally_ability(game, :bribe, player_id) do
     game |> Game.add_temporary_effect(player_id, :put_next_purchased_action_on_deck)
+  end
+
+  def ally_ability(game, :death_threat, player_id) do
+    are_targetable_champions =
+      Enum.any?(game.players, fn {other_player_id, other_player} ->
+        # next_to_player? makes sure that other_player is alive
+        Game.next_to_player?(game, player_id, other_player_id) and
+          Enum.any?(other_player.fight_zone, fn {_, c} -> Card.champion?(c.key) end)
+      end)
+
+    if are_targetable_champions do
+      game |> Game.queue_interaction(player_id, :stun_champion)
+    else
+      game
+    end
   end
 
   def ally_ability(_game, _, _player_id), do: nil

@@ -270,7 +270,7 @@ defmodule Heros.Game do
         if attacker.combat > 0 and next_to_current_player?(game, defender_id) do
           attack_bis(game, {attacker_id, attacker}, {defender_id, defender}, what)
         else
-          :error
+          Option.none()
         end
       end)
     end)
@@ -338,12 +338,7 @@ defmodule Heros.Game do
         | players:
             game.players
             |> KeyListUtils.update(attacker_id, &Player.decr_combat(&1, defense))
-            |> KeyListUtils.update(
-              defender_id,
-              &(&1
-                |> Player.remove_from_fight_zone(card_id)
-                |> Player.add_to_discard({card_id, card}))
-            )
+            |> KeyListUtils.update(defender_id, &Player.stun_card(&1, {card_id, card}))
       }
       |> Option.some()
     else
@@ -354,19 +349,17 @@ defmodule Heros.Game do
   # Interactions (when user needs to perform an additionnal action, like
   # choosing between two effects or choosing a card to discard or to sacrifice)
 
-  @spec interact(Game.t(), Player.id(), {atom, any}) :: update()
+  @spec interact(Game.t(), Player.id(), any) :: update()
   def interact(game, player_id, interaction) do
     current_player_action(game, player_id, fn player ->
-      {name, _} = interaction
-
       case player.pending_interactions do
         [] ->
           :error
 
-        [{^name, value} | tail] ->
+        [head | tail] ->
           game
           |> update_player(player_id, &%{&1 | pending_interactions: tail})
-          |> interaction(player_id, {name, value}, interaction)
+          |> interaction(player_id, head, interaction)
 
         _ ->
           :error
@@ -379,7 +372,7 @@ defmodule Heros.Game do
     |> Option.chain(fn effect -> apply_effect(game, player_id, effect) end)
   end
 
-  defp interaction(game, player_id, {:prepare_champion, _}, {:prepare_champion, card_id}) do
+  defp interaction(game, player_id, :prepare_champion, {:prepare_champion, card_id}) do
     with_member(game.players, player_id, fn player ->
       with_member(player.fight_zone, card_id, fn card ->
         if Card.champion?(card.key) and card.expend_ability_used do
@@ -393,7 +386,37 @@ defmodule Heros.Game do
     end)
   end
 
+  defp interaction(game, attacker_id, :stun_champion, {:stun_champion, defender_id, card_id}) do
+    with_member(game.players, defender_id, fn defender ->
+      with_member(defender.fight_zone, card_id, fn card ->
+        if next_to_player?(game, attacker_id, defender_id) do
+          stun_champion(game, {defender_id, defender}, {card_id, card})
+        else
+          Option.none()
+        end
+      end)
+    end)
+  end
+
   defp interaction(_game, _player_id, _pending, _interaction), do: Option.none()
+
+  defp stun_champion(game, {defender_id, defender}, {card_id, card}) do
+    case Card.type(card.key) do
+      {:guard, _} ->
+        update_player(game, defender_id, &Player.stun_card(&1, {card_id, card}))
+        |> Option.some()
+
+      {:not_guard, _} ->
+        defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.guard?(c.key) end)
+
+        update_player(game, defender_id, &Player.stun_card(&1, {card_id, card}))
+        |> Option.some()
+        |> Option.filter(fn _ -> not defender_has_guard end)
+
+      nil ->
+        Option.none()
+    end
+  end
 
   # Discard phase (no real reason to separate it from Draw phase, but well...)
 
@@ -418,7 +441,7 @@ defmodule Heros.Game do
         game = game |> update_player(player_id, &Player.draw_phase/1)
 
         game
-        |> set_current_player(next_player_alive(game))
+        |> set_current_player(next_player_alive(game, player_id))
         |> Option.some()
       else
         :error
@@ -462,52 +485,57 @@ defmodule Heros.Game do
 
   def set_current_player(game, player_id), do: %{game | current_player: player_id}
 
-  @spec next_player_alive(Game.t()) :: nil | Player.id()
-  defp next_player_alive(game) do
-    case Enum.find_index(game.players, fn {id, _} -> id == game.current_player end) do
+  @spec next_player_alive(Game.t(), Player.id()) :: nil | Player.id()
+  defp next_player_alive(game, player_id) do
+    case Enum.find_index(game.players, fn {id, _} -> id == player_id end) do
       nil -> nil
-      i -> next_player_alive_rec(game.players, i)
+      i -> next_player_alive_rec(game.players, player_id, i)
     end
   end
 
-  @spec previous_player_alive(Game.t()) :: nil | Player.id()
-  defp previous_player_alive(game) do
-    case Enum.find_index(game.players, fn {id, _} -> id == game.current_player end) do
+  @spec previous_player_alive(Game.t(), Player.id()) :: nil | Player.id()
+  defp previous_player_alive(game, player_id) do
+    case Enum.find_index(game.players, fn {id, _} -> id == player_id end) do
       nil -> nil
-      i -> previous_player_alive_rec(game.players, i)
+      i -> previous_player_alive_rec(game.players, player_id, i)
     end
   end
 
-  defp next_player_alive_rec(players, i) do
+  defp next_player_alive_rec(players, player_id, i) do
     i = if i == length(players) - 1, do: 0, else: i + 1
-    step_if_dead(players, i, &next_player_alive_rec/2)
+    step_if_dead(players, player_id, i, &next_player_alive_rec/3)
   end
 
-  defp previous_player_alive_rec(players, i) do
+  defp previous_player_alive_rec(players, player_id, i) do
     i = if i == 0, do: length(players) - 1, else: i - 1
-    step_if_dead(players, i, &previous_player_alive_rec/2)
+    step_if_dead(players, player_id, i, &previous_player_alive_rec/3)
   end
 
-  defp step_if_dead(players, i, f) do
+  defp step_if_dead(players, player_id, i, f) do
     case Enum.fetch(players, i) do
-      {:ok, {k, p}} -> if Player.alive?(p), do: k, else: f.(players, i)
+      {:ok, {k, p}} -> if Player.alive?(p), do: k, else: f.(players, player_id, i)
       :error -> nil
     end
   end
 
   @spec next_to_current_player?(Game.t(), Player.id()) :: boolean
-  defp next_to_current_player?(game, player_id) do
-    case next_player_alive(game) do
+  defp next_to_current_player?(game, other_player_id) do
+    next_to_player?(game, game.current_player, other_player_id)
+  end
+
+  @spec next_to_player?(Game.t(), Player.id(), Player.id()) :: boolean
+  def next_to_player?(game, player_id, other_player_id) do
+    case next_player_alive(game, player_id) do
       nil ->
         false
 
-      ^player_id ->
+      ^other_player_id ->
         true
 
       _ ->
-        case previous_player_alive(game) do
+        case previous_player_alive(game, player_id) do
           nil -> false
-          ^player_id -> true
+          ^other_player_id -> true
           _ -> false
         end
     end
@@ -545,6 +573,7 @@ defmodule Heros.Game do
   # Helpers for card abilities
   #
 
+  @spec update_player(%{players: [tuple]}, any, any) :: %{players: [tuple]}
   def update_player(game, player_id, f) do
     %{game | players: game.players |> KeyListUtils.update(player_id, f)}
   end
@@ -583,7 +612,7 @@ defmodule Heros.Game do
       if expended_champions == 0 do
         player
       else
-        player |> Player.queue_interaction({:prepare_champion, nil})
+        player |> Player.queue_interaction(:prepare_champion)
       end
     end)
   end

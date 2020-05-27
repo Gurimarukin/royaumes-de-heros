@@ -5,7 +5,7 @@ defmodule Heros.Player do
   @type id :: String.t()
 
   @type t :: %__MODULE__{
-          pending_interactions: list({atom, any}),
+          pending_interactions: list(any),
           temporary_effects: list(any),
           discard_phase_done: boolean,
           hp: integer,
@@ -128,6 +128,13 @@ defmodule Heros.Player do
             deck: [{card_id, card} | player.deck]
         }
     end
+  end
+
+  @spec stun_card(Player.t(), {Card.id(), Card.t()}) :: Heros.Player.t()
+  def stun_card(player, {card_id, card}) do
+    player
+    |> remove_from_fight_zone(card_id)
+    |> add_to_discard({card_id, card})
   end
 
   @spec remove_from_hand(Player.t(), Card.id()) :: Player.t()
