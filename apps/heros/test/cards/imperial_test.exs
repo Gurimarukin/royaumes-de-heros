@@ -770,4 +770,43 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "taxation" do
+    assert Card.cost(:taxation) == 1
+    assert Card.type(:taxation) == :action
+    assert Card.faction(:taxation) == :imperial
+    assert not Card.champion?(:taxation)
+    assert not Card.guard?(:taxation)
+
+    [taxation] = Cards.with_id(:taxation)
+    [arkus] = Cards.with_id(:arkus)
+
+    {id, card} = taxation
+    expended_taxation = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hp: 10,
+        hand: [taxation],
+        fight_zone: [arkus]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(taxation, 0))
+
+    p1 = %{p1 | gold: 2, hand: [], fight_zone: [arkus, taxation]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(taxation, 0))
+
+    p1 = %{p1 | hp: 16, fight_zone: [arkus, expended_taxation]}
+
+    assert Game.player(game, "p1") == p1
+  end
 end

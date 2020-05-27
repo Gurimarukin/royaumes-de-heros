@@ -50,6 +50,7 @@ defmodule Heros.Cards.Imperial do
   def type(:rally_troops), do: :action
   def type(:recruit), do: :action
   def type(:tithe_priest), do: {:not_guard, 3}
+  def type(:taxation), do: :action
   def type(_), do: nil
 
   @spec faction(atom) :: nil | :imperial
@@ -108,6 +109,10 @@ defmodule Heros.Cards.Imperial do
       champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
       player |> Player.heal(3 + champions * 1)
     end)
+  end
+
+  def primary_ability(game, :taxation, player_id) do
+    game |> Game.add_gold(player_id, 2)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -200,6 +205,10 @@ defmodule Heros.Cards.Imperial do
 
   def ally_ability(game, :recruit, player_id) do
     game |> Game.add_gold(player_id, 1)
+  end
+  
+  def ally_ability(game, :taxation, player_id) do
+    game |> Game.heal(player_id, 6)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
