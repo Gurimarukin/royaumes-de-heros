@@ -122,6 +122,4 @@ defmodule Heros.Cards.Card do
   def prepare(card), do: %{card | expend_ability_used: false}
 
   def consume_ally_ability(card), do: %{card | ally_ability_used: true}
-
-  def reset_ally_ability(card), do: %{card | ally_ability_used: false}
 end
