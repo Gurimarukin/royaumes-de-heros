@@ -51,6 +51,7 @@ defmodule Heros.Cards.Imperial do
   def type(:recruit), do: :action
   def type(:tithe_priest), do: {:not_guard, 3}
   def type(:taxation), do: :action
+  def type(:word_of_power), do: :action
   def type(_), do: nil
 
   @spec faction(atom) :: nil | :imperial
@@ -113,6 +114,10 @@ defmodule Heros.Cards.Imperial do
 
   def primary_ability(game, :taxation, player_id) do
     game |> Game.add_gold(player_id, 2)
+  end
+
+  def primary_ability(game, :word_of_power, player_id) do
+    game |> Game.draw_card(player_id, 2)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -206,10 +211,23 @@ defmodule Heros.Cards.Imperial do
   def ally_ability(game, :recruit, player_id) do
     game |> Game.add_gold(player_id, 1)
   end
-  
+
   def ally_ability(game, :taxation, player_id) do
     game |> Game.heal(player_id, 6)
   end
 
+  def ally_ability(game, :word_of_power, player_id) do
+    game |> Game.heal(player_id, 5)
+  end
+
   def ally_ability(_game, _, _player_id), do: nil
+
+  # Sacrifice ability
+
+  @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def sacrifice_ability(game, :word_of_power, player_id) do
+    game |> Game.add_combat(player_id, 5)
+  end
+
+  def sacrifice_ability(_game, _, _player_id), do: nil
 end

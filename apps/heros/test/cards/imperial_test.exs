@@ -809,4 +809,61 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "word_of_power" do
+    assert Card.cost(:word_of_power) == 6
+    assert Card.type(:word_of_power) == :action
+    assert Card.faction(:word_of_power) == :imperial
+    assert not Card.champion?(:word_of_power)
+    assert not Card.guard?(:word_of_power)
+
+    [word_of_power] = Cards.with_id(:word_of_power)
+    [arkus] = Cards.with_id(:arkus)
+    [rasmus] = Cards.with_id(:rasmus)
+    [gem1, gem2] = Cards.with_id(:gem, 2)
+
+    {id, card} = word_of_power
+    expended_word_of_power = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hp: 10,
+        hand: [word_of_power],
+        fight_zone: [arkus],
+        deck: [gem1],
+        discard: [gem2]
+    }
+
+    p2 = Player.empty()
+
+    game = %{Game.empty([{"p1", p1}, {"p2", p2}], "p1") | cemetery: [rasmus]}
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(word_of_power, 0))
+
+    p1 = %{
+      p1
+      | hand: [gem1, gem2],
+        fight_zone: [arkus, word_of_power],
+        deck: [],
+        discard: []
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(word_of_power, 0))
+
+    p1 = %{p1 | hp: 15, fight_zone: [arkus, expended_word_of_power]}
+
+    assert Game.player(game, "p1") == p1
+
+    # sacrifice
+    assert {:ok, game} = Game.use_sacrifice_ability(game, "p1", elem(word_of_power, 0))
+
+    p1 = %{p1 | combat: 5, fight_zone: [arkus]}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [word_of_power, rasmus]
+  end
 end
