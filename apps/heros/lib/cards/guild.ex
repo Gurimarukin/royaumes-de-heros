@@ -41,6 +41,7 @@ defmodule Heros.Cards.Guild do
   def type(:borg), do: {:guard, 6}
   def type(:bribe), do: :action
   def type(:death_threat), do: :action
+  def type(:deception), do: :action
   def type(:myros), do: {:guard, 3}
   def type(:parov), do: {:guard, 5}
   def type(:rake), do: {:not_guard, 7}
@@ -70,6 +71,12 @@ defmodule Heros.Cards.Guild do
   @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def primary_ability(game, :bribe, player_id) do
     game |> Game.add_gold(player_id, 3)
+  end
+
+  def primary_ability(game, :deception, player_id) do
+    game
+    |> Game.add_gold(player_id, 2)
+    |> Game.draw_card(player_id, 1)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -103,6 +110,10 @@ defmodule Heros.Cards.Guild do
     else
       game
     end
+  end
+
+  def ally_ability(game, :deception, player_id) do
+    game |> Game.add_temporary_effect(player_id, :put_next_purchased_card_in_hand)
   end
 
   def ally_ability(_game, _, _player_id), do: nil

@@ -103,32 +103,39 @@ defmodule Heros.Player do
   def buy_card(player, {card_id, card}, cost) do
     player = player |> Player.decr_gold(cost)
 
-    if Card.action?(card.key) do
-      buy_action(player, {card_id, card})
-    else
-      player |> Player.add_to_discard({card_id, card})
-    end
-  end
-
-  defp buy_action(player, {card_id, card}) do
-    index =
-      Enum.find_index(
-        player.temporary_effects,
-        &(&1 == :put_next_purchased_action_on_deck)
-      )
-
-    case index do
+    case try_effects(player, player.temporary_effects, 0, {card_id, card}) do
       nil ->
         player |> Player.add_to_discard({card_id, card})
 
-      index ->
-        %{
-          player
-          | temporary_effects: player.temporary_effects |> List.delete_at(index),
-            deck: [{card_id, card} | player.deck]
-        }
+      {player, index} ->
+        %{player | temporary_effects: player.temporary_effects |> List.delete_at(index)}
     end
   end
+
+  defp try_effects(_player, [], _i, {_card_id, _card}), do: nil
+
+  defp try_effects(player, [effect | tail], i, {card_id, card}) do
+    case temporary_effect(player, effect, {card_id, card}) do
+      nil -> try_effects(player, tail, i + 1, {card_id, card})
+      player -> {player, i}
+    end
+  end
+
+  # temporary_effect shouldn't update player.temporary_effects
+  # (except appending elements, which is just fine)
+  defp temporary_effect(player, :put_next_purchased_action_on_deck, {card_id, card}) do
+    if Card.action?(card.key) do
+      %{player | deck: [{card_id, card} | player.deck]}
+    else
+      nil
+    end
+  end
+
+  defp temporary_effect(player, :put_next_purchased_card_in_hand, {card_id, card}) do
+    %{player | hand: player.hand ++ [{card_id, card}]}
+  end
+
+  defp temporary_effect(_player, _effect, {_card_id, _card}), do: nil
 
   @spec stun_card(Player.t(), {Card.id(), Card.t()}) :: Heros.Player.t()
   def stun_card(player, {card_id, card}) do

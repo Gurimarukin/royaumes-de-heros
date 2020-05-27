@@ -73,7 +73,7 @@ defmodule Heros.Cards.GuildTest do
 
     assert Game.player(game, "p1") == p1
 
-    # expend
+    # ally
     assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(bribe, 0))
 
     p1 = %{
@@ -183,6 +183,64 @@ defmodule Heros.Cards.GuildTest do
 
     assert Game.player(game, "p1") == p1
     assert Game.player(game, "p2") == p2
+  end
+
+  test "deception" do
+    assert Card.cost(:deception) == 5
+    assert Card.type(:deception) == :action
+    assert Card.faction(:deception) == :guild
+    assert not Card.champion?(:deception)
+    assert not Card.guard?(:deception)
+
+    [deception] = Cards.with_id(:deception)
+    [rasmus] = Cards.with_id(:rasmus)
+    [tithe_priest] = Cards.with_id(:tithe_priest)
+    [gem1, gem2] = Cards.with_id(:gem, 2)
+
+    {id, card} = deception
+    expended_deception = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | gold: 10,
+        hand: [deception],
+        fight_zone: [rasmus],
+        deck: [gem1],
+        discard: [gem2]
+    }
+
+    p2 = Player.empty()
+
+    game = %{
+      Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+      | market: [tithe_priest]
+    }
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(deception, 0))
+
+    p1 = %{p1 | gold: 12, hand: [gem1], fight_zone: [rasmus, deception], deck: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(deception, 0))
+
+    p1 = %{
+      p1
+      | temporary_effects: [:put_next_purchased_card_in_hand],
+        fight_zone: [rasmus, expended_deception]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # buy card
+    assert {:ok, game} = Game.buy_card(game, "p1", elem(tithe_priest, 0))
+
+    p1 = %{p1 | gold: 10, temporary_effects: [], hand: [gem1, tithe_priest]}
+
+    assert Game.player(game, "p1") == p1
+    assert game.market == [nil]
   end
 
   test "rasmus" do
