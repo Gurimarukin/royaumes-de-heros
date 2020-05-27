@@ -97,30 +97,40 @@ defmodule Heros.Cards.Imperial do
 
   # Expend abilities
 
-  @spec expend_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def expend_ability(game, :arkus, player_id) do
+  @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
+  def expend_ability(game, :arkus, player_id, _card_id) do
     game
     |> Game.add_combat(player_id, 5)
     |> Game.draw_card(player_id, 1)
   end
 
-  def expend_ability(game, :darian, player_id) do
+  def expend_ability(game, :darian, player_id, _card_id) do
     game |> Game.queue_interaction(player_id, {:select_effect, [add_combat: 3, heal: 4]})
   end
 
-  def expend_ability(game, :cristov, player_id) do
+  def expend_ability(game, :cristov, player_id, _card_id) do
     game
     |> Game.add_combat(player_id, 2)
     |> Game.heal(player_id, 3)
   end
 
-  def expend_ability(game, :kraka, player_id) do
+  def expend_ability(game, :kraka, player_id, _card_id) do
     game
     |> Game.heal(player_id, 2)
     |> Game.draw_card(player_id, 1)
   end
 
-  def expend_ability(_game, _, _player_id), do: nil
+  def expend_ability(game, :man_at_arms, player_id, card_id) do
+    game
+    |> Game.update_player(player_id, fn player ->
+      other_guards =
+        Enum.count(player.fight_zone, fn {id, c} -> Card.guard?(c.key) and id != card_id end)
+
+      player |> Player.incr_combat(2 + other_guards * 1)
+    end)
+  end
+
+  def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
 

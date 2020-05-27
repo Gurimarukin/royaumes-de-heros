@@ -74,10 +74,10 @@ defmodule Heros.Cards.Card do
     # Wild.primary_ability(game, key, player_id) ||
   end
 
-  @spec expend_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def expend_ability(game, key, player_id) do
+  @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
+  def expend_ability(game, key, player_id, card_id) do
     # Guild.expend_ability(game, key, player_id) ||
-    Imperial.expend_ability(game, key, player_id)
+    Imperial.expend_ability(game, key, player_id, card_id)
     # Necros.expend_ability(game, key, player_id) ||
     # Wild.expend_ability(game, key, player_id)
   end

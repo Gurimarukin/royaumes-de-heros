@@ -127,7 +127,7 @@ defmodule Heros.Game do
   end
 
   defp use_expend_ability_bis(game, player_id, {card_id, card}) do
-    Card.expend_ability(game, card.key, player_id)
+    Card.expend_ability(game, card.key, player_id, card_id)
     |> Option.from_nilable()
     |> Option.map(fn game ->
       %{

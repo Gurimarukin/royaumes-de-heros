@@ -489,4 +489,65 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "man_at_arms" do
+    assert Card.cost(:man_at_arms) == 3
+    assert Card.type(:man_at_arms) == {:guard, 4}
+    assert Card.faction(:man_at_arms) == :imperial
+    assert Card.champion?(:man_at_arms)
+    assert Card.guard?(:man_at_arms)
+
+    [man_at_arms1, man_at_arms2] = Cards.with_id(:man_at_arms, 2)
+    [arkus] = Cards.with_id(:arkus)
+    [rasmus] = Cards.with_id(:rasmus)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = man_at_arms1
+    expended_man_at_arms1 = {id, %{card | expend_ability_used: true}}
+
+    # with 2 other guards (3 champions) in play
+    p1 = %{
+      Player.empty()
+      | hand: [man_at_arms1],
+        fight_zone: [arkus, rasmus, man_at_arms2, gem]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(man_at_arms1, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [arkus, rasmus, man_at_arms2, gem, man_at_arms1]}
+
+    assert Game.player(game, "p1") == p1
+
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(man_at_arms1, 0))
+
+    p1 = %{p1 | combat: 4, fight_zone: [arkus, rasmus, man_at_arms2, gem, expended_man_at_arms1]}
+
+    assert Game.player(game, "p1") == p1
+
+    # with 1 other guard in play
+    p1 = %{Player.empty() | fight_zone: [arkus, rasmus, man_at_arms1, gem]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(man_at_arms1, 0))
+
+    p1 = %{p1 | combat: 3, fight_zone: [arkus, rasmus, expended_man_at_arms1, gem]}
+
+    assert Game.player(game, "p1") == p1
+
+    # with no other guard in play
+    p1 = %{Player.empty() | fight_zone: [rasmus, man_at_arms1, gem]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(man_at_arms1, 0))
+
+    p1 = %{p1 | combat: 2, fight_zone: [rasmus, expended_man_at_arms1, gem]}
+
+    assert Game.player(game, "p1") == p1
+  end
 end
