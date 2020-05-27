@@ -111,10 +111,10 @@ defmodule Heros.Cards.Card do
   end
 
   def sacrifice_ability(game, key, player_id) do
-    Guild.ally_ability(game, key, player_id) ||
+    Guild.sacrifice_ability(game, key, player_id) ||
       Imperial.sacrifice_ability(game, key, player_id) ||
-      Necros.ally_ability(game, key, player_id) ||
-      Wild.ally_ability(game, key, player_id)
+      Necros.sacrifice_ability(game, key, player_id) ||
+      Wild.sacrifice_ability(game, key, player_id)
   end
 
   def expend(card), do: %{card | expend_ability_used: true}

@@ -151,9 +151,7 @@ defmodule Heros.Cards.GuildTest do
 
     p1 = %{
       p1
-      | pending_interactions: [
-          :stun_champion
-        ],
+      | pending_interactions: [:stun_champion],
         fight_zone: [rasmus, expended_death_threat]
     }
 
@@ -241,6 +239,72 @@ defmodule Heros.Cards.GuildTest do
 
     assert Game.player(game, "p1") == p1
     assert game.market == [nil]
+  end
+
+  test "fire_bomb" do
+    assert Card.cost(:fire_bomb) == 8
+    assert Card.type(:fire_bomb) == :action
+    assert Card.faction(:fire_bomb) == :guild
+    assert not Card.champion?(:fire_bomb)
+    assert not Card.guard?(:fire_bomb)
+
+    [fire_bomb] = Cards.with_id(:fire_bomb)
+    [arkus] = Cards.with_id(:arkus)
+    [gem1, gem2] = Cards.with_id(:gem, 2)
+
+    # without enemy champion
+
+    p1 = %{Player.empty() | hand: [fire_bomb], deck: [gem1], discard: [gem2]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(fire_bomb, 0))
+
+    p1 = %{
+      p1
+      | combat: 8,
+        hand: [gem1],
+        fight_zone: [fire_bomb],
+        deck: []
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # sacrifice
+    assert {:ok, game} = Game.use_sacrifice_ability(game, "p1", elem(fire_bomb, 0))
+
+    p1 = %{p1 | combat: 13, fight_zone: []}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [fire_bomb]
+
+    # with enemy champion
+
+    p1 = %{Player.empty() | hand: [fire_bomb], deck: [gem1], discard: [gem2]}
+    p2 = %{Player.empty() | fight_zone: [arkus]}
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(fire_bomb, 0))
+
+    p1 = %{
+      p1
+      | combat: 8,
+        pending_interactions: [:stun_champion],
+        hand: [gem1],
+        fight_zone: [fire_bomb],
+        deck: []
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interaction
+    assert {:ok, game} = Game.interact(game, "p1", {:stun_champion, "p2", elem(arkus, 0)})
+
+    p2 = %{p2 | fight_zone: [], discard: [arkus]}
+
+    assert Game.player(game, "p2") == p2
   end
 
   test "rasmus" do

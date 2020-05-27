@@ -617,6 +617,21 @@ defmodule Heros.Game do
     end)
   end
 
+  def queue_stun_champion(game, player_id) do
+    are_targetable_champions =
+      Enum.any?(game.players, fn {other_player_id, other_player} ->
+        # next_to_player? makes sure that other_player is alive
+        Game.next_to_player?(game, player_id, other_player_id) and
+          Enum.any?(other_player.fight_zone, fn {_, c} -> Card.champion?(c.key) end)
+      end)
+
+    if are_targetable_champions do
+      game |> Game.queue_interaction(player_id, :stun_champion)
+    else
+      game
+    end
+  end
+
   def add_temporary_effect(game, player_id, effect) do
     update_player(game, player_id, &Player.add_temporary_effect(&1, effect))
   end

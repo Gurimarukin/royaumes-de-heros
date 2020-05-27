@@ -42,6 +42,7 @@ defmodule Heros.Cards.Guild do
   def type(:bribe), do: :action
   def type(:death_threat), do: :action
   def type(:deception), do: :action
+  def type(:fire_bomb), do: :action
   def type(:myros), do: {:guard, 3}
   def type(:parov), do: {:guard, 5}
   def type(:rake), do: {:not_guard, 7}
@@ -79,6 +80,13 @@ defmodule Heros.Cards.Guild do
     |> Game.draw_card(player_id, 1)
   end
 
+  def primary_ability(game, :fire_bomb, player_id) do
+    game
+    |> Game.add_combat(player_id, 8)
+    |> Game.queue_stun_champion(player_id)
+    |> Game.draw_card(player_id, 1)
+  end
+
   def primary_ability(_game, _, _player_id), do: nil
 
   # Expend abilities
@@ -98,18 +106,7 @@ defmodule Heros.Cards.Guild do
   end
 
   def ally_ability(game, :death_threat, player_id) do
-    are_targetable_champions =
-      Enum.any?(game.players, fn {other_player_id, other_player} ->
-        # next_to_player? makes sure that other_player is alive
-        Game.next_to_player?(game, player_id, other_player_id) and
-          Enum.any?(other_player.fight_zone, fn {_, c} -> Card.champion?(c.key) end)
-      end)
-
-    if are_targetable_champions do
-      game |> Game.queue_interaction(player_id, :stun_champion)
-    else
-      game
-    end
+    game |> Game.queue_stun_champion(player_id)
   end
 
   def ally_ability(game, :deception, player_id) do
@@ -121,5 +118,9 @@ defmodule Heros.Cards.Guild do
   # Sacrifice ability
 
   @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def sacrifice_ability(game, :fire_bomb, player_id) do
+    game |> Game.add_combat(player_id, 5)
+  end
+
   def sacrifice_ability(_game, _, _player_id), do: nil
 end
