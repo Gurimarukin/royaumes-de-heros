@@ -73,8 +73,8 @@ defmodule Heros.Cards.Imperial do
   def primary_ability(game, :close_ranks, player_id) do
     game
     |> Game.update_player(player_id, fn player ->
-      n_champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
-      player |> Player.incr_combat(5 + n_champions * 2)
+      champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
+      player |> Player.incr_combat(5 + champions * 2)
     end)
   end
 
@@ -114,6 +114,12 @@ defmodule Heros.Cards.Imperial do
     |> Game.heal(player_id, 3)
   end
 
+  def expend_ability(game, :kraka, player_id) do
+    game
+    |> Game.heal(player_id, 2)
+    |> Game.draw_card(player_id, 1)
+  end
+
   def expend_ability(_game, _, _player_id), do: nil
 
   # Ally abilities
@@ -145,6 +151,14 @@ defmodule Heros.Cards.Imperial do
 
   def ally_ability(game, :cristov, player_id) do
     game |> Game.draw_card(player_id, 1)
+  end
+
+  def ally_ability(game, :kraka, player_id) do
+    game
+    |> Game.update_player(player_id, fn player ->
+      champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
+      player |> Player.heal(champions * 2)
+    end)
   end
 
   def ally_ability(_game, _, _player_id), do: nil

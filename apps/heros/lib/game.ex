@@ -502,11 +502,7 @@ defmodule Heros.Game do
 
   @spec perform_effect(Game.t(), Player.id(), {atom, any}) :: {:ok, Game.t()} | :error
   defp perform_effect(game, player_id, {:heal, amount}) do
-    {:ok,
-     update_player(game, player_id, fn player ->
-       hp = player.hp + amount
-       %{player | hp: min(hp, player.max_hp)}
-     end)}
+    {:ok, update_player(game, player_id, &Player.heal(&1, amount))}
   end
 
   defp perform_effect(game, player_id, {:add_gold, amount}) do

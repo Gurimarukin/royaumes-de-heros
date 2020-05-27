@@ -438,4 +438,55 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "kraka" do
+    assert Card.cost(:kraka) == 6
+    assert Card.type(:kraka) == {:not_guard, 6}
+    assert Card.faction(:kraka) == :imperial
+    assert Card.champion?(:kraka)
+    assert not Card.guard?(:kraka)
+
+    [kraka] = Cards.with_id(:kraka)
+    [arkus] = Cards.with_id(:arkus)
+    [rasmus] = Cards.with_id(:rasmus)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = kraka
+    expended_kraka = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_kraka
+    full_expended_kraka = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hp: 10,
+        hand: [kraka],
+        fight_zone: [arkus, rasmus],
+        deck: [gem]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(kraka, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [arkus, rasmus, kraka]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(kraka, 0))
+
+    p1 = %{p1 | hp: 12, hand: [gem], deck: [], fight_zone: [arkus, rasmus, expended_kraka]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(kraka, 0))
+
+    p1 = %{p1 | hp: 18, fight_zone: [arkus, rasmus, full_expended_kraka]}
+
+    assert Game.player(game, "p1") == p1
+  end
 end

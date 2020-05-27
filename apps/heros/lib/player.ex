@@ -155,6 +155,11 @@ defmodule Heros.Player do
     %{player | pending_interactions: player.pending_interactions ++ [interaction]}
   end
 
+  def heal(player, amount) do
+    hp = player.hp + amount
+    %{player | hp: min(hp, player.max_hp)}
+  end
+
   def decr_hp(player, amount), do: %{player | hp: player.hp - amount}
 
   def incr_gold(player, amount), do: %{player | gold: player.gold + amount}
