@@ -130,6 +130,16 @@ defmodule Heros.Cards.Imperial do
     end)
   end
 
+  def expend_ability(game, :weyan, player_id, card_id) do
+    game
+    |> Game.update_player(player_id, fn player ->
+      other_champions =
+        Enum.count(player.fight_zone, fn {id, c} -> Card.champion?(c.key) and id != card_id end)
+
+      player |> Player.incr_combat(3 + other_champions * 1)
+    end)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities

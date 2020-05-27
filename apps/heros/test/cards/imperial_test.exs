@@ -550,4 +550,65 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "weyan" do
+    assert Card.cost(:weyan) == 4
+    assert Card.type(:weyan) == {:guard, 4}
+    assert Card.faction(:weyan) == :imperial
+    assert Card.champion?(:weyan)
+    assert Card.guard?(:weyan)
+
+    [weyan] = Cards.with_id(:weyan)
+    [arkus] = Cards.with_id(:arkus)
+    [rasmus] = Cards.with_id(:rasmus)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = weyan
+    expended_weyan = {id, %{card | expend_ability_used: true}}
+
+    # with 2 other champions in play
+    p1 = %{
+      Player.empty()
+      | hand: [weyan],
+        fight_zone: [arkus, rasmus, gem]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(weyan, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [arkus, rasmus, gem, weyan]}
+
+    assert Game.player(game, "p1") == p1
+
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(weyan, 0))
+
+    p1 = %{p1 | combat: 5, fight_zone: [arkus, rasmus, gem, expended_weyan]}
+
+    assert Game.player(game, "p1") == p1
+
+    # with 1 other champion in play
+    p1 = %{Player.empty() | fight_zone: [rasmus, weyan, gem]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(weyan, 0))
+
+    p1 = %{p1 | combat: 4, fight_zone: [rasmus, expended_weyan, gem]}
+
+    assert Game.player(game, "p1") == p1
+
+    # with no other champion in play
+    p1 = %{Player.empty() | fight_zone: [weyan, gem]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(weyan, 0))
+
+    p1 = %{p1 | combat: 3, fight_zone: [expended_weyan, gem]}
+
+    assert Game.player(game, "p1") == p1
+  end
 end
