@@ -1,5 +1,5 @@
 defmodule Heros.Cards.Guild do
-  alias Heros.Cards
+  alias Heros.{Cards, Game, Player}
   alias Heros.Cards.Card
 
   @spec get :: list({Card.id(), Card.t()})
@@ -62,4 +62,28 @@ defmodule Heros.Cards.Guild do
   def faction(:smash_and_grab), do: :guild
   def faction(:street_thug), do: :guild
   def faction(_), do: nil
+
+  # Primary ablilities
+
+  @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def primary_ability(_game, _, _player_id), do: nil
+
+  # Expend abilities
+
+  @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
+  def expend_ability(game, :borg, player_id, _card_id) do
+    game |> Game.add_combat(player_id, 4)
+  end
+
+  def expend_ability(_game, _, _player_id, _card_id), do: nil
+
+  # Ally abilities
+
+  @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def ally_ability(_game, _, _player_id), do: nil
+
+  # Sacrifice ability
+
+  @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def sacrifice_ability(_game, _, _player_id), do: nil
 end

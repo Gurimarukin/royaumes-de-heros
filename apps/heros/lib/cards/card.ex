@@ -74,28 +74,27 @@ defmodule Heros.Cards.Card do
 
   def primary_ability(game, key, player_id) do
     Decks.Base.primary_ability(game, key, player_id) ||
+      Guild.primary_ability(game, key, player_id) ||
       Imperial.primary_ability(game, key, player_id) ||
+      Necros.primary_ability(game, key, player_id) ||
+      Wild.primary_ability(game, key, player_id) ||
       game
-
-    # Guild.primary_ability(game, key, player_id) ||
-    # Necros.primary_ability(game, key, player_id) ||
-    # Wild.primary_ability(game, key, player_id) ||
   end
 
   @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
   def expend_ability(game, key, player_id, card_id) do
-    # Guild.expend_ability(game, key, player_id) ||
-    Imperial.expend_ability(game, key, player_id, card_id)
-    # Necros.expend_ability(game, key, player_id) ||
-    # Wild.expend_ability(game, key, player_id)
+    Guild.expend_ability(game, key, player_id, card_id) ||
+      Imperial.expend_ability(game, key, player_id, card_id) ||
+      Necros.expend_ability(game, key, player_id, card_id) ||
+      Wild.expend_ability(game, key, player_id, card_id)
   end
 
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def ally_ability(game, key, player_id) do
-    # Guild.ally_ability(game, key, player_id) ||
-    Imperial.ally_ability(game, key, player_id)
-    # Necros.ally_ability(game, key, player_id) ||
-    # Wild.ally_ability(game, key, player_id)
+    Guild.ally_ability(game, key, player_id) ||
+      Imperial.ally_ability(game, key, player_id) ||
+      Necros.ally_ability(game, key, player_id) ||
+      Wild.ally_ability(game, key, player_id)
   end
 
   @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
@@ -104,10 +103,10 @@ defmodule Heros.Cards.Card do
   end
 
   def sacrifice_ability(game, key, player_id) do
-    # Guild.ally_ability(game, key, player_id) ||
-    Imperial.sacrifice_ability(game, key, player_id)
-    # Necros.ally_ability(game, key, player_id) ||
-    # Wild.ally_ability(game, key, player_id)
+    Guild.ally_ability(game, key, player_id) ||
+      Imperial.sacrifice_ability(game, key, player_id) ||
+      Necros.ally_ability(game, key, player_id) ||
+      Wild.ally_ability(game, key, player_id)
   end
 
   def expend(card), do: %{card | expend_ability_used: true}

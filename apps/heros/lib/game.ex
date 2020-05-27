@@ -118,7 +118,7 @@ defmodule Heros.Game do
     main_phase_action(game, player_id, fn player ->
       with_member(player.fight_zone, card_id, fn card ->
         if card.expend_ability_used do
-          :error
+          Option.none()
         else
           use_expend_ability_bis(game, player_id, {card_id, card})
         end
@@ -130,20 +130,12 @@ defmodule Heros.Game do
     Card.expend_ability(game, card.key, player_id, card_id)
     |> Option.from_nilable()
     |> Option.map(fn game ->
-      %{
-        game
-        | players:
-            game.players
-            |> KeyListUtils.update(
-              player_id,
-              fn player ->
-                %{
-                  player
-                  | fight_zone: player.fight_zone |> KeyListUtils.update(card_id, &Card.expend/1)
-                }
-              end
-            )
-      }
+      update_player(game, player_id, fn player ->
+        %{
+          player
+          | fight_zone: player.fight_zone |> KeyListUtils.update(card_id, &Card.expend/1)
+        }
+      end)
     end)
   end
 
@@ -151,17 +143,15 @@ defmodule Heros.Game do
   def use_ally_ability(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
       with_member(player.fight_zone, card_id, fn card ->
-        case Card.faction(card.key) do
-          nil ->
-            :error
-
-          faction ->
-            if card.ally_ability_used or count_from_faction(player.fight_zone, faction) < 2 do
-              :error
-            else
-              use_ally_ability_bis(game, player_id, {card_id, card})
-            end
-        end
+        Card.faction(card.key)
+        |> Option.from_nilable()
+        |> Option.filter(fn faction ->
+          not card.ally_ability_used and
+            2 <= count_from_faction(player.fight_zone, faction)
+        end)
+        |> Option.chain(fn _ ->
+          use_ally_ability_bis(game, player_id, {card_id, card})
+        end)
       end)
     end)
   end
