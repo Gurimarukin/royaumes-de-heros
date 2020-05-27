@@ -387,4 +387,55 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "cristov" do
+    assert Card.cost(:cristov) == 5
+    assert Card.type(:cristov) == {:guard, 5}
+    assert Card.faction(:cristov) == :imperial
+    assert Card.champion?(:cristov)
+    assert Card.guard?(:cristov)
+
+    [cristov] = Cards.with_id(:cristov)
+    [arkus] = Cards.with_id(:arkus)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = cristov
+    expended_cristov = {id, %{card | ally_ability_used: true}}
+
+    {id, card} = expended_cristov
+    full_expended_cristov = {id, %{card | expend_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | combat: 4,
+        hp: 10,
+        hand: [cristov],
+        fight_zone: [arkus],
+        discard: [gem]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(cristov, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [arkus, cristov]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(cristov, 0))
+
+    p1 = %{p1 | hand: [gem], fight_zone: [arkus, expended_cristov], discard: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(cristov, 0))
+
+    p1 = %{p1 | combat: 6, hp: 13, fight_zone: [arkus, full_expended_cristov]}
+
+    assert Game.player(game, "p1") == p1
+  end
 end

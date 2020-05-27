@@ -108,6 +108,12 @@ defmodule Heros.Cards.Imperial do
     game |> Game.queue_interaction(player_id, {:select_effect, [add_combat: 3, heal: 4]})
   end
 
+  def expend_ability(game, :cristov, player_id) do
+    game
+    |> Game.add_combat(player_id, 2)
+    |> Game.heal(player_id, 3)
+  end
+
   def expend_ability(_game, _, _player_id), do: nil
 
   # Ally abilities
@@ -135,6 +141,10 @@ defmodule Heros.Cards.Imperial do
         player |> Player.queue_interaction({:prepare_champion, nil})
       end
     end)
+  end
+
+  def ally_ability(game, :cristov, player_id) do
+    game |> Game.draw_card(player_id, 1)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
