@@ -341,8 +341,8 @@ defmodule Heros.Game do
   # Interactions (when user needs to perform an additionnal action, like
   # choosing between two effects or choosing a card to discard or to sacrifice)
 
-  @spec perform_interaction(Game.t(), Player.id(), {atom, any}) :: update()
-  def perform_interaction(game, player_id, interaction) do
+  @spec interact(Game.t(), Player.id(), {atom, any}) :: update()
+  def interact(game, player_id, interaction) do
     current_player_action(game, player_id, fn player ->
       {name, _} = interaction
 
@@ -363,7 +363,7 @@ defmodule Heros.Game do
 
   defp interaction(game, player_id, {:select_effect, effects}, {:select_effect, index}) do
     Enum.fetch(effects, index)
-    |> Option.chain(fn effect -> perform_effect(game, player_id, effect) end)
+    |> Option.chain(fn effect -> apply_effect(game, player_id, effect) end)
   end
 
   defp interaction(game, player_id, {:prepare_champion, _}, {:prepare_champion, card_id}) do
@@ -500,20 +500,31 @@ defmodule Heros.Game do
     end
   end
 
-  @spec perform_effect(Game.t(), Player.id(), {atom, any}) :: {:ok, Game.t()} | :error
-  defp perform_effect(game, player_id, {:heal, amount}) do
-    {:ok, update_player(game, player_id, &Player.heal(&1, amount))}
+  @spec apply_effect(Game.t(), Player.id(), {atom, any}) :: {:ok, Game.t()} | :error
+  defp apply_effect(game, player_id, {:heal, amount}) do
+    update_player(game, player_id, &Player.heal(&1, amount))
+    |> Option.some()
   end
 
-  defp perform_effect(game, player_id, {:add_gold, amount}) do
-    {:ok, update_player(game, player_id, &Player.incr_gold(&1, amount))}
+  defp apply_effect(game, player_id, {:heal_for_champions, {base, per_champion}}) do
+    update_player(game, player_id, fn player ->
+      champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
+      player |> Player.heal(base + champions * per_champion)
+    end)
+    |> Option.some()
   end
 
-  defp perform_effect(game, player_id, {:add_combat, amount}) do
-    {:ok, update_player(game, player_id, &Player.incr_combat(&1, amount))}
+  defp apply_effect(game, player_id, {:add_gold, amount}) do
+    update_player(game, player_id, &Player.incr_gold(&1, amount))
+    |> Option.some()
   end
 
-  defp perform_effect(_game, _player_id, _effect), do: :error
+  defp apply_effect(game, player_id, {:add_combat, amount}) do
+    update_player(game, player_id, &Player.incr_combat(&1, amount))
+    |> Option.some()
+  end
+
+  defp apply_effect(_game, _player_id, _effect), do: :error
 
   #
   # Helpers for card abilities
@@ -524,17 +535,17 @@ defmodule Heros.Game do
   end
 
   def heal(game, player_id, amount) do
-    {:ok, game} = perform_effect(game, player_id, {:heal, amount})
+    {:ok, game} = apply_effect(game, player_id, {:heal, amount})
     game
   end
 
   def add_gold(game, player_id, amount) do
-    {:ok, game} = perform_effect(game, player_id, {:add_gold, amount})
+    {:ok, game} = apply_effect(game, player_id, {:add_gold, amount})
     game
   end
 
   def add_combat(game, player_id, amount) do
-    {:ok, game} = perform_effect(game, player_id, {:add_combat, amount})
+    {:ok, game} = apply_effect(game, player_id, {:add_combat, amount})
     game
   end
 

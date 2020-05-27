@@ -269,14 +269,14 @@ defmodule Heros.Cards.ImperialTest do
     assert p1.pending_interactions == [select_effect: [add_combat: 3, heal: 4]]
 
     # not p2's turn
-    assert Game.perform_interaction(game, "p2", {:select_effect, 0}) == :error
+    assert Game.interact(game, "p2", {:select_effect, 0}) == :error
     # not the pending interaction
-    assert Game.perform_interaction(game, "p1", {:discard, elem(gem1, 0)}) == :error
+    assert Game.interact(game, "p1", {:discard, elem(gem1, 0)}) == :error
     # effect doesn't exist
-    assert Game.perform_interaction(game, "p1", {:select_effect, 2}) == :error
+    assert Game.interact(game, "p1", {:select_effect, 2}) == :error
 
     # effect 0: combat
-    assert {:ok, game} = Game.perform_interaction(game, "p1", {:select_effect, 0})
+    assert {:ok, game} = Game.interact(game, "p1", {:select_effect, 0})
 
     p1 = Game.player(game, "p1")
 
@@ -291,7 +291,7 @@ defmodule Heros.Cards.ImperialTest do
     # effect 1: heal
     game = before_interaction
 
-    assert {:ok, game} = Game.perform_interaction(game, "p1", {:select_effect, 1})
+    assert {:ok, game} = Game.interact(game, "p1", {:select_effect, 1})
 
     p1 = Game.player(game, "p1")
 
@@ -376,8 +376,8 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
 
-    assert :error = Game.perform_interaction(game, "p1", {:prepare_champion, elem(weyan, 0)})
-    assert {:ok, game} = Game.perform_interaction(game, "p1", {:prepare_champion, elem(arkus, 0)})
+    assert :error = Game.interact(game, "p1", {:prepare_champion, elem(weyan, 0)})
+    assert {:ok, game} = Game.interact(game, "p1", {:prepare_champion, elem(arkus, 0)})
 
     p1 = %{
       p1
@@ -657,7 +657,7 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
 
-    assert {:ok, game} = Game.perform_interaction(game, "p1", {:prepare_champion, elem(arkus, 0)})
+    assert {:ok, game} = Game.interact(game, "p1", {:prepare_champion, elem(arkus, 0)})
 
     p1 = %{
       p1
@@ -704,6 +704,69 @@ defmodule Heros.Cards.ImperialTest do
     assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(recruit, 0))
 
     p1 = %{p1 | gold: 3, fight_zone: [arkus, gem, expended_recruit]}
+
+    assert Game.player(game, "p1") == p1
+  end
+
+  test "tithe_priest" do
+    assert Card.cost(:tithe_priest) == 2
+    assert Card.type(:tithe_priest) == {:not_guard, 3}
+    assert Card.faction(:tithe_priest) == :imperial
+    assert Card.champion?(:tithe_priest)
+    assert not Card.guard?(:tithe_priest)
+
+    [tithe_priest] = Cards.with_id(:tithe_priest)
+    [arkus] = Cards.with_id(:arkus)
+    [rasmus] = Cards.with_id(:rasmus)
+
+    {id, card} = tithe_priest
+    expended_tithe_priest = {id, %{card | expend_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hp: 10,
+        hand: [tithe_priest],
+        fight_zone: [arkus, rasmus]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(tithe_priest, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [arkus, rasmus, tithe_priest]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(tithe_priest, 0))
+
+    p1 = %{
+      p1
+      | pending_interactions: [
+          select_effect: [add_gold: 1, heal_for_champions: {0, 1}]
+        ],
+        fight_zone: [arkus, rasmus, expended_tithe_priest]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    before_interaction = {game, p1}
+
+    # interaction 0, add gold
+    assert {:ok, game} = Game.interact(game, "p1", {:select_effect, 0})
+
+    p1 = %{p1 | gold: 1, pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # interaction 1, heal for champions
+    {game, p1} = before_interaction
+
+    assert {:ok, game} = Game.interact(game, "p1", {:select_effect, 1})
+
+    p1 = %{p1 | hp: 13, pending_interactions: []}
 
     assert Game.player(game, "p1") == p1
   end

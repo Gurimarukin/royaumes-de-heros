@@ -467,14 +467,14 @@ defmodule Heros.GameTest do
     # consuming interactions
     game = game_init
 
-    assert {:ok, game} = Game.perform_interaction(game, "p1", {:select_effect, 1})
+    assert {:ok, game} = Game.interact(game, "p1", {:select_effect, 1})
 
     p1 = Game.player(game, "p1")
 
     assert p1.hp == 12
     assert p1.pending_interactions == [discard_card: nil]
 
-    assert Game.perform_interaction(game, "p1", {:select_effect, 1}) == :error
-    assert Game.perform_interaction(game, "p1", {:discard_card, elem(gem, 0)}) == :error
+    assert Game.interact(game, "p1", {:select_effect, 1}) == :error
+    assert Game.interact(game, "p1", {:discard_card, elem(gem, 0)}) == :error
   end
 end

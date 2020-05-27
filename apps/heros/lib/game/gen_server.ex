@@ -57,8 +57,8 @@ defmodule Heros.Game.GenServer do
 
   @spec buy_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), {atom, any}) ::
           Game.update()
-  def perform_interaction(game, player_id, interaction) do
-    GenServer.call(game, {:perform_interaction, player_id, interaction})
+  def interact(game, player_id, interaction) do
+    GenServer.call(game, {:interact, player_id, interaction})
   end
 
   @spec discard_phase(atom | pid | {atom, any} | {:via, atom, any}, Player.id()) :: Game.update()
@@ -123,8 +123,8 @@ defmodule Heros.Game.GenServer do
     |> to_reply(game)
   end
 
-  def handle_call({:perform_interaction, player_id, interaction}, _from, game) do
-    Game.perform_interaction(game, player_id, interaction)
+  def handle_call({:interact, player_id, interaction}, _from, game) do
+    Game.interact(game, player_id, interaction)
     |> to_reply(game)
   end
 

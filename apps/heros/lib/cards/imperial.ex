@@ -157,6 +157,14 @@ defmodule Heros.Cards.Imperial do
     end)
   end
 
+  def expend_ability(game, :tithe_priest, player_id, _card_id) do
+    game
+    |> Game.queue_interaction(
+      player_id,
+      {:select_effect, [add_gold: 1, heal_for_champions: {0, 1}]}
+    )
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
