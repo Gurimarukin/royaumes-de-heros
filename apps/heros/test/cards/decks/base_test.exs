@@ -87,4 +87,34 @@ defmodule Heros.Cards.Decks.BaseTest do
 
     assert p1.gold == 1
   end
+
+  test "gem" do
+    assert Card.cost(:gem) == 2
+    assert Card.type(:gem) == :item
+    assert Card.faction(:gem) == nil
+    assert not Card.champion?(:gem)
+    assert not Card.guard?(:gem)
+
+    [gem1, gem2] = Cards.with_id(:gem, 2)
+
+    p1 = %{Player.empty() | hand: [gem1]}
+    p2 = Player.empty()
+
+    game = %{Game.empty([{"p1", p1}, {"p2", p2}], "p1") | gems: [gem2]}
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(gem1, 0))
+
+    p1 = %{p1 | gold: 2, hand: [], fight_zone: [gem1]}
+
+    assert Game.player(game, "p1") == p1
+
+    # sacrifice
+    assert {:ok, game} = Game.use_sacrifice_ability(game, "p1", elem(gem1, 0))
+
+    p1 = %{p1 | combat: 3, fight_zone: []}
+
+    assert Game.player(game, "p1") == p1
+    assert game.gems == [gem1, gem2]
+  end
 end

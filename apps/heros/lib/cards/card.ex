@@ -1,4 +1,5 @@
 defmodule Heros.Cards.Card do
+  alias Heros.Game
   alias Heros.Cards.{Card, Decks, Guild, Imperial, Necros, Wild}
 
   @type id :: binary
@@ -11,6 +12,7 @@ defmodule Heros.Cards.Card do
   @enforce_keys [:key, :expend_ability_used, :ally_ability_used]
   defstruct [:key, :expend_ability_used, :ally_ability_used]
 
+  @spec get(atom) :: Heros.Cards.Card.t()
   def get(key) do
     %Card{
       key: key,
@@ -30,6 +32,8 @@ defmodule Heros.Cards.Card do
   end
 
   @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
+  def type(:gem), do: :item
+
   def type(key) do
     Decks.Base.type(key) ||
       Guild.type(key) ||
@@ -64,6 +68,10 @@ defmodule Heros.Cards.Card do
   end
 
   @spec primary_ability(Game.t(), atom, Player.id()) :: Game.t()
+  def primary_ability(game, :gem, player_id) do
+    game |> Game.add_gold(player_id, 2)
+  end
+
   def primary_ability(game, key, player_id) do
     Decks.Base.primary_ability(game, key, player_id) ||
       Imperial.primary_ability(game, key, player_id) ||
@@ -89,6 +97,13 @@ defmodule Heros.Cards.Card do
     # Necros.ally_ability(game, key, player_id) ||
     # Wild.ally_ability(game, key, player_id)
   end
+
+  @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def sacrifice_ability(game, :gem, player_id) do
+    game |> Game.add_combat(player_id, 3)
+  end
+
+  def sacrifice_ability(_game, _key, _player_id), do: nil
 
   def expend(card), do: %{card | expend_ability_used: true}
 

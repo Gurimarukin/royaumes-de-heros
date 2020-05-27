@@ -39,6 +39,16 @@ defmodule Heros.Game.GenServer do
     GenServer.call(game, {:use_ally_ability, player_id, card_id})
   end
 
+  @spec use_sacrifice_ability(
+          atom | pid | {atom, any} | {:via, atom, any},
+          Player.id(),
+          Card.id()
+        ) ::
+          Game.update()
+  def use_sacrifice_ability(game, player_id, card_id) do
+    GenServer.call(game, {:use_sacrifice_ability, player_id, card_id})
+  end
+
   @spec buy_card(atom | pid | {atom, any} | {:via, atom, any}, Player.id(), Card.id()) ::
           Game.update()
   def buy_card(game, player_id, card_id) do
@@ -110,6 +120,11 @@ defmodule Heros.Game.GenServer do
 
   def handle_call({:use_ally_ability, player_id, card_id}, _from, game) do
     Game.use_ally_ability(game, player_id, card_id)
+    |> to_reply(game)
+  end
+
+  def handle_call({:use_sacrifice_ability, player_id, card_id}, _from, game) do
+    Game.use_sacrifice_ability(game, player_id, card_id)
     |> to_reply(game)
   end
 

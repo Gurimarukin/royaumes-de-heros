@@ -193,6 +193,29 @@ defmodule Heros.Game do
     end)
   end
 
+  @spec use_ally_ability(Game.t(), Player.id(), Card.id()) :: update()
+  def use_sacrifice_ability(game, player_id, card_id) do
+    main_phase_action(game, player_id, fn player ->
+      with_member(player.fight_zone, card_id, fn card ->
+        Card.sacrifice_ability(game, card.key, player_id)
+        |> Option.from_nilable()
+        |> Option.map(fn game ->
+          game =
+            game
+            |> update_player(player_id, &Player.remove_from_fight_zone(&1, card_id))
+
+          reset_card = {card_id, Card.get(card.key)}
+
+          if card.key == :gem do
+            %{game | gems: [reset_card | game.gems]}
+          else
+            %{game | cemetery: [reset_card | game.cemetery]}
+          end
+        end)
+      end)
+    end)
+  end
+
   @spec buy_card(Game.t(), Player.id(), Card.id()) :: update()
   def buy_card(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
