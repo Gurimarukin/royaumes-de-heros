@@ -67,6 +67,14 @@ defmodule Heros.Cards.Card do
     end
   end
 
+  @spec action?(atom) :: boolean
+  def action?(key) do
+    case type(key) do
+      :action -> true
+      _ -> false
+    end
+  end
+
   @spec primary_ability(Game.t(), atom, Player.id()) :: Game.t()
   def primary_ability(game, :gem, player_id) do
     game |> Game.add_gold(player_id, 2)

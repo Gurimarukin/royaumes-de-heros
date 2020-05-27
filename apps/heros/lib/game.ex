@@ -513,6 +513,8 @@ defmodule Heros.Game do
     end
   end
 
+  # when you have to chose between two effects
+  # (has nothing to do with temporary effects)
   @spec apply_effect(Game.t(), Player.id(), {atom, any}) :: {:ok, Game.t()} | :error
   defp apply_effect(game, player_id, {:heal, amount}) do
     update_player(game, player_id, &Player.heal(&1, amount))
@@ -584,5 +586,9 @@ defmodule Heros.Game do
         player |> Player.queue_interaction({:prepare_champion, nil})
       end
     end)
+  end
+
+  def add_temporary_effect(game, player_id, effect) do
+    update_player(game, player_id, &Player.add_temporary_effect(&1, effect))
   end
 end

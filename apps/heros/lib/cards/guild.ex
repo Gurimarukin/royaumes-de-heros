@@ -39,6 +39,7 @@ defmodule Heros.Cards.Guild do
 
   @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
   def type(:borg), do: {:guard, 6}
+  def type(:bribe), do: :action
   def type(:myros), do: {:guard, 3}
   def type(:parov), do: {:guard, 5}
   def type(:rake), do: {:not_guard, 7}
@@ -66,6 +67,10 @@ defmodule Heros.Cards.Guild do
   # Primary ablilities
 
   @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def primary_ability(game, :bribe, player_id) do
+    game |> Game.add_gold(player_id, 3)
+  end
+
   def primary_ability(_game, _, _player_id), do: nil
 
   # Expend abilities
@@ -80,6 +85,10 @@ defmodule Heros.Cards.Guild do
   # Ally abilities
 
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def ally_ability(game, :bribe, player_id) do
+    game |> Game.add_temporary_effect(player_id, :put_next_purchased_action_on_deck)
+  end
+
   def ally_ability(_game, _, _player_id), do: nil
 
   # Sacrifice ability

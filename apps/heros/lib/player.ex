@@ -5,7 +5,8 @@ defmodule Heros.Player do
   @type id :: String.t()
 
   @type t :: %__MODULE__{
-          pending_interactions: list(tuple),
+          pending_interactions: list({atom, any}),
+          temporary_effects: list(any),
           discard_phase_done: boolean,
           hp: integer,
           max_hp: integer,
@@ -20,6 +21,7 @@ defmodule Heros.Player do
         }
   @enforce_keys [
     :pending_interactions,
+    :temporary_effects,
     :discard_phase_done,
     :hp,
     :max_hp,
@@ -32,6 +34,7 @@ defmodule Heros.Player do
   ]
   defstruct [
     :pending_interactions,
+    :temporary_effects,
     :discard_phase_done,
     :hp,
     :max_hp,
@@ -46,6 +49,7 @@ defmodule Heros.Player do
   def empty do
     %Player{
       pending_interactions: [],
+      temporary_effects: [],
       discard_phase_done: false,
       hp: 50,
       max_hp: 50,
@@ -97,9 +101,33 @@ defmodule Heros.Player do
 
   @spec buy_card(Player.t(), {Card.id(), Card.t()}, integer) :: Player.t()
   def buy_card(player, {card_id, card}, cost) do
-    player
-    |> Player.decr_gold(cost)
-    |> Player.add_to_discard({card_id, card})
+    player = player |> Player.decr_gold(cost)
+
+    if Card.action?(card.key) do
+      buy_action(player, {card_id, card})
+    else
+      player |> Player.add_to_discard({card_id, card})
+    end
+  end
+
+  defp buy_action(player, {card_id, card}) do
+    index =
+      Enum.find_index(
+        player.temporary_effects,
+        &(&1 == :put_next_purchased_action_on_deck)
+      )
+
+    case index do
+      nil ->
+        player |> Player.add_to_discard({card_id, card})
+
+      index ->
+        %{
+          player
+          | temporary_effects: player.temporary_effects |> List.delete_at(index),
+            deck: [{card_id, card} | player.deck]
+        }
+    end
   end
 
   @spec remove_from_hand(Player.t(), Card.id()) :: Player.t()
@@ -136,6 +164,7 @@ defmodule Heros.Player do
     %{
       player
       | pending_interactions: [],
+        temporary_effects: [],
         discard_phase_done: true,
         gold: 0,
         combat: 0,
@@ -153,6 +182,10 @@ defmodule Heros.Player do
 
   def queue_interaction(player, interaction) do
     %{player | pending_interactions: player.pending_interactions ++ [interaction]}
+  end
+
+  def add_temporary_effect(player, effect) do
+    %{player | temporary_effects: player.temporary_effects ++ [effect]}
   end
 
   def heal(player, amount) do

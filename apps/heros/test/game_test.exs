@@ -334,6 +334,7 @@ defmodule Heros.GameTest do
 
     p3 = %Player{
       pending_interactions: [],
+      temporary_effects: [],
       discard_phase_done: true,
       hp: 50,
       max_hp: 50,
