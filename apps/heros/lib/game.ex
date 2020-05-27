@@ -545,4 +545,20 @@ defmodule Heros.Game do
   def queue_interaction(game, player_id, interaction) do
     update_player(game, player_id, &Player.queue_interaction(&1, interaction))
   end
+
+  def queue_prepare_champion(game, player_id) do
+    update_player(game, player_id, fn player ->
+      expended_champions =
+        KeyListUtils.count(
+          player.fight_zone,
+          fn c -> Card.champion?(c.key) and c.expend_ability_used end
+        )
+
+      if expended_champions == 0 do
+        player
+      else
+        player |> Player.queue_interaction({:prepare_champion, nil})
+      end
+    end)
+  end
 end

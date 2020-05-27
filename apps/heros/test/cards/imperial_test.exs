@@ -611,4 +611,60 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "rally_troops" do
+    assert Card.cost(:rally_troops) == 4
+    assert Card.type(:rally_troops) == :action
+    assert Card.faction(:rally_troops) == :imperial
+    assert not Card.champion?(:rally_troops)
+    assert not Card.guard?(:rally_troops)
+
+    [rally_troops] = Cards.with_id(:rally_troops)
+    [arkus] = Cards.with_id(:arkus)
+
+    {id, card} = rally_troops
+    expended_rally_troops = {id, %{card | ally_ability_used: true}}
+
+    {id, card} = arkus
+    expended_arkus = {id, %{card | expend_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hp: 10,
+        hand: [rally_troops],
+        fight_zone: [expended_arkus]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(rally_troops, 0))
+
+    p1 = %{p1 | combat: 5, hp: 15, hand: [], fight_zone: [expended_arkus, rally_troops]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(rally_troops, 0))
+
+    p1 = %{
+      p1
+      | pending_interactions: [prepare_champion: nil],
+        fight_zone: [expended_arkus, expended_rally_troops]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    assert {:ok, game} = Game.perform_interaction(game, "p1", {:prepare_champion, elem(arkus, 0)})
+
+    p1 = %{
+      p1
+      | pending_interactions: [],
+        fight_zone: [arkus, expended_rally_troops]
+    }
+
+    assert Game.player(game, "p1") == p1
+  end
 end
