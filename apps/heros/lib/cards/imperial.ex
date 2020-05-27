@@ -48,6 +48,7 @@ defmodule Heros.Cards.Imperial do
   def type(:man_at_arms), do: {:guard, 4}
   def type(:weyan), do: {:guard, 4}
   def type(:rally_troops), do: :action
+  def type(:recruit), do: :action
   def type(:tithe_priest), do: {:not_guard, 3}
   def type(_), do: nil
 
@@ -98,6 +99,15 @@ defmodule Heros.Cards.Imperial do
     game
     |> Game.add_combat(player_id, 5)
     |> Game.heal(player_id, 5)
+  end
+
+  def primary_ability(game, :recruit, player_id) do
+    game
+    |> Game.add_gold(player_id, 2)
+    |> Game.update_player(player_id, fn player ->
+      champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
+      player |> Player.heal(3 + champions * 1)
+    end)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -178,6 +188,10 @@ defmodule Heros.Cards.Imperial do
 
   def ally_ability(game, :rally_troops, player_id) do
     game |> Game.queue_prepare_champion(player_id)
+  end
+
+  def ally_ability(game, :recruit, player_id) do
+    game |> Game.add_gold(player_id, 1)
   end
 
   def ally_ability(_game, _, _player_id), do: nil

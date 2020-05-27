@@ -667,4 +667,44 @@ defmodule Heros.Cards.ImperialTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "recruit" do
+    assert Card.cost(:recruit) == 2
+    assert Card.type(:recruit) == :action
+    assert Card.faction(:recruit) == :imperial
+    assert not Card.champion?(:recruit)
+    assert not Card.guard?(:recruit)
+
+    [recruit] = Cards.with_id(:recruit)
+    [arkus] = Cards.with_id(:arkus)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = recruit
+    expended_recruit = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hp: 10,
+        hand: [recruit],
+        fight_zone: [arkus, gem]
+    }
+
+    p2 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(recruit, 0))
+
+    p1 = %{p1 | gold: 2, hp: 14, hand: [], fight_zone: [arkus, gem, recruit]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(recruit, 0))
+
+    p1 = %{p1 | gold: 3, fight_zone: [arkus, gem, expended_recruit]}
+
+    assert Game.player(game, "p1") == p1
+  end
 end
