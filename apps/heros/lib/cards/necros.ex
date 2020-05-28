@@ -69,11 +69,19 @@ defmodule Heros.Cards.Necros do
   # Expend abilities
 
   @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
+  def expend_ability(game, :cult_priest, player_id, _card_id) do
+    game |> Game.queue_interaction(player_id, {:select_effect, [add_gold: 1, add_combat: 1]})
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
 
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def ally_ability(game, :cult_priest, player_id) do
+    game |> Game.add_combat(player_id, 4)
+  end
+
   def ally_ability(_game, _, _player_id), do: nil
 
   # Sacrifice ability
