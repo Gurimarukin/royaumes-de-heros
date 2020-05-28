@@ -413,6 +413,48 @@ defmodule Heros.Cards.GuildTest do
     assert Game.player(game, "p1") == p1
   end
 
+  test "parov" do
+    assert Card.cost(:parov) == 5
+    assert Card.type(:parov) == {:guard, 5}
+    assert Card.faction(:parov) == :guild
+    assert Card.champion?(:parov)
+    assert Card.guard?(:parov)
+
+    [parov] = Cards.with_id(:parov)
+    [rasmus] = Cards.with_id(:rasmus)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = parov
+    expended_parov = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_parov
+    full_expended_parov = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [parov], fight_zone: [rasmus], deck: [gem]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(parov, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [rasmus, parov]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(parov, 0))
+
+    p1 = %{p1 | combat: 3, fight_zone: [rasmus, expended_parov]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(parov, 0))
+
+    p1 = %{p1 | hand: [gem], deck: [], fight_zone: [rasmus, full_expended_parov]}
+
+    assert Game.player(game, "p1") == p1
+  end
+
   test "rasmus" do
     assert Card.cost(:rasmus) == 4
     assert Card.type(:rasmus) == {:not_guard, 5}

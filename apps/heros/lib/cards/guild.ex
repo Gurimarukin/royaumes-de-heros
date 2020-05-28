@@ -110,6 +110,10 @@ defmodule Heros.Cards.Guild do
     game |> Game.add_gold(player_id, 3)
   end
 
+  def expend_ability(game, :parov, player_id, _card_id) do
+    game |> Game.add_combat(player_id, 3)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
@@ -137,6 +141,10 @@ defmodule Heros.Cards.Guild do
 
   def ally_ability(game, :myros, player_id) do
     game |> Game.add_combat(player_id, 4)
+  end
+
+  def ally_ability(game, :parov, player_id) do
+    game |> Game.draw_card(player_id, 1)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
