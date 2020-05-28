@@ -66,4 +66,37 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "dark_energy" do
+    assert Card.cost(:dark_energy) == 4
+    assert Card.type(:dark_energy) == :action
+    assert Card.faction(:dark_energy) == :necros
+    assert not Card.champion?(:dark_energy)
+    assert not Card.guard?(:dark_energy)
+
+    [dark_energy] = Cards.with_id(:dark_energy)
+    [lys] = Cards.with_id(:lys)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = dark_energy
+    expended_dark_energy = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [dark_energy], fight_zone: [lys], deck: [gem]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(dark_energy, 0))
+
+    p1 = %{p1 | combat: 7, hand: [], fight_zone: [lys, dark_energy]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(dark_energy, 0))
+
+    p1 = %{p1 | hand: [gem], deck: [], fight_zone: [lys, expended_dark_energy]}
+
+    assert Game.player(game, "p1") == p1
+  end
 end

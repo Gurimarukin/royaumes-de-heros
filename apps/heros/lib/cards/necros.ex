@@ -37,6 +37,7 @@ defmodule Heros.Cards.Necros do
 
   @spec type(atom) :: nil | :item | :action | {:guard | :not_guard, integer}
   def type(:cult_priest), do: {:not_guard, 4}
+  def type(:dark_energy), do: :action
   def type(:death_cultist), do: {:guard, 3}
   def type(:rayla), do: {:not_guard, 4}
   def type(:krythos), do: {:not_guard, 6}
@@ -64,6 +65,10 @@ defmodule Heros.Cards.Necros do
   # Primary ablilities
 
   @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def primary_ability(game, :dark_energy, player_id) do
+    game |> Game.add_combat(player_id, 7)
+  end
+
   def primary_ability(_game, _, _player_id), do: nil
 
   # Expend abilities
@@ -80,6 +85,10 @@ defmodule Heros.Cards.Necros do
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def ally_ability(game, :cult_priest, player_id) do
     game |> Game.add_combat(player_id, 4)
+  end
+
+  def ally_ability(game, :dark_energy, player_id) do
+    game |> Game.draw_card(player_id, 1)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
