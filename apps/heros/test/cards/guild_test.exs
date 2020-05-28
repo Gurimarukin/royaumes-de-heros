@@ -625,4 +625,56 @@ defmodule Heros.Cards.GuildTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "street_thug" do
+    assert Card.cost(:street_thug) == 3
+    assert Card.type(:street_thug) == {:not_guard, 4}
+    assert Card.faction(:street_thug) == :guild
+    assert Card.champion?(:street_thug)
+    assert not Card.guard?(:street_thug)
+
+    [street_thug] = Cards.with_id(:street_thug)
+
+    {id, card} = street_thug
+    expended_street_thug = {id, %{card | expend_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [street_thug]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(street_thug, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [street_thug]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(street_thug, 0))
+
+    p1 = %{
+      p1
+      | pending_interactions: [select_effect: [add_gold: 1, add_combat: 2]],
+        fight_zone: [expended_street_thug]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    before_interact = {game, p1}
+
+    # interaction 0
+    assert {:ok, game} = Game.interact(game, "p1", {:select_effect, 0})
+
+    p1 = %{p1 | pending_interactions: [], gold: 1}
+
+    assert Game.player(game, "p1") == p1
+
+    # interaction 1
+    {game, p1} = before_interact
+
+    assert {:ok, game} = Game.interact(game, "p1", {:select_effect, 1})
+
+    p1 = %{p1 | pending_interactions: [], combat: 2}
+
+    assert Game.player(game, "p1") == p1
+  end
 end
