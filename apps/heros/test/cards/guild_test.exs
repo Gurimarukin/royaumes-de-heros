@@ -523,5 +523,52 @@ defmodule Heros.Cards.GuildTest do
     assert Card.faction(:rasmus) == :guild
     assert Card.champion?(:rasmus)
     assert not Card.guard?(:rasmus)
+
+    [rasmus] = Cards.with_id(:rasmus)
+    [profit] = Cards.with_id(:profit)
+    [tithe_priest] = Cards.with_id(:tithe_priest)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = rasmus
+    expended_rasmus = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_rasmus
+    full_expended_rasmus = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [rasmus], fight_zone: [profit], deck: [gem]}
+    p2 = Player.empty()
+    game = %{Game.empty([{"p1", p1}, {"p2", p2}], "p1") | market: [tithe_priest]}
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(rasmus, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [profit, rasmus]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(rasmus, 0))
+
+    p1 = %{p1 | gold: 2, fight_zone: [profit, expended_rasmus]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(rasmus, 0))
+
+    p1 = %{
+      p1
+      | temporary_effects: [:put_next_purchased_card_on_deck],
+        fight_zone: [profit, full_expended_rasmus]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # buy card
+    assert {:ok, game} = Game.buy_card(game, "p1", elem(tithe_priest, 0))
+
+    p1 = %{p1 | gold: 0, temporary_effects: [], deck: [tithe_priest, gem]}
+
+    assert Game.player(game, "p1") == p1
+    assert game.market == [nil]
   end
 end

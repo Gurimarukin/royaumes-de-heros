@@ -125,6 +125,10 @@ defmodule Heros.Cards.Guild do
     |> Game.queue_stun_champion(player_id)
   end
 
+  def expend_ability(game, :rasmus, player_id, _card_id) do
+    game |> Game.add_gold(player_id, 2)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
@@ -160,6 +164,10 @@ defmodule Heros.Cards.Guild do
 
   def ally_ability(game, :profit, player_id) do
     game |> Game.add_combat(player_id, 4)
+  end
+
+  def ally_ability(game, :rasmus, player_id) do
+    game |> Game.add_temporary_effect(player_id, :put_next_purchased_card_on_deck)
   end
 
   def ally_ability(_game, _, _player_id), do: nil

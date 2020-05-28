@@ -135,6 +135,10 @@ defmodule Heros.Player do
     %{player | hand: player.hand ++ [{card_id, card}]}
   end
 
+  defp temporary_effect(player, :put_next_purchased_card_on_deck, {card_id, card}) do
+    %{player | deck: [{card_id, card} | player.deck]}
+  end
+
   defp temporary_effect(_player, _effect, {_card_id, _card}), do: nil
 
   @spec stun_card(Player.t(), {Card.id(), Card.t()}) :: Heros.Player.t()
