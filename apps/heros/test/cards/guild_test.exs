@@ -571,4 +571,58 @@ defmodule Heros.Cards.GuildTest do
     assert Game.player(game, "p1") == p1
     assert game.market == [nil]
   end
+
+  test "smash_and_grab" do
+    assert Card.cost(:smash_and_grab) == 6
+    assert Card.type(:smash_and_grab) == :action
+    assert Card.faction(:smash_and_grab) == :guild
+    assert not Card.champion?(:smash_and_grab)
+    assert not Card.guard?(:smash_and_grab)
+
+    [smash_and_grab] = Cards.with_id(:smash_and_grab)
+    [tithe_priest] = Cards.with_id(:tithe_priest)
+    [arkus] = Cards.with_id(:arkus)
+    [gem] = Cards.with_id(:gem)
+
+    p1 = %{Player.empty() | hand: [smash_and_grab], deck: [gem], discard: [tithe_priest, arkus]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(smash_and_grab, 0))
+
+    p1 = %{
+      p1
+      | combat: 6,
+        pending_interactions: [:put_card_from_discard_to_deck],
+        hand: [],
+        fight_zone: [smash_and_grab]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    before_interact = {game, p1}
+
+    # interaction
+
+    # not a discarded card
+    assert :error = Game.interact(game, "p1", {:put_card_from_discard_to_deck, elem(gem, 0)})
+
+    # use interaction
+    assert {:ok, game} =
+             Game.interact(game, "p1", {:put_card_from_discard_to_deck, elem(arkus, 0)})
+
+    p1 = %{p1 | pending_interactions: [], deck: [arkus, gem], discard: [tithe_priest]}
+
+    assert Game.player(game, "p1") == p1
+
+    # don't use interaction
+    {game, p1} = before_interact
+
+    assert {:ok, game} = Game.interact(game, "p1", {:put_card_from_discard_to_deck, nil})
+
+    p1 = %{p1 | pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+  end
 end

@@ -326,7 +326,7 @@ defmodule Heros.Game do
           attack_card_bis(game, {attacker_id, attacker}, defender_id, {card_id, card}, defense)
         end
 
-      nil ->
+      _ ->
         :error
     end
   end
@@ -394,6 +394,35 @@ defmodule Heros.Game do
         else
           Option.none()
         end
+      end)
+    end)
+  end
+
+  defp interaction(
+         game,
+         _player_id,
+         :put_card_from_discard_to_deck,
+         {:put_card_from_discard_to_deck, nil}
+       ),
+       do: Option.some(game)
+
+  defp interaction(
+         game,
+         player_id,
+         :put_card_from_discard_to_deck,
+         {:put_card_from_discard_to_deck, card_id}
+       ) do
+    with_member(game.players, player_id, fn player ->
+      with_member(player.discard, card_id, fn card ->
+        game
+        |> update_player(player_id, fn player ->
+          %{
+            player
+            | deck: [{card_id, card} | player.deck],
+              discard: player.discard |> KeyListUtils.delete(card_id)
+          }
+        end)
+        |> Option.some()
       end)
     end)
   end

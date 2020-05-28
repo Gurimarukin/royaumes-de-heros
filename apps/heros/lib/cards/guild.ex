@@ -50,6 +50,7 @@ defmodule Heros.Cards.Guild do
   def type(:profit), do: :action
   def type(:rake), do: {:not_guard, 7}
   def type(:rasmus), do: {:not_guard, 5}
+  def type(:smash_and_grab), do: :action
   def type(:street_thug), do: {:not_guard, 4}
   def type(_), do: nil
 
@@ -100,6 +101,12 @@ defmodule Heros.Cards.Guild do
 
   def primary_ability(game, :profit, player_id) do
     game |> Game.add_gold(player_id, 2)
+  end
+
+  def primary_ability(game, :smash_and_grab, player_id) do
+    game
+    |> Game.add_combat(player_id, 6)
+    |> Game.queue_interaction(player_id, :put_card_from_discard_to_deck)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
