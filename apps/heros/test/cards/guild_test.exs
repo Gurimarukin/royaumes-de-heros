@@ -340,6 +340,38 @@ defmodule Heros.Cards.GuildTest do
     assert Game.player(game, "p1") == p1
   end
 
+  test "intimidation" do
+    assert Card.cost(:intimidation) == 2
+    assert Card.type(:intimidation) == :action
+    assert Card.faction(:intimidation) == :guild
+    assert not Card.champion?(:intimidation)
+    assert not Card.guard?(:intimidation)
+
+    [intimidation] = Cards.with_id(:intimidation)
+    [rasmus] = Cards.with_id(:rasmus)
+
+    {id, card} = intimidation
+    expended_intimidation = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [intimidation], fight_zone: [rasmus]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(intimidation, 0))
+
+    p1 = %{p1 | combat: 5, hand: [], fight_zone: [rasmus, intimidation]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(intimidation, 0))
+
+    p1 = %{p1 | gold: 2, fight_zone: [rasmus, expended_intimidation]}
+
+    assert Game.player(game, "p1") == p1
+  end
+
   test "rasmus" do
     assert Card.cost(:rasmus) == 4
     assert Card.type(:rasmus) == {:not_guard, 5}

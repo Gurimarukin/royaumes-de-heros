@@ -44,6 +44,7 @@ defmodule Heros.Cards.Guild do
   def type(:deception), do: :action
   def type(:fire_bomb), do: :action
   def type(:hit_job), do: :action
+  def type(:intimidation), do: :action
   def type(:myros), do: {:guard, 3}
   def type(:parov), do: {:guard, 5}
   def type(:rake), do: {:not_guard, 7}
@@ -92,6 +93,10 @@ defmodule Heros.Cards.Guild do
     game |> Game.add_combat(player_id, 7)
   end
 
+  def primary_ability(game, :intimidation, player_id) do
+    game |> Game.add_combat(player_id, 5)
+  end
+
   def primary_ability(_game, _, _player_id), do: nil
 
   # Expend abilities
@@ -120,6 +125,10 @@ defmodule Heros.Cards.Guild do
 
   def ally_ability(game, :hit_job, player_id) do
     game |> Game.queue_stun_champion(player_id)
+  end
+
+  def ally_ability(game, :intimidation, player_id) do
+    game |> Game.add_gold(player_id, 2)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
