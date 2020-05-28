@@ -307,6 +307,39 @@ defmodule Heros.Cards.GuildTest do
     assert Game.player(game, "p2") == p2
   end
 
+  test "hit_job" do
+    assert Card.cost(:hit_job) == 4
+    assert Card.type(:hit_job) == :action
+    assert Card.faction(:hit_job) == :guild
+    assert not Card.champion?(:hit_job)
+    assert not Card.guard?(:hit_job)
+
+    [hit_job] = Cards.with_id(:hit_job)
+    [rasmus] = Cards.with_id(:rasmus)
+    [arkus] = Cards.with_id(:arkus)
+
+    {id, card} = hit_job
+    expended_hit_job = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [hit_job], fight_zone: [rasmus]}
+    p2 = %{Player.empty() | fight_zone: [arkus]}
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(hit_job, 0))
+
+    p1 = %{p1 | combat: 7, hand: [], fight_zone: [rasmus, hit_job]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(hit_job, 0))
+
+    p1 = %{p1 | pending_interactions: [:stun_champion], fight_zone: [rasmus, expended_hit_job]}
+
+    assert Game.player(game, "p1") == p1
+  end
+
   test "rasmus" do
     assert Card.cost(:rasmus) == 4
     assert Card.type(:rasmus) == {:not_guard, 5}

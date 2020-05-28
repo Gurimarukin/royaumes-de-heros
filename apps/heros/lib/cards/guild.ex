@@ -43,6 +43,7 @@ defmodule Heros.Cards.Guild do
   def type(:death_threat), do: :action
   def type(:deception), do: :action
   def type(:fire_bomb), do: :action
+  def type(:hit_job), do: :action
   def type(:myros), do: {:guard, 3}
   def type(:parov), do: {:guard, 5}
   def type(:rake), do: {:not_guard, 7}
@@ -87,6 +88,10 @@ defmodule Heros.Cards.Guild do
     |> Game.draw_card(player_id, 1)
   end
 
+  def primary_ability(game, :hit_job, player_id) do
+    game |> Game.add_combat(player_id, 7)
+  end
+
   def primary_ability(_game, _, _player_id), do: nil
 
   # Expend abilities
@@ -111,6 +116,10 @@ defmodule Heros.Cards.Guild do
 
   def ally_ability(game, :deception, player_id) do
     game |> Game.add_temporary_effect(player_id, :put_next_purchased_card_in_hand)
+  end
+
+  def ally_ability(game, :hit_job, player_id) do
+    game |> Game.queue_stun_champion(player_id)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
