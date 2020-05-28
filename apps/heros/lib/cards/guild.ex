@@ -119,6 +119,12 @@ defmodule Heros.Cards.Guild do
     game |> Game.add_combat(player_id, 3)
   end
 
+  def expend_ability(game, :rake, player_id, _card_id) do
+    game
+    |> Game.add_combat(player_id, 4)
+    |> Game.queue_stun_champion(player_id)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities

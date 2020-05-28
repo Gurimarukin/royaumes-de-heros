@@ -486,6 +486,37 @@ defmodule Heros.Cards.GuildTest do
     assert Game.player(game, "p1") == p1
   end
 
+  test "rake" do
+    assert Card.cost(:rake) == 7
+    assert Card.type(:rake) == {:not_guard, 7}
+    assert Card.faction(:rake) == :guild
+    assert Card.champion?(:rake)
+    assert not Card.guard?(:rake)
+
+    [rake] = Cards.with_id(:rake)
+    [arkus] = Cards.with_id(:arkus)
+
+    {id, card} = rake
+    expended_rake = {id, %{card | expend_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [rake]}
+    p2 = %{Player.empty() | fight_zone: [arkus]}
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(rake, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [rake]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(rake, 0))
+
+    p1 = %{p1 | combat: 4, pending_interactions: [:stun_champion], fight_zone: [expended_rake]}
+
+    assert Game.player(game, "p1") == p1
+  end
+
   test "rasmus" do
     assert Card.cost(:rasmus) == 4
     assert Card.type(:rasmus) == {:not_guard, 5}
