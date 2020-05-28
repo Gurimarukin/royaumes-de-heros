@@ -47,6 +47,7 @@ defmodule Heros.Cards.Guild do
   def type(:intimidation), do: :action
   def type(:myros), do: {:guard, 3}
   def type(:parov), do: {:guard, 5}
+  def type(:profit), do: :action
   def type(:rake), do: {:not_guard, 7}
   def type(:rasmus), do: {:not_guard, 5}
   def type(:street_thug), do: {:not_guard, 4}
@@ -97,6 +98,10 @@ defmodule Heros.Cards.Guild do
     game |> Game.add_combat(player_id, 5)
   end
 
+  def primary_ability(game, :profit, player_id) do
+    game |> Game.add_gold(player_id, 2)
+  end
+
   def primary_ability(_game, _, _player_id), do: nil
 
   # Expend abilities
@@ -145,6 +150,10 @@ defmodule Heros.Cards.Guild do
 
   def ally_ability(game, :parov, player_id) do
     game |> Game.draw_card(player_id, 1)
+  end
+
+  def ally_ability(game, :profit, player_id) do
+    game |> Game.add_combat(player_id, 4)
   end
 
   def ally_ability(_game, _, _player_id), do: nil

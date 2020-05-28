@@ -455,6 +455,37 @@ defmodule Heros.Cards.GuildTest do
     assert Game.player(game, "p1") == p1
   end
 
+  test "profit" do
+    assert Card.cost(:profit) == 1
+    assert Card.type(:profit) == :action
+    assert Card.faction(:profit) == :guild
+    assert not Card.champion?(:profit)
+    assert not Card.guard?(:profit)
+
+    [profit] = Cards.with_id(:profit)
+    [rasmus] = Cards.with_id(:rasmus)
+
+    {id, card} = profit
+    expended_profit = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [profit], fight_zone: [rasmus]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(profit, 0))
+
+    p1 = %{p1 | gold: 2, hand: [], fight_zone: [rasmus, profit]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(profit, 0))
+
+    p1 = %{p1 | combat: 4, fight_zone: [rasmus, expended_profit]}
+
+    assert Game.player(game, "p1") == p1
+  end
+
   test "rasmus" do
     assert Card.cost(:rasmus) == 4
     assert Card.type(:rasmus) == {:not_guard, 5}
