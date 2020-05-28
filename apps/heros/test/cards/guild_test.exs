@@ -372,6 +372,47 @@ defmodule Heros.Cards.GuildTest do
     assert Game.player(game, "p1") == p1
   end
 
+  test "myros" do
+    assert Card.cost(:myros) == 5
+    assert Card.type(:myros) == {:guard, 3}
+    assert Card.faction(:myros) == :guild
+    assert Card.champion?(:myros)
+    assert Card.guard?(:myros)
+
+    [myros] = Cards.with_id(:myros)
+    [rasmus] = Cards.with_id(:rasmus)
+
+    {id, card} = myros
+    expended_myros = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_myros
+    full_expended_myros = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [myros], fight_zone: [rasmus]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(myros, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [rasmus, myros]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(myros, 0))
+
+    p1 = %{p1 | gold: 3, fight_zone: [rasmus, expended_myros]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(myros, 0))
+
+    p1 = %{p1 | combat: 4, fight_zone: [rasmus, full_expended_myros]}
+
+    assert Game.player(game, "p1") == p1
+  end
+
   test "rasmus" do
     assert Card.cost(:rasmus) == 4
     assert Card.type(:rasmus) == {:not_guard, 5}
