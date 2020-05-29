@@ -134,7 +134,7 @@ defmodule Heros.Cards.NecrosTest do
       | hand: [dagger],
         fight_zone: [lys, dark_reward],
         gold: 3,
-        pending_interactions: [sacrifice_from_hand_or_discard: 0]
+        pending_interactions: [sacrifice_from_hand_or_discard: %{amount: 1, combat_per_card: 0}]
     }
 
     assert Game.player(game, "p1") == p1
@@ -143,7 +143,7 @@ defmodule Heros.Cards.NecrosTest do
 
     # sacrifice from hand
     assert {:ok, game} =
-             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(dagger, 0)})
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, [elem(dagger, 0)]})
 
     p1 = %{p1 | pending_interactions: [], hand: []}
 
@@ -154,7 +154,7 @@ defmodule Heros.Cards.NecrosTest do
     {game, p1} = before_interact
 
     assert {:ok, game} =
-             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(gold2, 0)})
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, [elem(gold2, 0)]})
 
     p1 = %{p1 | pending_interactions: [], discard: [gold1]}
 
@@ -164,11 +164,12 @@ defmodule Heros.Cards.NecrosTest do
     # don't sacrifice
     {game, p1} = before_interact
 
-    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, nil})
+    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, []})
 
     p1 = %{p1 | pending_interactions: []}
 
     assert Game.player(game, "p1") == p1
+    assert game.cemetery == [shortsword]
 
     # ally
     assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(dark_reward, 0))
@@ -235,17 +236,18 @@ defmodule Heros.Cards.NecrosTest do
       | hand: [gold],
         fight_zone: [lys, death_touch],
         combat: 2,
-        pending_interactions: [sacrifice_from_hand_or_discard: 0]
+        pending_interactions: [sacrifice_from_hand_or_discard: %{amount: 1, combat_per_card: 0}]
     }
 
     assert Game.player(game, "p1") == p1
 
     # interact
-    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, nil})
+    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, []})
 
     p1 = %{p1 | pending_interactions: []}
 
     assert Game.player(game, "p1") == p1
+    assert game.cemetery == []
 
     # ally
     assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(death_touch, 0))
@@ -369,7 +371,7 @@ defmodule Heros.Cards.NecrosTest do
       | hand: [],
         fight_zone: [expended_krythos],
         combat: 3,
-        pending_interactions: [sacrifice_from_hand_or_discard: 3]
+        pending_interactions: [sacrifice_from_hand_or_discard: %{amount: 1, combat_per_card: 3}]
     }
 
     assert Game.player(game, "p1") == p1
@@ -378,7 +380,7 @@ defmodule Heros.Cards.NecrosTest do
 
     # use sacrifice
     assert {:ok, game} =
-             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(gold, 0)})
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, [elem(gold, 0)]})
 
     p1 = %{p1 | discard: [], pending_interactions: [], combat: 6}
 
@@ -388,11 +390,12 @@ defmodule Heros.Cards.NecrosTest do
     # don't use sacrifice
     {game, p1} = before_interact
 
-    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, nil})
+    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, []})
 
     p1 = %{p1 | pending_interactions: []}
 
     assert Game.player(game, "p1") == p1
+    assert game.cemetery == []
 
     # without card to sacrifice
 
@@ -441,14 +444,14 @@ defmodule Heros.Cards.NecrosTest do
       | hand: [gold],
         fight_zone: [lys, life_drain],
         combat: 8,
-        pending_interactions: [sacrifice_from_hand_or_discard: 0]
+        pending_interactions: [sacrifice_from_hand_or_discard: %{amount: 1, combat_per_card: 0}]
     }
 
     assert Game.player(game, "p1") == p1
 
     # interact
     assert {:ok, game} =
-             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(gold, 0)})
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, [elem(gold, 0)]})
 
     p1 = %{p1 | pending_interactions: [], hand: []}
 
@@ -494,14 +497,14 @@ defmodule Heros.Cards.NecrosTest do
       p1
       | fight_zone: [expended_lys],
         combat: 2,
-        pending_interactions: [sacrifice_from_hand_or_discard: 2]
+        pending_interactions: [sacrifice_from_hand_or_discard: %{amount: 1, combat_per_card: 2}]
     }
 
     assert Game.player(game, "p1") == p1
 
     # interact
     assert {:ok, game} =
-             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(gold, 0)})
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, [elem(gold, 0)]})
 
     p1 = %{p1 | pending_interactions: [], hand: [], combat: 4}
 
@@ -535,14 +538,14 @@ defmodule Heros.Cards.NecrosTest do
       | hand: [gold],
         fight_zone: [lys, the_rot],
         combat: 4,
-        pending_interactions: [sacrifice_from_hand_or_discard: 0]
+        pending_interactions: [sacrifice_from_hand_or_discard: %{amount: 1, combat_per_card: 0}]
     }
 
     assert Game.player(game, "p1") == p1
 
     # interact
     assert {:ok, game} =
-             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(gold, 0)})
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, [elem(gold, 0)]})
 
     p1 = %{p1 | pending_interactions: [], hand: []}
 
@@ -553,6 +556,116 @@ defmodule Heros.Cards.NecrosTest do
     assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(the_rot, 0))
 
     p1 = %{p1 | fight_zone: [lys, expended_the_rot], combat: 7}
+
+    assert Game.player(game, "p1") == p1
+  end
+
+  test "tyrannor" do
+    assert Card.cost(:tyrannor) == 8
+    assert Card.type(:tyrannor) == {:guard, 6}
+    assert Card.faction(:tyrannor) == :necros
+    assert Card.champion?(:tyrannor)
+    assert Card.guard?(:tyrannor)
+
+    [tyrannor] = Cards.with_id(:tyrannor)
+    [lys] = Cards.with_id(:lys)
+    [gold1, gold2] = Cards.with_id(:gold, 2)
+    [dagger] = Cards.with_id(:dagger)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = tyrannor
+    expended_tyrannor = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_tyrannor
+    full_expended_tyrannor = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hand: [gold1, gold2, tyrannor],
+        fight_zone: [lys],
+        discard: [dagger],
+        deck: [gem]
+    }
+
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(tyrannor, 0))
+
+    p1 = %{p1 | hand: [gold1, gold2], fight_zone: [lys, tyrannor]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(tyrannor, 0))
+
+    p1 = %{
+      p1
+      | fight_zone: [lys, expended_tyrannor],
+        combat: 4,
+        pending_interactions: [
+          sacrifice_from_hand_or_discard: %{amount: 2, combat_per_card: 0}
+        ]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    before_interact = {game, p1}
+
+    # can't sacrifice that many cards
+    assert :error =
+             Game.interact(
+               game,
+               "p1",
+               {:sacrifice_from_hand_or_discard,
+                [elem(gold1, 0), elem(gold2, 0), elem(dagger, 0)]}
+             )
+
+    # can't sacrifice the same card twice
+    assert :error =
+             Game.interact(
+               game,
+               "p1",
+               {:sacrifice_from_hand_or_discard, [elem(gold1, 0), elem(gold1, 0)]}
+             )
+
+    # interact 0
+    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, []})
+
+    p1 = %{p1 | pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # interact 1
+    {game, p1} = before_interact
+
+    assert {:ok, game} =
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, [elem(gold1, 0)]})
+
+    p1 = %{p1 | pending_interactions: [], hand: [gold2]}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [gold1]
+
+    # interact 2
+    {game, p1} = before_interact
+
+    assert {:ok, game} =
+             Game.interact(
+               game,
+               "p1",
+               {:sacrifice_from_hand_or_discard, [elem(gold1, 0), elem(dagger, 0)]}
+             )
+
+    p1 = %{p1 | pending_interactions: [], hand: [gold2], discard: []}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [dagger, gold1]
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(tyrannor, 0))
+
+    p1 = %{p1 | fight_zone: [lys, full_expended_tyrannor], hand: [gold2, gem], deck: []}
 
     assert Game.player(game, "p1") == p1
   end

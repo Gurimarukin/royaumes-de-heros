@@ -77,13 +77,13 @@ defmodule Heros.Cards.Necros do
   def primary_ability(game, :dark_reward, player_id) do
     game
     |> Game.add_gold(player_id, 3)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 0)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
   end
 
   def primary_ability(game, :death_touch, player_id) do
     game
     |> Game.add_combat(player_id, 2)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 0)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
   end
 
   def primary_ability(game, :influence, player_id) do
@@ -93,13 +93,13 @@ defmodule Heros.Cards.Necros do
   def primary_ability(game, :life_drain, player_id) do
     game
     |> Game.add_combat(player_id, 8)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 0)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
   end
 
   def primary_ability(game, :the_rot, player_id) do
     game
     |> Game.add_combat(player_id, 4)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 0)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -122,13 +122,19 @@ defmodule Heros.Cards.Necros do
   def expend_ability(game, :krythos, player_id, _card_id) do
     game
     |> Game.add_combat(player_id, 3)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 3)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id, combat_per_card: 3)
   end
 
   def expend_ability(game, :lys, player_id, _card_id) do
     game
     |> Game.add_combat(player_id, 2)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 2)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id, combat_per_card: 2)
+  end
+
+  def expend_ability(game, :tyrannor, player_id, _card_id) do
+    game
+    |> Game.add_combat(player_id, 4)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id, amount: 2)
   end
 
   def expend_ability(_game, _, _player_id, _card_id), do: nil
@@ -162,6 +168,10 @@ defmodule Heros.Cards.Necros do
 
   def ally_ability(game, :the_rot, player_id) do
     game |> Game.add_combat(player_id, 3)
+  end
+
+  def ally_ability(game, :tyrannor, player_id) do
+    game |> Game.draw_card(player_id, 1)
   end
 
   def ally_ability(_game, _, _player_id), do: nil

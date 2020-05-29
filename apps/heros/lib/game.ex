@@ -429,23 +429,23 @@ defmodule Heros.Game do
 
   defp interaction(
          game,
-         _player_id,
-         {:sacrifice_from_hand_or_discard, _combat_gained},
-         {:sacrifice_from_hand_or_discard, nil}
-       ),
-       do: Option.some(game)
-
-  defp interaction(
-         game,
          player_id,
-         {:sacrifice_from_hand_or_discard, combat_gained},
-         {:sacrifice_from_hand_or_discard, card_id}
+         {:sacrifice_from_hand_or_discard, args},
+         {:sacrifice_from_hand_or_discard, card_ids}
        ) do
-    with_member(game.players, player_id, fn player ->
-      sacrifice = sacrifice_from(game, player_id, card_id, combat_gained)
+    %{amount: amount, combat_per_card: combat_per_card} = args
 
-      sacrifice.(player.hand, &Player.remove_from_hand/2)
-      |> Option.alt(fn -> sacrifice.(player.discard, &Player.remove_from_discard/2) end)
+    game = Option.some(game) |> Option.filter(fn _ -> length(card_ids) <= amount end)
+
+    Enum.reduce(card_ids, game, fn card_id, acc ->
+      Option.chain(acc, fn game ->
+        with_member(game.players, player_id, fn player ->
+          sacrifice = sacrifice_from(game, player_id, card_id, combat_per_card)
+
+          sacrifice.(player.hand, &Player.remove_from_hand/2)
+          |> Option.alt(fn -> sacrifice.(player.discard, &Player.remove_from_discard/2) end)
+        end)
+      end)
     end)
   end
 
@@ -715,7 +715,17 @@ defmodule Heros.Game do
   end
 
   # combat_gained: combat gained when sacrificing a card
-  def queue_sacrifice_from_hand_or_discard(game, player_id, combat_gained) do
+  @spec queue_sacrifice_from_hand_or_discard(
+          Game.t(),
+          Player.id(),
+          nil | list({:amount, integer} | {:combat_per_card, integer})
+        ) :: Game.t()
+  def queue_sacrifice_from_hand_or_discard(game, player_id, opts \\ []) do
+    args = %{
+      amount: opts[:amount] || 1,
+      combat_per_card: opts[:combat_per_card] || 0
+    }
+
     case KeyListUtils.find(game.players, player_id) do
       nil ->
         game
@@ -724,7 +734,7 @@ defmodule Heros.Game do
         sacrificeable_cards = length(player.hand) + length(player.discard)
 
         if 1 <= sacrificeable_cards do
-          queue_interaction(game, player_id, {:sacrifice_from_hand_or_discard, combat_gained})
+          queue_interaction(game, player_id, {:sacrifice_from_hand_or_discard, args})
         else
           game
         end
