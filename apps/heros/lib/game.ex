@@ -427,6 +427,38 @@ defmodule Heros.Game do
     end)
   end
 
+  defp interaction(
+         game,
+         _player_id,
+         :sacrifice_from_hand_or_discard,
+         {:sacrifice_from_hand_or_discard, nil}
+       ),
+       do: Option.some(game)
+
+  defp interaction(
+         game,
+         player_id,
+         :sacrifice_from_hand_or_discard,
+         {:sacrifice_from_hand_or_discard, card_id}
+       ) do
+    with_member(game.players, player_id, fn player ->
+      with_member(player.hand, card_id, fn card ->
+        game
+        |> update_player(player_id, &Player.remove_from_hand(&1, card_id))
+        |> add_to_cemetery({card_id, card})
+        |> Option.some()
+      end)
+      |> Option.alt(fn ->
+        with_member(player.discard, card_id, fn card ->
+          game
+          |> update_player(player_id, &Player.remove_from_discard(&1, card_id))
+          |> add_to_cemetery({card_id, card})
+          |> Option.some()
+        end)
+      end)
+    end)
+  end
+
   defp interaction(_game, _player_id, _pending, _interaction), do: Option.none()
 
   defp stun_champion(game, {defender_id, defender}, {card_id, card}) do
@@ -510,10 +542,6 @@ defmodule Heros.Game do
     end
   end
 
-  def player(game, player_id), do: KeyListUtils.find(game.players, player_id)
-
-  def set_current_player(game, player_id), do: %{game | current_player: player_id}
-
   @spec next_player_alive(Game.t(), Player.id()) :: nil | Player.id()
   defp next_player_alive(game, player_id) do
     case Enum.find_index(game.players, fn {id, _} -> id == player_id end) do
@@ -568,6 +596,14 @@ defmodule Heros.Game do
           _ -> false
         end
     end
+  end
+
+  def player(game, player_id), do: KeyListUtils.find(game.players, player_id)
+
+  defp set_current_player(game, player_id), do: %{game | current_player: player_id}
+
+  defp add_to_cemetery(game, {card_id, card}) do
+    %{game | cemetery: [{card_id, card} | game.cemetery]}
   end
 
   # when you have to chose between two effects

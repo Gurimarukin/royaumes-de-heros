@@ -99,4 +99,82 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "dark_reward" do
+    assert Card.cost(:dark_reward) == 5
+    assert Card.type(:dark_reward) == :action
+    assert Card.faction(:dark_reward) == :necros
+    assert not Card.champion?(:dark_reward)
+    assert not Card.guard?(:dark_reward)
+
+    [dark_reward] = Cards.with_id(:dark_reward)
+    [lys] = Cards.with_id(:lys)
+    [gold1, gold2] = Cards.with_id(:gold, 2)
+    [dagger] = Cards.with_id(:dagger)
+    [shortsword] = Cards.with_id(:shortsword)
+
+    {id, card} = dark_reward
+    expended_dark_reward = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{
+      Player.empty()
+      | hand: [dagger, dark_reward],
+        fight_zone: [lys],
+        discard: [gold1, gold2]
+    }
+
+    p2 = Player.empty()
+    game = %{Game.empty([{"p1", p1}, {"p2", p2}], "p1") | cemetery: [shortsword]}
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(dark_reward, 0))
+
+    p1 = %{
+      p1
+      | hand: [dagger],
+        fight_zone: [lys, dark_reward],
+        gold: 3,
+        pending_interactions: [:sacrifice_from_hand_or_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    before_interact = {game, p1}
+
+    # sacrifice from hand
+    assert {:ok, game} =
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(dagger, 0)})
+
+    p1 = %{p1 | pending_interactions: [], hand: []}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [dagger, shortsword]
+
+    # sacrifice from discard
+    {game, p1} = before_interact
+
+    assert {:ok, game} =
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(gold2, 0)})
+
+    p1 = %{p1 | pending_interactions: [], discard: [gold1]}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [gold2, shortsword]
+
+    # don't sacrifice
+    {game, p1} = before_interact
+
+    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, nil})
+
+    p1 = %{p1 | pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(dark_reward, 0))
+
+    p1 = %{p1 | fight_zone: [lys, expended_dark_reward], combat: 6}
+
+    assert Game.player(game, "p1") == p1
+  end
 end

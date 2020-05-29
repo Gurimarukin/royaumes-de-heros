@@ -168,6 +168,11 @@ defmodule Heros.Player do
     %{player | discard: [{card_id, card} | player.discard]}
   end
 
+  @spec remove_from_discard(Player.t(), Card.id()) :: Player.t()
+  def remove_from_discard(player, card_id) do
+    %{player | discard: player.discard |> KeyListUtils.delete(card_id)}
+  end
+
   @spec card_cost_for_player(Player.t(), Card.t()) :: nil | integer
   def card_cost_for_player(_player, card) do
     Card.cost(card.key)

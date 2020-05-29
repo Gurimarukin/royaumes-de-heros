@@ -25,4 +25,12 @@ defmodule Heros.Option do
       :error -> :error
     end
   end
+
+  @spec alt({:ok, any} | :error, (() -> {:ok, any} | :error)) :: {:ok, any} | :error
+  def alt(opt, lazy_other) do
+    case opt do
+      {:ok, _} -> opt
+      :error -> lazy_other.()
+    end
+  end
 end
