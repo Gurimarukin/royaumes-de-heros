@@ -77,6 +77,10 @@ defmodule Heros.Cards.Wild do
     game |> Game.add_combat(player_id, 5)
   end
 
+  def expend_ability(game, :dire_wolf, player_id, _card_id) do
+    game |> Game.add_combat(player_id, 3)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
@@ -88,6 +92,10 @@ defmodule Heros.Cards.Wild do
 
   def ally_ability(game, :cron, player_id) do
     game |> Game.draw_card(player_id, 1)
+  end
+
+  def ally_ability(game, :dire_wolf, player_id) do
+    game |> Game.add_combat(player_id, 4)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
