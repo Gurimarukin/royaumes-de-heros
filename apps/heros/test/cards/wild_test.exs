@@ -221,6 +221,50 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "elven_curse" do
+    assert Card.cost(:elven_curse) == 3
+    assert Card.type(:elven_curse) == :action
+    assert Card.faction(:elven_curse) == :wild
+    assert not Card.champion?(:elven_curse)
+    assert not Card.guard?(:elven_curse)
+
+    [elven_curse] = Cards.with_id(:elven_curse)
+    [cron] = Cards.with_id(:cron)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = elven_curse
+    expended_elven_curse = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [elven_curse], fight_zone: [cron]}
+    p2 = %{Player.empty() | hand: [gem]}
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(elven_curse, 0))
+
+    p1 = %{
+      p1
+      | hand: [],
+        fight_zone: [cron, elven_curse],
+        combat: 6,
+        pending_interactions: [:target_opponent_to_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interact
+    assert {:ok, game} = Game.interact(game, "p1", {:target_opponent_to_discard, "p2"})
+
+    p1 = %{p1 | pending_interactions: []}
+    p2 = %{p2 | pending_interactions: [:discard_card]}
+
+    assert Game.player(game, "p2") == p2
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(elven_curse, 0))
+
+    p1 = %{p1 | fight_zone: [cron, expended_elven_curse], combat: 9}
+
+    assert Game.player(game, "p1") == p1
   end
 
   test "elven_gift" do

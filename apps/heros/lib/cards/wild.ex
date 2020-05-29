@@ -39,6 +39,7 @@ defmodule Heros.Cards.Wild do
   def type(:broelyn), do: {:not_guard, 6}
   def type(:cron), do: {:not_guard, 6}
   def type(:dire_wolf), do: {:guard, 5}
+  def type(:elven_curse), do: :action
   def type(:grak), do: {:guard, 7}
   def type(:orc_grunt), do: {:guard, 3}
   def type(:torgen), do: {:guard, 7}
@@ -64,6 +65,12 @@ defmodule Heros.Cards.Wild do
   # Primary ablilities
 
   @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def primary_ability(game, :elven_curse, player_id) do
+    game
+    |> Game.add_combat(player_id, 6)
+    |> Game.queue_target_opponent_to_discard(player_id)
+  end
+
   def primary_ability(_game, _, _player_id), do: nil
 
   # Expend abilities
@@ -96,6 +103,10 @@ defmodule Heros.Cards.Wild do
 
   def ally_ability(game, :dire_wolf, player_id) do
     game |> Game.add_combat(player_id, 4)
+  end
+
+  def ally_ability(game, :elven_curse, player_id) do
+    game |> Game.add_combat(player_id, 3)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
