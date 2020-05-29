@@ -307,4 +307,32 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "influence" do
+    assert Card.cost(:influence) == 2
+    assert Card.type(:influence) == :action
+    assert Card.faction(:influence) == :necros
+    assert not Card.champion?(:influence)
+    assert not Card.guard?(:influence)
+
+    [influence] = Cards.with_id(:influence)
+
+    p1 = %{Player.empty() | hand: [influence]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(influence, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [influence], gold: 3}
+
+    assert Game.player(game, "p1") == p1
+
+    # sacrifice
+    assert {:ok, game} = Game.use_sacrifice_ability(game, "p1", elem(influence, 0))
+
+    p1 = %{p1 | fight_zone: [], combat: 3}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [influence]
+  end
 end

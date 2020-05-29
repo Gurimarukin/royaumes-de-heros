@@ -42,6 +42,7 @@ defmodule Heros.Cards.Necros do
   def type(:death_cultist), do: {:guard, 3}
   def type(:death_touch), do: :action
   def type(:rayla), do: {:not_guard, 4}
+  def type(:influence), do: :action
   def type(:krythos), do: {:not_guard, 6}
   def type(:lys), do: {:guard, 5}
   def type(:tyrannor), do: {:guard, 6}
@@ -81,6 +82,10 @@ defmodule Heros.Cards.Necros do
     game
     |> Game.add_combat(player_id, 2)
     |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+  end
+
+  def primary_ability(game, :influence, player_id) do
+    game |> Game.add_gold(player_id, 3)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -130,5 +135,9 @@ defmodule Heros.Cards.Necros do
   # Sacrifice ability
 
   @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def sacrifice_ability(game, :influence, player_id) do
+    game |> Game.add_combat(player_id, 3)
+  end
+
   def sacrifice_ability(_game, _, _player_id), do: nil
 end
