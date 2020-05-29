@@ -265,4 +265,46 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "rayla" do
+    assert Card.cost(:rayla) == 4
+    assert Card.type(:rayla) == {:not_guard, 4}
+    assert Card.faction(:rayla) == :necros
+    assert Card.champion?(:rayla)
+    assert not Card.guard?(:rayla)
+
+    [rayla] = Cards.with_id(:rayla)
+    [lys] = Cards.with_id(:lys)
+    [gold] = Cards.with_id(:gold)
+
+    {id, card} = rayla
+    expended_rayla = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_rayla
+    full_expended_rayla = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [rayla], fight_zone: [lys], deck: [gold]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(rayla, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [lys, rayla]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(rayla, 0))
+
+    p1 = %{p1 | fight_zone: [lys, expended_rayla], combat: 3}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(rayla, 0))
+
+    p1 = %{p1 | fight_zone: [lys, full_expended_rayla], hand: [gold], deck: []}
+
+    assert Game.player(game, "p1") == p1
+  end
 end

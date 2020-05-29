@@ -96,6 +96,10 @@ defmodule Heros.Cards.Necros do
     game |> Game.add_combat(player_id, 2)
   end
 
+  def expend_ability(game, :rayla, player_id, _card_id) do
+    game |> Game.add_combat(player_id, 3)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
@@ -115,6 +119,10 @@ defmodule Heros.Cards.Necros do
 
   def ally_ability(game, :death_touch, player_id) do
     game |> Game.add_combat(player_id, 2)
+  end
+
+  def ally_ability(game, :rayla, player_id) do
+    game |> Game.draw_card(player_id, 1)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
