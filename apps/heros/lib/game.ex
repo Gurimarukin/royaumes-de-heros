@@ -352,10 +352,10 @@ defmodule Heros.Game do
 
   @spec interact(Game.t(), Player.id(), any) :: update()
   def interact(game, player_id, interaction) do
-    current_player_action(game, player_id, fn player ->
+    with_member(game.players, player_id, fn player ->
       case player.pending_interactions do
         [] ->
-          :error
+          Option.none()
 
         [head | tail] ->
           game
@@ -363,7 +363,7 @@ defmodule Heros.Game do
           |> interaction(player_id, head, interaction)
 
         _ ->
-          :error
+          Option.none()
       end
     end)
   end
@@ -449,6 +449,34 @@ defmodule Heros.Game do
     end)
   end
 
+  defp interaction(
+         game,
+         _attacker_id,
+         :target_opponent_to_discard,
+         {:target_opponent_to_discard, nil}
+       ),
+       do: Option.some(game)
+
+  defp interaction(
+         game,
+         _attacker_id,
+         :target_opponent_to_discard,
+         {:target_opponent_to_discard, defender_id}
+       ) do
+    with_member(game.players, defender_id, fn player ->
+      if length(player.hand) == 0 do
+        Option.none()
+      else
+        queue_discard_card(game, defender_id)
+        |> Option.some()
+      end
+    end)
+  end
+
+  defp interaction(game, player_id, :discard_card, {:discard_card, card_id}) do
+    discard_card(game, player_id, card_id, fn _ -> true end)
+  end
+
   defp interaction(_game, _player_id, _pending, _interaction), do: Option.none()
 
   defp stun_champion(game, {defender_id, defender}, {card_id, card}) do
@@ -518,6 +546,22 @@ defmodule Heros.Game do
     end
   end
 
+  defp discard_card(game, player_id, card_id, filter) do
+    with_member(game.players, player_id, fn player ->
+      with_member(player.hand, card_id, fn card ->
+        game
+        |> update_player(
+          player_id,
+          &(&1
+            |> Player.remove_from_hand(card_id)
+            |> Player.add_to_discard({card_id, card}))
+        )
+        |> Option.some()
+        |> Option.filter(fn _ -> filter.(card) end)
+      end)
+    end)
+  end
+
   # Discard phase (no real reason to separate it from Draw phase, but well...)
 
   @spec discard_phase(Game.t(), Player.id()) :: update()
@@ -576,10 +620,7 @@ defmodule Heros.Game do
   # player_id needs to be current player
   defp current_player_action(game, player_id, f) do
     if game.current_player == player_id do
-      case player(game, player_id) do
-        nil -> Option.none()
-        p -> f.(p)
-      end
+      with_member(game.players, player_id, f)
     else
       Option.none()
     end
@@ -730,14 +771,14 @@ defmodule Heros.Game do
   end
 
   def queue_stun_champion(game, player_id) do
-    are_targetable_champions =
+    targetable_champion? =
       Enum.any?(game.players, fn {other_player_id, other_player} ->
         # next_to_player? makes sure that other_player is alive
         Game.next_to_player?(game, player_id, other_player_id) and
           Enum.any?(other_player.fight_zone, fn {_, c} -> Card.champion?(c.key) end)
       end)
 
-    if are_targetable_champions do
+    if targetable_champion? do
       game |> queue_interaction(player_id, :stun_champion)
     else
       game
@@ -797,6 +838,25 @@ defmodule Heros.Game do
         player |> Player.queue_interaction({:sacrifice_from_hand_or_discard, args})
       end
     end)
+  end
+
+  def queue_target_opponent_to_discard(game, player_id) do
+    targetable_player? =
+      Enum.any?(game.players, fn {other_player_id, other_player} ->
+        # next_to_player? makes sure that other_player is alive
+        Game.next_to_player?(game, player_id, other_player_id) and
+          0 < length(other_player.hand)
+      end)
+
+    if targetable_player? do
+      game |> queue_interaction(player_id, :target_opponent_to_discard)
+    else
+      game
+    end
+  end
+
+  defp queue_discard_card(game, player_id) do
+    game |> queue_interaction(player_id, :discard_card)
   end
 
   def add_temporary_effect(game, player_id, effect) do

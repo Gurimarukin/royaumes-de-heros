@@ -69,11 +69,19 @@ defmodule Heros.Cards.Wild do
   # Expend abilities
 
   @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
+  def expend_ability(game, :broelyn, player_id, _card_id) do
+    game |> Game.add_gold(player_id, 2)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
 
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def ally_ability(game, :broelyn, player_id) do
+    game |> Game.queue_target_opponent_to_discard(player_id)
+  end
+
   def ally_ability(_game, _, _player_id), do: nil
 
   # Sacrifice ability

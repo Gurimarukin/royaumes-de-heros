@@ -193,7 +193,13 @@ defmodule Heros.Player do
         combat: 0,
         hand: [],
         discard: Enum.reverse(player.hand) ++ Enum.reverse(non_champions) ++ player.discard,
-        fight_zone: champions |> KeyListUtils.map(&Card.prepare/1)
+        fight_zone:
+          champions
+          |> KeyListUtils.map(fn champion ->
+            champion
+            |> Card.prepare()
+            |> Card.reset_ally_ability()
+          end)
     }
   end
 
