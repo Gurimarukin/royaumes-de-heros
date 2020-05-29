@@ -442,19 +442,9 @@ defmodule Heros.Game do
          {:sacrifice_from_hand_or_discard, card_id}
        ) do
     with_member(game.players, player_id, fn player ->
-      with_member(player.hand, card_id, fn card ->
-        game
-        |> update_player(player_id, &Player.remove_from_hand(&1, card_id))
-        |> add_to_cemetery({card_id, card})
-        |> Option.some()
-      end)
+      sacrifice_from(game, player_id, player.hand, &Player.remove_from_hand/2, card_id)
       |> Option.alt(fn ->
-        with_member(player.discard, card_id, fn card ->
-          game
-          |> update_player(player_id, &Player.remove_from_discard(&1, card_id))
-          |> add_to_cemetery({card_id, card})
-          |> Option.some()
-        end)
+        sacrifice_from(game, player_id, player.discard, &Player.remove_from_discard/2, card_id)
       end)
     end)
   end
@@ -477,6 +467,22 @@ defmodule Heros.Game do
       nil ->
         Option.none()
     end
+  end
+
+  @spec sacrifice_from(
+          Game.t(),
+          Player.id(),
+          list({Card.id(), Card.t()}),
+          (Player.t(), Card.id() -> Player.t()),
+          Card.id()
+        ) :: {:ok, Game.t()} | :error
+  defp sacrifice_from(game, player_id, cards, remove, card_id) do
+    with_member(cards, card_id, fn card ->
+      game
+      |> update_player(player_id, &remove.(&1, card_id))
+      |> add_to_cemetery({card_id, card})
+      |> Option.some()
+    end)
   end
 
   # Discard phase (no real reason to separate it from Draw phase, but well...)
