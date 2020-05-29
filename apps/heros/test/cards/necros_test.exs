@@ -177,4 +177,35 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "death_cultist" do
+    assert Card.cost(:death_cultist) == 2
+    assert Card.type(:death_cultist) == {:guard, 3}
+    assert Card.faction(:death_cultist) == :necros
+    assert Card.champion?(:death_cultist)
+    assert Card.guard?(:death_cultist)
+
+    [death_cultist] = Cards.with_id(:death_cultist)
+
+    {id, card} = death_cultist
+    expended_death_cultist = {id, %{card | expend_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [death_cultist]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(death_cultist, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [death_cultist]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(death_cultist, 0))
+
+    p1 = %{p1 | fight_zone: [expended_death_cultist], combat: 2}
+
+    assert Game.player(game, "p1") == p1
+  end
 end
