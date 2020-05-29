@@ -329,8 +329,7 @@ defmodule Heros.GameTest do
     assert Game.discard_phase(game, "p3") == :error
 
     # can't do anything else than calling draw_phase
-    assert Game.use_expend_ability(game, "p3", elem(lys, 0)) ==
-             :error
+    assert Game.use_expend_ability(game, "p3", elem(lys, 0)) == :error
 
     p3 = %Player{
       pending_interactions: [],

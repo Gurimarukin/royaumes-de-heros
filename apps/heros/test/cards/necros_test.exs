@@ -462,4 +462,50 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "lys" do
+    assert Card.cost(:lys) == 6
+    assert Card.type(:lys) == {:guard, 5}
+    assert Card.faction(:lys) == :necros
+    assert Card.champion?(:lys)
+    assert Card.guard?(:lys)
+
+    [lys] = Cards.with_id(:lys)
+    [gold] = Cards.with_id(:gold)
+
+    {id, card} = lys
+    expended_lys = {id, %{card | expend_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [gold, lys]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(lys, 0))
+
+    p1 = %{p1 | hand: [gold], fight_zone: [lys]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(lys, 0))
+
+    p1 = %{
+      p1
+      | fight_zone: [expended_lys],
+        combat: 2,
+        pending_interactions: [sacrifice_from_hand_or_discard: 2]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interact
+    assert {:ok, game} =
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(gold, 0)})
+
+    p1 = %{p1 | pending_interactions: [], hand: [], combat: 4}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [gold]
+  end
 end

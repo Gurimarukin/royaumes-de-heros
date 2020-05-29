@@ -118,6 +118,12 @@ defmodule Heros.Cards.Necros do
     |> Game.queue_sacrifice_from_hand_or_discard(player_id, 3)
   end
 
+  def expend_ability(game, :lys, player_id, _card_id) do
+    game
+    |> Game.add_combat(player_id, 2)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 2)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities

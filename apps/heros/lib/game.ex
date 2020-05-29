@@ -536,9 +536,13 @@ defmodule Heros.Game do
   # player_id needs to be current player and no interaction is pending
   defp main_phase_action(game, player_id, f) do
     current_player_action(game, player_id, fn player ->
-      case player.pending_interactions do
-        [] -> f.(player)
-        _ -> Option.none()
+      if player.discard_phase_done do
+        Option.none()
+      else
+        case player.pending_interactions do
+          [] -> f.(player)
+          _ -> Option.none()
+        end
       end
     end)
   end
