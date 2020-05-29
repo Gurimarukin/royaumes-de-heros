@@ -138,6 +138,45 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "cron" do
+    assert Card.cost(:cron) == 6
+    assert Card.type(:cron) == {:not_guard, 6}
+    assert Card.faction(:cron) == :wild
+    assert Card.champion?(:cron)
+    assert not Card.guard?(:cron)
+
+    [cron] = Cards.with_id(:cron)
+    [broelyn] = Cards.with_id(:broelyn)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = cron
+    expended_cron = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_cron
+    full_expended_cron = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [cron], fight_zone: [broelyn], discard: [gem]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(cron, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [broelyn, cron]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(cron, 0))
+
+    p1 = %{p1 | fight_zone: [broelyn, expended_cron], combat: 5}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(cron, 0))
+
+    p1 = %{p1 | fight_zone: [broelyn, full_expended_cron], hand: [gem], discard: []}
+
+    assert Game.player(game, "p1") == p1
   end
 
   test "dire_wolf" do

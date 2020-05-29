@@ -73,6 +73,10 @@ defmodule Heros.Cards.Wild do
     game |> Game.add_gold(player_id, 2)
   end
 
+  def expend_ability(game, :cron, player_id, _card_id) do
+    game |> Game.add_combat(player_id, 5)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
@@ -80,6 +84,10 @@ defmodule Heros.Cards.Wild do
   @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def ally_ability(game, :broelyn, player_id) do
     game |> Game.queue_target_opponent_to_discard(player_id)
+  end
+
+  def ally_ability(game, :cron, player_id) do
+    game |> Game.draw_card(player_id, 1)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
