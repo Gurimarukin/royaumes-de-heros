@@ -705,8 +705,12 @@ defmodule Heros.Game do
     update_player(game, player_id, &Player.draw_cards(&1, amount))
   end
 
-  def queue_interaction(game, player_id, interaction) do
+  defp queue_interaction(game, player_id, interaction) do
     update_player(game, player_id, &Player.queue_interaction(&1, interaction))
+  end
+
+  def queue_select_effect(game, player_id, effects) do
+    queue_interaction(game, player_id, {:select_effect, effects})
   end
 
   def queue_prepare_champion(game, player_id) do
@@ -734,7 +738,7 @@ defmodule Heros.Game do
       end)
 
     if are_targetable_champions do
-      game |> Game.queue_interaction(player_id, :stun_champion)
+      game |> queue_interaction(player_id, :stun_champion)
     else
       game
     end

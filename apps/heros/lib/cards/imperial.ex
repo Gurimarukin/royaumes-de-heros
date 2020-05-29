@@ -132,7 +132,7 @@ defmodule Heros.Cards.Imperial do
   end
 
   def expend_ability(game, :darian, player_id, _card_id) do
-    game |> Game.queue_interaction(player_id, {:select_effect, [add_combat: 3, heal: 4]})
+    game |> Game.queue_select_effect(player_id, add_combat: 3, heal: 4)
   end
 
   def expend_ability(game, :cristov, player_id, _card_id) do
@@ -168,11 +168,7 @@ defmodule Heros.Cards.Imperial do
   end
 
   def expend_ability(game, :tithe_priest, player_id, _card_id) do
-    game
-    |> Game.queue_interaction(
-      player_id,
-      {:select_effect, [add_gold: 1, heal_for_champions: {0, 1}]}
-    )
+    game |> Game.queue_select_effect(player_id, add_gold: 1, heal_for_champions: {0, 1})
   end
 
   def expend_ability(_game, _, _player_id, _card_id), do: nil

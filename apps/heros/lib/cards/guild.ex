@@ -137,7 +137,7 @@ defmodule Heros.Cards.Guild do
   end
 
   def expend_ability(game, :street_thug, player_id, _card_id) do
-    game |> Game.queue_interaction(player_id, {:select_effect, [add_gold: 1, add_combat: 2]})
+    game |> Game.queue_select_effect(player_id, add_gold: 1, add_combat: 2)
   end
 
   def expend_ability(_game, _, _player_id, _card_id), do: nil

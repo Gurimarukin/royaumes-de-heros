@@ -108,7 +108,7 @@ defmodule Heros.Cards.Necros do
 
   @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
   def expend_ability(game, :cult_priest, player_id, _card_id) do
-    game |> Game.queue_interaction(player_id, {:select_effect, [add_gold: 1, add_combat: 1]})
+    game |> Game.queue_select_effect(player_id, add_gold: 1, add_combat: 1)
   end
 
   def expend_ability(game, :death_cultist, player_id, _card_id) do
