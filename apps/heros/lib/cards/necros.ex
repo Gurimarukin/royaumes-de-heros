@@ -75,13 +75,13 @@ defmodule Heros.Cards.Necros do
   def primary_ability(game, :dark_reward, player_id) do
     game
     |> Game.add_gold(player_id, 3)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 0)
   end
 
   def primary_ability(game, :death_touch, player_id) do
     game
     |> Game.add_combat(player_id, 2)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 0)
   end
 
   def primary_ability(game, :influence, player_id) do
@@ -103,6 +103,12 @@ defmodule Heros.Cards.Necros do
 
   def expend_ability(game, :rayla, player_id, _card_id) do
     game |> Game.add_combat(player_id, 3)
+  end
+
+  def expend_ability(game, :krythos, player_id, _card_id) do
+    game
+    |> Game.add_combat(player_id, 3)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 3)
   end
 
   def expend_ability(_game, _, _player_id, _card_id), do: nil

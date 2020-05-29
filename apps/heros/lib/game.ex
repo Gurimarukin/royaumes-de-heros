@@ -430,7 +430,7 @@ defmodule Heros.Game do
   defp interaction(
          game,
          _player_id,
-         :sacrifice_from_hand_or_discard,
+         {:sacrifice_from_hand_or_discard, _combat_gained},
          {:sacrifice_from_hand_or_discard, nil}
        ),
        do: Option.some(game)
@@ -438,14 +438,14 @@ defmodule Heros.Game do
   defp interaction(
          game,
          player_id,
-         :sacrifice_from_hand_or_discard,
+         {:sacrifice_from_hand_or_discard, combat_gained},
          {:sacrifice_from_hand_or_discard, card_id}
        ) do
     with_member(game.players, player_id, fn player ->
-      sacrifice_from(game, player_id, player.hand, &Player.remove_from_hand/2, card_id)
-      |> Option.alt(fn ->
-        sacrifice_from(game, player_id, player.discard, &Player.remove_from_discard/2, card_id)
-      end)
+      sacrifice = sacrifice_from(game, player_id, card_id, combat_gained)
+
+      sacrifice.(player.hand, &Player.remove_from_hand/2)
+      |> Option.alt(fn -> sacrifice.(player.discard, &Player.remove_from_discard/2) end)
     end)
   end
 
@@ -472,17 +472,24 @@ defmodule Heros.Game do
   @spec sacrifice_from(
           Game.t(),
           Player.id(),
-          list({Card.id(), Card.t()}),
-          (Player.t(), Card.id() -> Player.t()),
-          Card.id()
-        ) :: {:ok, Game.t()} | :error
-  defp sacrifice_from(game, player_id, cards, remove, card_id) do
-    with_member(cards, card_id, fn card ->
-      game
-      |> update_player(player_id, &remove.(&1, card_id))
-      |> add_to_cemetery({card_id, card})
-      |> Option.some()
-    end)
+          Card.id(),
+          integer
+        ) ::
+          (list({Card.id(), Card.t()}), (Player.t(), Card.id() -> Player.t()) ->
+             {:ok, Game.t()} | :error)
+  defp sacrifice_from(game, player_id, card_id, combat_gained) do
+    fn cards, remove ->
+      with_member(cards, card_id, fn card ->
+        game
+        |> update_player(player_id, fn player ->
+          player
+          |> remove.(card_id)
+          |> Player.incr_combat(combat_gained)
+        end)
+        |> add_to_cemetery({card_id, card})
+        |> Option.some()
+      end)
+    end
   end
 
   # Discard phase (no real reason to separate it from Draw phase, but well...)
@@ -703,7 +710,7 @@ defmodule Heros.Game do
     end
   end
 
-  def queue_sacrifice_from_hand_or_discard(game, player_id) do
+  def queue_sacrifice_from_hand_or_discard(game, player_id, combat_gained) do
     case KeyListUtils.find(game.players, player_id) do
       nil ->
         game
@@ -712,7 +719,7 @@ defmodule Heros.Game do
         sacrificeable_cards = length(player.hand) + length(player.discard)
 
         if 1 <= sacrificeable_cards do
-          queue_interaction(game, player_id, :sacrifice_from_hand_or_discard)
+          queue_interaction(game, player_id, {:sacrifice_from_hand_or_discard, combat_gained})
         else
           game
         end

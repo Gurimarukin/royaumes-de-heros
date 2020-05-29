@@ -134,7 +134,7 @@ defmodule Heros.Cards.NecrosTest do
       | hand: [dagger],
         fight_zone: [lys, dark_reward],
         gold: 3,
-        pending_interactions: [:sacrifice_from_hand_or_discard]
+        pending_interactions: [sacrifice_from_hand_or_discard: 0]
     }
 
     assert Game.player(game, "p1") == p1
@@ -235,7 +235,7 @@ defmodule Heros.Cards.NecrosTest do
       | hand: [gold],
         fight_zone: [lys, death_touch],
         combat: 2,
-        pending_interactions: [:sacrifice_from_hand_or_discard]
+        pending_interactions: [sacrifice_from_hand_or_discard: 0]
     }
 
     assert Game.player(game, "p1") == p1
@@ -334,5 +334,83 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
     assert game.cemetery == [influence]
+  end
+
+  test "krythos" do
+    assert Card.cost(:krythos) == 7
+    assert Card.type(:krythos) == {:not_guard, 6}
+    assert Card.faction(:krythos) == :necros
+    assert Card.champion?(:krythos)
+    assert not Card.guard?(:krythos)
+
+    [krythos] = Cards.with_id(:krythos)
+    [gold] = Cards.with_id(:gold)
+
+    {id, card} = krythos
+    expended_krythos = {id, %{card | expend_ability_used: true}}
+
+    # with card in discard
+
+    p1 = %{Player.empty() | hand: [krythos], discard: [gold]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(krythos, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [krythos]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(krythos, 0))
+
+    p1 = %{
+      p1
+      | hand: [],
+        fight_zone: [expended_krythos],
+        combat: 3,
+        pending_interactions: [sacrifice_from_hand_or_discard: 3]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    before_interact = {game, p1}
+
+    # use sacrifice
+    assert {:ok, game} =
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(gold, 0)})
+
+    p1 = %{p1 | discard: [], pending_interactions: [], combat: 6}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [gold]
+
+    # don't use sacrifice
+    {game, p1} = before_interact
+
+    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, nil})
+
+    p1 = %{p1 | pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # without card to sacrifice
+
+    p1 = %{Player.empty() | hand: [krythos]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(krythos, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [krythos]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(krythos, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [expended_krythos], combat: 3}
+
+    assert Game.player(game, "p1") == p1
   end
 end
