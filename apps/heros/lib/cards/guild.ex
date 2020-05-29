@@ -106,7 +106,7 @@ defmodule Heros.Cards.Guild do
   def primary_ability(game, :smash_and_grab, player_id) do
     game
     |> Game.add_combat(player_id, 6)
-    |> Game.queue_interaction(player_id, :put_card_from_discard_to_deck)
+    |> Game.queue_put_card_from_discard_to_deck(player_id)
   end
 
   def primary_ability(_game, _, _player_id), do: nil

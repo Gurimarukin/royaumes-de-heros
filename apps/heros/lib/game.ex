@@ -5,6 +5,7 @@ defmodule Heros.Game do
 
   alias Heros.{Cards, Game, KeyListUtils, Option, Player}
   alias Heros.Cards.Card
+  alias Heros.Game.Helpers
 
   @type t :: %__MODULE__{
           players: list({Player.id(), Player.t()}),
@@ -404,7 +405,12 @@ defmodule Heros.Game do
          :put_card_from_discard_to_deck,
          {:put_card_from_discard_to_deck, card_id}
        ) do
-    put_card_from_discard_to_deck(game, player_id, card_id, fn _ -> true end)
+    put_card_from_discard_to_deck(
+      game,
+      player_id,
+      card_id,
+      Helpers.interaction_filter(:put_card_from_discard_to_deck)
+    )
   end
 
   defp interaction(
@@ -413,7 +419,12 @@ defmodule Heros.Game do
          :put_champion_from_discard_to_deck,
          {:put_champion_from_discard_to_deck, card_id}
        ) do
-    put_card_from_discard_to_deck(game, player_id, card_id, &Card.champion?(&1.key))
+    put_card_from_discard_to_deck(
+      game,
+      player_id,
+      card_id,
+      Helpers.interaction_filter(:put_champion_from_discard_to_deck)
+    )
   end
 
   defp interaction(
@@ -729,9 +740,29 @@ defmodule Heros.Game do
     end
   end
 
+  def queue_put_card_from_discard_to_deck(game, player_id) do
+    update_player(game, player_id, fn player ->
+      cards_in_discard =
+        KeyListUtils.count(
+          player.discard,
+          Helpers.interaction_filter(:put_card_from_discard_to_deck)
+        )
+
+      if cards_in_discard == 0 do
+        player
+      else
+        player |> Player.queue_interaction(:put_card_from_discard_to_deck)
+      end
+    end)
+  end
+
   def queue_put_champion_from_discard_to_deck(game, player_id) do
     update_player(game, player_id, fn player ->
-      champions_in_discard = KeyListUtils.count(player.discard, &Card.champion?(&1.key))
+      champions_in_discard =
+        KeyListUtils.count(
+          player.discard,
+          Helpers.interaction_filter(:put_champion_from_discard_to_deck)
+        )
 
       if champions_in_discard == 0 do
         player

@@ -587,6 +587,8 @@ defmodule Heros.Cards.GuildTest do
     [arkus] = Cards.with_id(:arkus)
     [gem] = Cards.with_id(:gem)
 
+    # with discarded cards
+
     p1 = %{Player.empty() | hand: [smash_and_grab], deck: [gem], discard: [tithe_priest, arkus]}
     p2 = Player.empty()
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
@@ -625,6 +627,19 @@ defmodule Heros.Cards.GuildTest do
     assert {:ok, game} = Game.interact(game, "p1", {:put_card_from_discard_to_deck, nil})
 
     p1 = %{p1 | pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # without discarded cards
+
+    p1 = %{Player.empty() | hand: [smash_and_grab], deck: [gem], discard: []}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(smash_and_grab, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [smash_and_grab], combat: 6}
 
     assert Game.player(game, "p1") == p1
   end
