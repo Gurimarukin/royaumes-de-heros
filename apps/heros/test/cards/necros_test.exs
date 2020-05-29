@@ -413,4 +413,53 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "life_drain" do
+    assert Card.cost(:life_drain) == 6
+    assert Card.type(:life_drain) == :action
+    assert Card.faction(:life_drain) == :necros
+    assert not Card.champion?(:life_drain)
+    assert not Card.guard?(:life_drain)
+
+    [life_drain] = Cards.with_id(:life_drain)
+    [lys] = Cards.with_id(:lys)
+    [gem] = Cards.with_id(:gem)
+    [gold] = Cards.with_id(:gold)
+
+    {id, card} = life_drain
+    expended_life_drain = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [gold, life_drain], fight_zone: [lys], deck: [gem]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(life_drain, 0))
+
+    p1 = %{
+      p1
+      | hand: [gold],
+        fight_zone: [lys, life_drain],
+        combat: 8,
+        pending_interactions: [sacrifice_from_hand_or_discard: 0]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interact
+    assert {:ok, game} =
+             Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, elem(gold, 0)})
+
+    p1 = %{p1 | pending_interactions: [], hand: []}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [gold]
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(life_drain, 0))
+
+    p1 = %{p1 | fight_zone: [lys, expended_life_drain], hand: [gem], deck: []}
+
+    assert Game.player(game, "p1") == p1
+  end
 end

@@ -710,6 +710,7 @@ defmodule Heros.Game do
     end
   end
 
+  # combat_gained: combat gained when sacrificing a card
   def queue_sacrifice_from_hand_or_discard(game, player_id, combat_gained) do
     case KeyListUtils.find(game.players, player_id) do
       nil ->

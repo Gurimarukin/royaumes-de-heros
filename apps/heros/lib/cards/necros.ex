@@ -44,6 +44,7 @@ defmodule Heros.Cards.Necros do
   def type(:rayla), do: {:not_guard, 4}
   def type(:influence), do: :action
   def type(:krythos), do: {:not_guard, 6}
+  def type(:life_drain), do: :action
   def type(:lys), do: {:guard, 5}
   def type(:tyrannor), do: {:guard, 6}
   def type(:varrick), do: {:not_guard, 3}
@@ -86,6 +87,12 @@ defmodule Heros.Cards.Necros do
 
   def primary_ability(game, :influence, player_id) do
     game |> Game.add_gold(player_id, 3)
+  end
+
+  def primary_ability(game, :life_drain, player_id) do
+    game
+    |> Game.add_combat(player_id, 8)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 0)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -133,6 +140,10 @@ defmodule Heros.Cards.Necros do
   end
 
   def ally_ability(game, :rayla, player_id) do
+    game |> Game.draw_card(player_id, 1)
+  end
+
+  def ally_ability(game, :life_drain, player_id) do
     game |> Game.draw_card(player_id, 1)
   end
 
