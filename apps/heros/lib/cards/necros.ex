@@ -40,6 +40,7 @@ defmodule Heros.Cards.Necros do
   def type(:dark_energy), do: :action
   def type(:dark_reward), do: :action
   def type(:death_cultist), do: {:guard, 3}
+  def type(:death_touch), do: :action
   def type(:rayla), do: {:not_guard, 4}
   def type(:krythos), do: {:not_guard, 6}
   def type(:lys), do: {:guard, 5}
@@ -73,7 +74,13 @@ defmodule Heros.Cards.Necros do
   def primary_ability(game, :dark_reward, player_id) do
     game
     |> Game.add_gold(player_id, 3)
-    |> Game.queue_interaction(player_id, :sacrifice_from_hand_or_discard)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+  end
+
+  def primary_ability(game, :death_touch, player_id) do
+    game
+    |> Game.add_combat(player_id, 2)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -104,6 +111,10 @@ defmodule Heros.Cards.Necros do
 
   def ally_ability(game, :dark_reward, player_id) do
     game |> Game.add_combat(player_id, 6)
+  end
+
+  def ally_ability(game, :death_touch, player_id) do
+    game |> Game.add_combat(player_id, 2)
   end
 
   def ally_ability(_game, _, _player_id), do: nil

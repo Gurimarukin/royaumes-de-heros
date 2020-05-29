@@ -208,4 +208,61 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "death_touch" do
+    assert Card.cost(:death_touch) == 1
+    assert Card.type(:death_touch) == :action
+    assert Card.faction(:death_touch) == :necros
+    assert not Card.champion?(:death_touch)
+    assert not Card.guard?(:death_touch)
+
+    [death_touch] = Cards.with_id(:death_touch)
+    [lys] = Cards.with_id(:lys)
+    [gold] = Cards.with_id(:gold)
+
+    {id, card} = death_touch
+    expended_death_touch = {id, %{card | ally_ability_used: true}}
+
+    # primary with cards in hand or discard
+    p1 = %{Player.empty() | hand: [gold, death_touch], fight_zone: [lys]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(death_touch, 0))
+
+    p1 = %{
+      p1
+      | hand: [gold],
+        fight_zone: [lys, death_touch],
+        combat: 2,
+        pending_interactions: [:sacrifice_from_hand_or_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interact
+    assert {:ok, game} = Game.interact(game, "p1", {:sacrifice_from_hand_or_discard, nil})
+
+    p1 = %{p1 | pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(death_touch, 0))
+
+    p1 = %{p1 | fight_zone: [lys, expended_death_touch], combat: 4}
+
+    assert Game.player(game, "p1") == p1
+
+    # primary without cards in hand or discard
+    p1 = %{Player.empty() | hand: [death_touch], fight_zone: [lys]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(death_touch, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [lys, death_touch], combat: 2}
+
+    assert Game.player(game, "p1") == p1
+  end
 end

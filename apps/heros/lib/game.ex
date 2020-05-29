@@ -697,6 +697,22 @@ defmodule Heros.Game do
     end
   end
 
+  def queue_sacrifice_from_hand_or_discard(game, player_id) do
+    case KeyListUtils.find(game.players, player_id) do
+      nil ->
+        game
+
+      player ->
+        sacrificeable_cards = length(player.hand) + length(player.discard)
+
+        if 1 <= sacrificeable_cards do
+          queue_interaction(game, player_id, :sacrifice_from_hand_or_discard)
+        else
+          game
+        end
+    end
+  end
+
   def add_temporary_effect(game, player_id, effect) do
     update_player(game, player_id, &Player.add_temporary_effect(&1, effect))
   end
