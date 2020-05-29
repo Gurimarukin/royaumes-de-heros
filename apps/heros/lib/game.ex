@@ -400,31 +400,20 @@ defmodule Heros.Game do
 
   defp interaction(
          game,
-         _player_id,
-         :put_card_from_discard_to_deck,
-         {:put_card_from_discard_to_deck, nil}
-       ),
-       do: Option.some(game)
-
-  defp interaction(
-         game,
          player_id,
          :put_card_from_discard_to_deck,
          {:put_card_from_discard_to_deck, card_id}
        ) do
-    with_member(game.players, player_id, fn player ->
-      with_member(player.discard, card_id, fn card ->
-        game
-        |> update_player(player_id, fn player ->
-          %{
-            player
-            | deck: [{card_id, card} | player.deck],
-              discard: player.discard |> KeyListUtils.delete(card_id)
-          }
-        end)
-        |> Option.some()
-      end)
-    end)
+    put_card_from_discard_to_deck(game, player_id, card_id, fn _ -> true end)
+  end
+
+  defp interaction(
+         game,
+         player_id,
+         :put_champion_from_discard_to_deck,
+         {:put_champion_from_discard_to_deck, card_id}
+       ) do
+    put_card_from_discard_to_deck(game, player_id, card_id, &Card.champion?(&1.key))
   end
 
   defp interaction(
@@ -467,6 +456,32 @@ defmodule Heros.Game do
       nil ->
         Option.none()
     end
+  end
+
+  @spec put_card_from_discard_to_deck(
+          Game.t(),
+          Player.id(),
+          nil | Card.id(),
+          (Card.t() -> boolean)
+        ) ::
+          {:ok, Game.t()} | :error
+  defp put_card_from_discard_to_deck(game, _player_id, nil, _filter), do: Option.some(game)
+
+  defp put_card_from_discard_to_deck(game, player_id, card_id, filter) do
+    with_member(game.players, player_id, fn player ->
+      with_member(player.discard, card_id, fn card ->
+        game
+        |> update_player(player_id, fn player ->
+          %{
+            player
+            | deck: [{card_id, card} | player.deck],
+              discard: player.discard |> KeyListUtils.delete(card_id)
+          }
+        end)
+        |> Option.some()
+        |> Option.filter(fn _ -> filter.(card) end)
+      end)
+    end)
   end
 
   @spec sacrifice_from(
@@ -714,6 +729,18 @@ defmodule Heros.Game do
     end
   end
 
+  def queue_put_champion_from_discard_to_deck(game, player_id) do
+    update_player(game, player_id, fn player ->
+      champions_in_discard = KeyListUtils.count(player.discard, &Card.champion?(&1.key))
+
+      if champions_in_discard == 0 do
+        player
+      else
+        player |> Player.queue_interaction(:put_champion_from_discard_to_deck)
+      end
+    end)
+  end
+
   # combat_gained: combat gained when sacrificing a card
   @spec queue_sacrifice_from_hand_or_discard(
           Game.t(),
@@ -726,19 +753,15 @@ defmodule Heros.Game do
       combat_per_card: opts[:combat_per_card] || 0
     }
 
-    case KeyListUtils.find(game.players, player_id) do
-      nil ->
-        game
+    update_player(game, player_id, fn player ->
+      sacrificeable_cards = length(player.hand) + length(player.discard)
 
-      player ->
-        sacrificeable_cards = length(player.hand) + length(player.discard)
-
-        if 1 <= sacrificeable_cards do
-          queue_interaction(game, player_id, {:sacrifice_from_hand_or_discard, args})
-        else
-          game
-        end
-    end
+      if sacrificeable_cards == 0 do
+        player
+      else
+        player |> Player.queue_interaction({:sacrifice_from_hand_or_discard, args})
+      end
+    end)
   end
 
   def add_temporary_effect(game, player_id, effect) do

@@ -137,6 +137,10 @@ defmodule Heros.Cards.Necros do
     |> Game.queue_sacrifice_from_hand_or_discard(player_id, amount: 2)
   end
 
+  def expend_ability(game, :varrick, player_id, _card_id) do
+    game |> Game.queue_put_champion_from_discard_to_deck(player_id)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
@@ -171,6 +175,10 @@ defmodule Heros.Cards.Necros do
   end
 
   def ally_ability(game, :tyrannor, player_id) do
+    game |> Game.draw_card(player_id, 1)
+  end
+
+  def ally_ability(game, :varrick, player_id) do
     game |> Game.draw_card(player_id, 1)
   end
 

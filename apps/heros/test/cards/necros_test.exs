@@ -669,4 +669,109 @@ defmodule Heros.Cards.NecrosTest do
 
     assert Game.player(game, "p1") == p1
   end
+
+  test "varrick" do
+    assert Card.cost(:varrick) == 5
+    assert Card.type(:varrick) == {:not_guard, 3}
+    assert Card.faction(:varrick) == :necros
+    assert Card.champion?(:varrick)
+    assert not Card.guard?(:varrick)
+
+    [varrick] = Cards.with_id(:varrick)
+    [lys] = Cards.with_id(:lys)
+    [arkus] = Cards.with_id(:arkus)
+    [gold] = Cards.with_id(:gold)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = varrick
+    expended_varrick = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_varrick
+    full_expended_varrick = {id, %{card | ally_ability_used: true}}
+
+    # with a champion in discard
+
+    p1 = %{
+      Player.empty()
+      | hand: [varrick],
+        fight_zone: [lys],
+        discard: [arkus, gold],
+        deck: [gem]
+    }
+
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(varrick, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [lys, varrick]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(varrick, 0))
+
+    p1 = %{
+      p1
+      | fight_zone: [lys, expended_varrick],
+        pending_interactions: [:put_champion_from_discard_to_deck]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # not a champion
+    assert :error = Game.interact(game, "p1", {:put_champion_from_discard_to_deck, elem(gold, 0)})
+
+    before_interact = {game, p1}
+
+    # interact
+    assert {:ok, game} =
+             Game.interact(game, "p1", {:put_champion_from_discard_to_deck, elem(arkus, 0)})
+
+    p1 = %{p1 | pending_interactions: [], discard: [gold], deck: [arkus, gem]}
+
+    assert Game.player(game, "p1") == p1
+
+    # don't interact
+    {game, p1} = before_interact
+
+    assert {:ok, game} = Game.interact(game, "p1", {:put_champion_from_discard_to_deck, nil})
+
+    p1 = %{p1 | pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(varrick, 0))
+
+    p1 = %{p1 | fight_zone: [lys, full_expended_varrick], hand: [gem], deck: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # without a champion in discard
+
+    p1 = %{
+      Player.empty()
+      | hand: [varrick],
+        fight_zone: [lys],
+        discard: [gold],
+        deck: [gem]
+    }
+
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(varrick, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [lys, varrick]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(varrick, 0))
+
+    p1 = %{p1 | fight_zone: [lys, expended_varrick]}
+
+    assert Game.player(game, "p1") == p1
+  end
 end
