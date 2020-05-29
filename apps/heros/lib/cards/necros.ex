@@ -46,6 +46,7 @@ defmodule Heros.Cards.Necros do
   def type(:krythos), do: {:not_guard, 6}
   def type(:life_drain), do: :action
   def type(:lys), do: {:guard, 5}
+  def type(:the_rot), do: :action
   def type(:tyrannor), do: {:guard, 6}
   def type(:varrick), do: {:not_guard, 3}
   def type(_), do: nil
@@ -92,6 +93,12 @@ defmodule Heros.Cards.Necros do
   def primary_ability(game, :life_drain, player_id) do
     game
     |> Game.add_combat(player_id, 8)
+    |> Game.queue_sacrifice_from_hand_or_discard(player_id, 0)
+  end
+
+  def primary_ability(game, :the_rot, player_id) do
+    game
+    |> Game.add_combat(player_id, 4)
     |> Game.queue_sacrifice_from_hand_or_discard(player_id, 0)
   end
 
@@ -151,6 +158,10 @@ defmodule Heros.Cards.Necros do
 
   def ally_ability(game, :life_drain, player_id) do
     game |> Game.draw_card(player_id, 1)
+  end
+
+  def ally_ability(game, :the_rot, player_id) do
+    game |> Game.add_combat(player_id, 3)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
