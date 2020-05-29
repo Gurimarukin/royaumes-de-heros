@@ -145,7 +145,7 @@ defmodule Heros.Player do
   def stun_card(player, {card_id, card}) do
     player
     |> remove_from_fight_zone(card_id)
-    |> add_to_discard({card_id, card})
+    |> add_to_discard({card_id, Card.get(card.key)})
   end
 
   @spec remove_from_hand(Player.t(), Card.id()) :: Player.t()

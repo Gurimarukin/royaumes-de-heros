@@ -129,9 +129,12 @@ defmodule Heros.Cards.GuildTest do
     {id, card} = death_threat
     expended_death_threat = {id, %{card | ally_ability_used: true}}
 
+    {id, card} = arkus
+    expended_arkus = {id, %{card | expend_ability_used: true}}
+
     # when enemy has a champion
     p1 = %{Player.empty() | hp: 10, hand: [death_threat], fight_zone: [rasmus]}
-    p2 = %{Player.empty() | fight_zone: [arkus, kraka]}
+    p2 = %{Player.empty() | fight_zone: [expended_arkus, kraka]}
     p3 = %{Player.empty() | fight_zone: [cron]}
     p4 = Player.empty()
     p5 = %{Player.empty() | hp: 0, fight_zone: [darian]}
