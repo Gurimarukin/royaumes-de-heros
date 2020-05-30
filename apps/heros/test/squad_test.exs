@@ -1,29 +1,63 @@
 defmodule Heros.SquadTest do
   use ExUnit.Case, async: true
 
-  alias Heros.Squad
-  alias Heros.Lobby
+  alias Heros.{Game, Lobby, Squad}
 
   defp user do
     {:ok, agent} = Agent.start_link(fn -> nil end)
-    {agent, fn new_state -> Agent.update(agent, fn _ -> new_state end) end}
+
+    %{
+      get: fn -> Agent.get(agent, & &1) end,
+      update: fn new_state -> Agent.update(agent, fn _ -> new_state end) end
+    }
   end
 
   test "create squad" do
-    {_p1, update_p1} = user()
+    p1 = user()
+    p2 = user()
 
-    assert {:ok, pid} = Squad.start_link("p1", "Player 1", update_p1)
+    assert {:ok, pid} = Squad.start_link("p1", "Player 1", p1.update)
 
-    assert squad = Squad.get(pid)
-
-    assert squad == %Squad{
-             members: [{"p1", [update_p1]}],
+    assert :sys.get_state(pid) == %Squad{
+             members: [{"p1", [p1.update]}],
              state:
                {:lobby,
                 %Lobby{
                   owner: "p1",
-                  players: [{"p1", %Lobby.Player{name: "Player 1"}}]
+                  players: [{"p1", %Lobby.Player{name: "Player 1"}}],
+                  ready: false
                 }}
            }
+
+    assert :error = GenServer.call(pid, :start_game)
+
+    assert p1.get.() == nil
+
+    assert {:ok, state} = GenServer.call(pid, {:join, "p2", "Player 2", p2.update})
+
+    lobby =
+      {:lobby,
+       %Lobby{
+         owner: "p1",
+         players: [
+           {"p1", %Lobby.Player{name: "Player 1"}},
+           {"p2", %Lobby.Player{name: "Player 2"}}
+         ],
+         ready: true
+       }}
+
+    assert state == lobby
+
+    assert :sys.get_state(pid) == %Squad{
+             members: [{"p1", [p1.update]}, {"p2", [p2.update]}],
+             state: lobby
+           }
+
+    assert p1.get.() == lobby
+
+    assert {:ok, state} = GenServer.call(pid, :start_game)
+
+    assert {:game, game} = state
+    assert game.__struct__ == Game
   end
 end

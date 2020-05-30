@@ -5,10 +5,11 @@ defmodule Heros.Lobby do
 
   @type t :: %__MODULE__{
           owner: nil | Player.id(),
-          players: list({Player.id(), Player.t()})
+          players: list({Player.id(), Player.t()}),
+          ready: boolean
         }
-  @enforce_keys [:owner, :players]
-  defstruct [:owner, :players]
+  @enforce_keys [:owner, :players, :ready]
+  defstruct [:owner, :players, :ready]
 
   def empty?(lobby) do
     Enum.empty?(lobby.players)
@@ -17,7 +18,8 @@ defmodule Heros.Lobby do
   def create(player_id, player_name) do
     %Lobby{
       owner: player_id,
-      players: [{player_id, Player.from_name(player_name)}]
+      players: [{player_id, Player.from_name(player_name)}],
+      ready: false
     }
   end
 
@@ -25,6 +27,7 @@ defmodule Heros.Lobby do
     case KeyList.find(lobby.players, player_id) do
       nil ->
         %{lobby | players: lobby.players ++ [{player_id, Player.from_name(player_name)}]}
+        |> update_ready()
         |> Option.some()
 
       _ ->
@@ -35,7 +38,7 @@ defmodule Heros.Lobby do
   def leave(lobby, player_id) do
     with_member(lobby.players, player_id, fn _player ->
       players = lobby.players |> KeyList.delete(player_id)
-      lobby = %{lobby | players: players}
+      lobby = %{lobby | players: players} |> update_ready()
 
       if player_id == lobby.owner do
         case players do
@@ -47,6 +50,10 @@ defmodule Heros.Lobby do
       end
       |> Option.some()
     end)
+  end
+
+  defp update_ready(lobby) do
+    %{lobby | ready: 2 <= length(lobby.players)}
   end
 
   defp with_member(list, key, f) do
