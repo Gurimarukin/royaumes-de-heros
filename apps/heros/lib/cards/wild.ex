@@ -44,6 +44,7 @@ defmodule Heros.Cards.Wild do
   def type(:grak), do: {:guard, 7}
   def type(:natures_bounty), do: :action
   def type(:orc_grunt), do: {:guard, 3}
+  def type(:rampage), do: :action
   def type(:torgen), do: {:guard, 7}
   def type(:wolf_shaman), do: {:not_guard, 4}
   def type(_), do: nil
@@ -81,6 +82,12 @@ defmodule Heros.Cards.Wild do
 
   def primary_ability(game, :natures_bounty, player_id) do
     game |> Game.add_gold(player_id, 4)
+  end
+
+  def primary_ability(game, :rampage, player_id) do
+    game
+    |> Game.add_combat(player_id, 6)
+    |> Game.queue_draw_then_discard(player_id, 2)
   end
 
   def primary_ability(_game, _, _player_id), do: nil

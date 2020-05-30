@@ -470,8 +470,17 @@ defmodule Heros.Game do
     end)
   end
 
-  defp interaction(game, _player_id, :draw_then_discard, {:draw_then_discard, false}),
-    do: Option.some(game)
+  defp interaction(game, player_id, :draw_then_discard, {:draw_then_discard, false}) do
+    game
+    |> update_player(player_id, fn player ->
+      %{
+        player
+        | pending_interactions:
+            player.pending_interactions |> Enum.drop_while(&(&1 == :draw_then_discard))
+      }
+    end)
+    |> Option.some()
+  end
 
   defp interaction(game, player_id, :draw_then_discard, {:draw_then_discard, true}) do
     with_member(game.players, player_id, fn player -> Option.some(length(player.hand)) end)
@@ -872,15 +881,14 @@ defmodule Heros.Game do
     end
   end
 
-  def queue_draw_then_discard(game, player_id) do
+  def queue_draw_then_discard(game, player_id, amount \\ 1) do
     update_player(game, player_id, fn player ->
-      can_draw = 0 < length(player.deck) + length(player.discard)
+      amount = min(amount, length(player.deck) + length(player.discard))
 
-      if can_draw do
+      List.duplicate(nil, amount)
+      |> Enum.reduce(player, fn _, player ->
         player |> Player.queue_interaction(:draw_then_discard)
-      else
-        player
-      end
+      end)
     end)
   end
 

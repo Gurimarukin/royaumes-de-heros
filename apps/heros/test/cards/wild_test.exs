@@ -509,6 +509,119 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "rampage" do
+    assert Card.cost(:rampage) == 6
+    assert Card.type(:rampage) == :action
+    assert Card.faction(:rampage) == :wild
+    assert not Card.champion?(:rampage)
+    assert not Card.guard?(:rampage)
+
+    [rampage] = Cards.with_id(:rampage)
+    [dagger] = Cards.with_id(:dagger)
+    [gold] = Cards.with_id(:gold)
+
+    # no cards to draw
+
+    p1 = %{Player.empty() | hand: [rampage]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(rampage, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [rampage], combat: 6}
+
+    assert Game.player(game, "p1") == p1
+
+    # 1 card to draw
+
+    p1 = %{Player.empty() | hand: [rampage], discard: [dagger]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(rampage, 0))
+
+    p1 = %{
+      p1
+      | hand: [],
+        fight_zone: [rampage],
+        combat: 6,
+        pending_interactions: [:draw_then_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # 2 cards to draw
+
+    p1 = %{Player.empty() | hand: [rampage], deck: [gold, dagger]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(rampage, 0))
+
+    p1 = %{
+      p1
+      | hand: [],
+        fight_zone: [rampage],
+        combat: 6,
+        pending_interactions: [:draw_then_discard, :draw_then_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    before_interact = {game, p1}
+
+    # interact: draw, draw
+    assert {:ok, game} = Game.interact(game, "p1", {:draw_then_discard, true})
+
+    p1 = %{
+      p1
+      | pending_interactions: [:draw_then_discard, :discard_card],
+        hand: [gold],
+        deck: [dagger]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    #
+    assert {:ok, game} = Game.interact(game, "p1", {:draw_then_discard, true})
+
+    p1 = %{
+      p1
+      | pending_interactions: [:discard_card, :discard_card],
+        hand: [gold, dagger],
+        deck: []
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interact: don't draw
+    {game, p1} = before_interact
+
+    assert {:ok, game} = Game.interact(game, "p1", {:draw_then_discard, false})
+
+    p1 = %{p1 | pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # interact: draw, don't draw
+    {game, p1} = before_interact
+
+    assert {:ok, game} = Game.interact(game, "p1", {:draw_then_discard, true})
+
+    p1 = %{
+      p1
+      | pending_interactions: [:draw_then_discard, :discard_card],
+        hand: [gold],
+        deck: [dagger]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    #
+    assert {:ok, game} = Game.interact(game, "p1", {:draw_then_discard, false})
+
+    p1 = %{p1 | pending_interactions: [:discard_card]}
+
+    assert Game.player(game, "p1") == p1
   end
 
   test "torgen" do
