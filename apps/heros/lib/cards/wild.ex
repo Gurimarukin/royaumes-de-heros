@@ -46,6 +46,7 @@ defmodule Heros.Cards.Wild do
   def type(:orc_grunt), do: {:guard, 3}
   def type(:rampage), do: :action
   def type(:torgen), do: {:guard, 7}
+  def type(:spark), do: :action
   def type(:wolf_shaman), do: {:not_guard, 4}
   def type(_), do: nil
 
@@ -88,6 +89,12 @@ defmodule Heros.Cards.Wild do
     game
     |> Game.add_combat(player_id, 6)
     |> Game.queue_draw_then_discard(player_id, 2)
+  end
+
+  def primary_ability(game, :spark, player_id) do
+    game
+    |> Game.add_combat(player_id, 3)
+    |> Game.queue_target_opponent_to_discard(player_id)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -158,6 +165,10 @@ defmodule Heros.Cards.Wild do
 
   def ally_ability(game, :orc_grunt, player_id) do
     game |> Game.draw_card(player_id, 1)
+  end
+
+  def ally_ability(game, :spark, player_id) do
+    game |> Game.add_combat(player_id, 2)
   end
 
   def ally_ability(_game, _, _player_id), do: nil

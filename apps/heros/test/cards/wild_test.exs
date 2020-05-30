@@ -637,8 +637,6 @@ defmodule Heros.Cards.WildTest do
     {id, card} = torgen
     expended_torgen = {id, %{card | expend_ability_used: true}}
 
-    # no cards to draw
-
     p1 = %{Player.empty() | hand: [torgen]}
     p2 = %{Player.empty() | hand: [gold]}
     game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
@@ -663,6 +661,51 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "spark" do
+    assert Card.cost(:spark) == 1
+    assert Card.type(:spark) == :action
+    assert Card.faction(:spark) == :wild
+    assert not Card.champion?(:spark)
+    assert not Card.guard?(:spark)
+
+    [spark] = Cards.with_id(:spark)
+    [cron] = Cards.with_id(:cron)
+    [gold] = Cards.with_id(:gold)
+
+    {id, card} = spark
+    expended_spark = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [spark], fight_zone: [cron]}
+    p2 = %{Player.empty() | hand: [gold]}
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(spark, 0))
+
+    p1 = %{
+      p1
+      | hand: [],
+        fight_zone: [cron, spark],
+        combat: 3,
+        pending_interactions: [:target_opponent_to_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interact
+    assert {:ok, game} = Game.interact(game, "p1", {:target_opponent_to_discard, "p2"})
+
+    p1 = %{p1 | pending_interactions: []}
+    p2 = %{p2 | pending_interactions: [:discard_card]}
+
+    assert Game.player(game, "p1") == p1
+    assert Game.player(game, "p2") == p2
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(spark, 0))
+
+    p1 = %{p1 | fight_zone: [cron, expended_spark], combat: 5}
+
+    assert Game.player(game, "p1") == p1
   end
 
   test "wolf_form" do
