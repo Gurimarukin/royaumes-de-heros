@@ -2,6 +2,7 @@ defmodule Heros.SquadTest do
   use ExUnit.Case, async: true
 
   alias Heros.Squad
+  alias Heros.Lobby
 
   defp user do
     {:ok, agent} = Agent.start_link(fn -> nil end)
@@ -9,12 +10,20 @@ defmodule Heros.SquadTest do
   end
 
   test "create squad" do
-    {_u1, update_u1} = user()
+    {_p1, update_p1} = user()
 
-    assert squad = Squad.create("u1", update_u1)
+    assert {:ok, pid} = Squad.start_link("p1", "Player 1", update_p1)
+
+    assert squad = Squad.get(pid)
 
     assert squad == %Squad{
-             users: [{"u1", [update_u1]}]
+             members: [{"p1", [update_p1]}],
+             state:
+               {:lobby,
+                %Lobby{
+                  owner: "p1",
+                  players: [{"p1", %Lobby.Player{name: "Player 1"}}]
+                }}
            }
   end
 end
