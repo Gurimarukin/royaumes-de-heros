@@ -42,6 +42,7 @@ defmodule Heros.Cards.Wild do
   def type(:elven_curse), do: :action
   def type(:elven_gift), do: :action
   def type(:grak), do: {:guard, 7}
+  def type(:natures_bounty), do: :action
   def type(:orc_grunt), do: {:guard, 3}
   def type(:torgen), do: {:guard, 7}
   def type(:wolf_shaman), do: {:not_guard, 4}
@@ -76,6 +77,10 @@ defmodule Heros.Cards.Wild do
     game
     |> Game.add_gold(player_id, 2)
     |> Game.queue_draw_then_discard(player_id)
+  end
+
+  def primary_ability(game, :natures_bounty, player_id) do
+    game |> Game.add_gold(player_id, 4)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -130,10 +135,18 @@ defmodule Heros.Cards.Wild do
     game |> Game.queue_draw_then_discard(player_id)
   end
 
+  def ally_ability(game, :natures_bounty, player_id) do
+    game |> Game.queue_target_opponent_to_discard(player_id)
+  end
+
   def ally_ability(_game, _, _player_id), do: nil
 
   # Sacrifice ability
 
   @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
+  def sacrifice_ability(game, :natures_bounty, player_id) do
+    game |> Game.add_combat(player_id, 4)
+  end
+
   def sacrifice_ability(_game, _, _player_id), do: nil
 end

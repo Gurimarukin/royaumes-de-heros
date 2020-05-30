@@ -413,6 +413,57 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "natures_bounty" do
+    assert Card.cost(:natures_bounty) == 4
+    assert Card.type(:natures_bounty) == :action
+    assert Card.faction(:natures_bounty) == :wild
+    assert not Card.champion?(:natures_bounty)
+    assert not Card.guard?(:natures_bounty)
+
+    [natures_bounty] = Cards.with_id(:natures_bounty)
+    [cron] = Cards.with_id(:cron)
+    [dagger] = Cards.with_id(:dagger)
+
+    {id, card} = natures_bounty
+    expended_natures_bounty = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [natures_bounty], fight_zone: [cron]}
+    p2 = %{Player.empty() | hand: [dagger]}
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(natures_bounty, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [cron, natures_bounty], gold: 4}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(natures_bounty, 0))
+
+    p1 = %{
+      p1
+      | fight_zone: [cron, expended_natures_bounty],
+        pending_interactions: [:target_opponent_to_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interact
+    assert {:ok, game} = Game.interact(game, "p1", {:target_opponent_to_discard, "p2"})
+
+    p1 = %{p1 | fight_zone: [cron, expended_natures_bounty], pending_interactions: []}
+    p2 = %{p2 | pending_interactions: [:discard_card]}
+
+    assert Game.player(game, "p1") == p1
+    assert Game.player(game, "p2") == p2
+
+    # sacrifice
+    assert {:ok, game} = Game.use_sacrifice_ability(game, "p1", elem(natures_bounty, 0))
+
+    p1 = %{p1 | fight_zone: [cron], combat: 4}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [natures_bounty]
   end
 
   test "orc_grunt" do
