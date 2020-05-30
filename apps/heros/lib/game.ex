@@ -1,8 +1,4 @@
 defmodule Heros.Game do
-  # use GenServer, restart: :temporary
-
-  # require Logger
-
   alias Heros.{Cards, Game, KeyListUtils, Option, Player}
   alias Heros.Cards.Card
   alias Heros.Game.Helpers
@@ -97,17 +93,8 @@ defmodule Heros.Game do
   def play_card(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
       with_member(player.hand, card_id, fn card ->
-        %{
-          game
-          | players:
-              game.players
-              |> KeyListUtils.update(
-                player_id,
-                &(&1
-                  |> Player.remove_from_hand(card_id)
-                  |> Player.add_to_fight_zone({card_id, card}))
-              )
-        }
+        game
+        |> update_player(player_id, &Player.move_from_hand_to_fight_zone(&1, {card_id, card}))
         |> Card.primary_ability(card.key, player_id)
         |> Option.some()
       end)
@@ -131,12 +118,7 @@ defmodule Heros.Game do
     Card.expend_ability(game, card.key, player_id, card_id)
     |> Option.from_nilable()
     |> Option.map(fn game ->
-      update_player(game, player_id, fn player ->
-        %{
-          player
-          | fight_zone: player.fight_zone |> KeyListUtils.update(card_id, &Card.expend/1)
-        }
-      end)
+      update_player(game, player_id, &Player.expend_card(&1, card_id))
     end)
   end
 
@@ -165,22 +147,7 @@ defmodule Heros.Game do
     Card.ally_ability(game, card.key, player_id)
     |> Option.from_nilable()
     |> Option.map(fn game ->
-      %{
-        game
-        | players:
-            game.players
-            |> KeyListUtils.update(
-              player_id,
-              fn player ->
-                %{
-                  player
-                  | fight_zone:
-                      player.fight_zone
-                      |> KeyListUtils.update(card_id, &Card.consume_ally_ability/1)
-                }
-              end
-            )
-      }
+      update_player(game, player_id, &Player.consume_ally_ability(&1, card_id))
     end)
   end
 
@@ -188,21 +155,11 @@ defmodule Heros.Game do
   def use_sacrifice_ability(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
       with_member(player.fight_zone, card_id, fn card ->
-        Card.sacrifice_ability(game, card.key, player_id)
+        game
+        |> update_player(player_id, &Player.remove_from_fight_zone(&1, card_id))
+        |> add_to_gems_or_cemetery({card_id, Card.get(card.key)})
+        |> Card.sacrifice_ability(card.key, player_id)
         |> Option.from_nilable()
-        |> Option.map(fn game ->
-          game =
-            game
-            |> update_player(player_id, &Player.remove_from_fight_zone(&1, card_id))
-
-          reset_card = {card_id, Card.get(card.key)}
-
-          if card.key == :gem do
-            %{game | gems: [reset_card | game.gems]}
-          else
-            %{game | cemetery: [reset_card | game.cemetery]}
-          end
-        end)
       end)
     end)
   end
@@ -222,46 +179,21 @@ defmodule Heros.Game do
     end)
   end
 
-  defp buy_market_card(game, {player_id, player}, {card_id, card}) do
-    buy_card_bis(player, card, fn cost ->
-      {market_card, market_deck} =
-        case game.market_deck do
-          [] -> {nil, []}
-          [market_card | market_deck] -> {market_card, market_deck}
-        end
-
-      %{
-        game
-        | players: game.players |> player_buy_card(player_id, {card_id, card}, cost),
-          market: game.market |> KeyListUtils.fullreplace(card_id, market_card),
-          market_deck: market_deck
-      }
+  defp buy_card_bis(game, {player_id, player}, {card_id, card}, f) do
+    Player.buy_card(player, {card_id, card})
+    |> Option.map(fn player ->
+      game
+      |> update_player(player_id, fn _ -> player end)
+      |> f.(card_id)
     end)
+  end
+
+  defp buy_market_card(game, {player_id, player}, {card_id, card}) do
+    buy_card_bis(game, {player_id, player}, {card_id, card}, &remove_from_market_and_refill/2)
   end
 
   defp buy_gem(game, {player_id, player}, {card_id, card}) do
-    buy_card_bis(player, card, fn cost ->
-      %{
-        game
-        | players: game.players |> player_buy_card(player_id, {card_id, card}, cost),
-          gems: game.gems |> KeyListUtils.delete(card_id)
-      }
-    end)
-  end
-
-  defp buy_card_bis(player, card, f) do
-    Player.card_cost_for_player(player, card)
-    |> Option.from_nilable()
-    |> Option.filter(fn cost -> cost <= player.gold end)
-    |> Option.map(f)
-  end
-
-  defp player_buy_card(players, player_id, {card_id, card}, cost) do
-    players
-    |> KeyListUtils.update(
-      player_id,
-      &Player.buy_card(&1, {card_id, card}, cost)
-    )
+    buy_card_bis(game, {player_id, player}, {card_id, card}, &remove_from_gems/2)
   end
 
   @spec attack(Game.t(), Player.id(), Player.id(), :attack | Card.id()) :: update()
@@ -281,17 +213,13 @@ defmodule Heros.Game do
     defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.guard?(c.key) end)
 
     if defender_has_guard or not Player.alive?(defender) do
-      :error
+      Option.none()
     else
       damages = min(attacker.combat, defender.hp)
 
-      %{
-        game
-        | players:
-            game.players
-            |> KeyListUtils.update(attacker_id, &Player.decr_combat(&1, damages))
-            |> KeyListUtils.update(defender_id, &Player.decr_hp(&1, damages))
-      }
+      game
+      |> update_player(attacker_id, &Player.decr_combat(&1, damages))
+      |> update_player(defender_id, &Player.decr_hp(&1, damages))
       |> check_victory(attacker_id)
     end
   end
@@ -322,28 +250,24 @@ defmodule Heros.Game do
         defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.guard?(c.key) end)
 
         if defender_has_guard do
-          :error
+          Option.none()
         else
           attack_card_bis(game, {attacker_id, attacker}, defender_id, {card_id, card}, defense)
         end
 
       _ ->
-        :error
+        Option.none()
     end
   end
 
   defp attack_card_bis(game, {attacker_id, attacker}, defender_id, {card_id, card}, defense) do
     if defense <= attacker.combat do
-      %{
-        game
-        | players:
-            game.players
-            |> KeyListUtils.update(attacker_id, &Player.decr_combat(&1, defense))
-            |> KeyListUtils.update(defender_id, &Player.stun_card(&1, {card_id, card}))
-      }
+      game
+      |> update_player(attacker_id, &Player.decr_combat(&1, defense))
+      |> update_player(defender_id, &Player.move_from_fight_zone_to_discard(&1, {card_id, card}))
       |> Option.some()
     else
-      :error
+      Option.none()
     end
   end
 
@@ -359,7 +283,7 @@ defmodule Heros.Game do
 
         [head | tail] ->
           game
-          |> update_player(player_id, &%{&1 | pending_interactions: tail})
+          |> update_player(player_id, &Player.set_pending_interactions(&1, tail))
           |> interaction(player_id, head, interaction)
       end
     end)
@@ -378,7 +302,7 @@ defmodule Heros.Game do
           |> update_player(player_id, &Player.prepare(&1, card_id))
           |> Option.some()
         else
-          :error
+          Option.none()
         end
       end)
     end)
@@ -472,13 +396,7 @@ defmodule Heros.Game do
 
   defp interaction(game, player_id, :draw_then_discard, {:draw_then_discard, false}) do
     game
-    |> update_player(player_id, fn player ->
-      %{
-        player
-        | pending_interactions:
-            player.pending_interactions |> Enum.drop_while(&(&1 == :draw_then_discard))
-      }
-    end)
+    |> update_player(player_id, &Player.pop_interactions(&1, :draw_then_discard))
     |> Option.some()
   end
 
@@ -508,13 +426,21 @@ defmodule Heros.Game do
   defp stun_champion(game, {defender_id, defender}, {card_id, card}) do
     case Card.type(card.key) do
       {:guard, _} ->
-        update_player(game, defender_id, &Player.stun_card(&1, {card_id, card}))
+        game
+        |> update_player(
+          defender_id,
+          &Player.move_from_fight_zone_to_discard(&1, {card_id, card})
+        )
         |> Option.some()
 
       {:not_guard, _} ->
         defender_has_guard = Enum.any?(defender.fight_zone, fn {_, c} -> Card.guard?(c.key) end)
 
-        update_player(game, defender_id, &Player.stun_card(&1, {card_id, card}))
+        game
+        |> update_player(
+          defender_id,
+          &Player.move_from_fight_zone_to_discard(&1, {card_id, card})
+        )
         |> Option.some()
         |> Option.filter(fn _ -> not defender_has_guard end)
 
@@ -536,13 +462,7 @@ defmodule Heros.Game do
     with_member(game.players, player_id, fn player ->
       with_member(player.discard, card_id, fn card ->
         game
-        |> update_player(player_id, fn player ->
-          %{
-            player
-            | deck: [{card_id, card} | player.deck],
-              discard: player.discard |> KeyListUtils.delete(card_id)
-          }
-        end)
+        |> update_player(player_id, &Player.move_from_discard_to_deck(&1, {card_id, card}))
         |> Option.some()
         |> Option.filter(fn _ -> filter.(card) end)
       end)
@@ -576,12 +496,7 @@ defmodule Heros.Game do
     with_member(game.players, player_id, fn player ->
       with_member(player.hand, card_id, fn card ->
         game
-        |> update_player(
-          player_id,
-          &(&1
-            |> Player.remove_from_hand(card_id)
-            |> Player.add_to_discard({card_id, card}))
-        )
+        |> update_player(player_id, &Player.move_from_hand_to_discard(&1, {card_id, card}))
         |> Option.some()
         |> Option.filter(fn _ -> filter.(card) end)
       end)
@@ -594,7 +509,7 @@ defmodule Heros.Game do
   def discard_phase(game, player_id) do
     current_player_action(game, player_id, fn player ->
       if player.discard_phase_done do
-        :error
+        Option.none()
       else
         update_player(game, player_id, &Player.discard_phase/1)
         |> Option.some()
@@ -652,6 +567,7 @@ defmodule Heros.Game do
     end
   end
 
+  # targeting other players
   @spec next_player_alive(Game.t(), Player.id()) :: nil | Player.id()
   defp next_player_alive(game, player_id) do
     case Enum.find_index(game.players, fn {id, _} -> id == player_id end) do
@@ -710,10 +626,43 @@ defmodule Heros.Game do
 
   def player(game, player_id), do: KeyListUtils.find(game.players, player_id)
 
+  # private setters
   defp set_current_player(game, player_id), do: %{game | current_player: player_id}
+
+  defp add_to_gems_or_cemetery(game, {card_id, card}) do
+    if card.key == :gem do
+      add_to_gems(game, {card_id, card})
+    else
+      add_to_cemetery(game, {card_id, card})
+    end
+  end
+
+  defp add_to_gems(game, {card_id, card}) do
+    %{game | gems: [{card_id, card} | game.gems]}
+  end
+
+  defp remove_from_gems(game, card_id) do
+    %{game | gems: game.gems |> KeyListUtils.delete(card_id)}
+  end
 
   defp add_to_cemetery(game, {card_id, card}) do
     %{game | cemetery: [{card_id, card} | game.cemetery]}
+  end
+
+  defp remove_from_market_and_refill(game, card_id) do
+    {new_card, market_deck} =
+      case game.market_deck do
+        [] -> {nil, []}
+        [new_card | market_deck] -> {new_card, market_deck}
+      end
+
+    %{game | market_deck: market_deck}
+    |> replace_market_card(card_id, new_card)
+  end
+
+  # new_card can be {Card.id(), Card.t()} or nil
+  defp replace_market_card(game, card_id, new_card) do
+    %{game | market: game.market |> KeyListUtils.fullreplace(card_id, new_card)}
   end
 
   # when you have to chose between two effects

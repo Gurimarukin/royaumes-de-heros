@@ -117,6 +117,12 @@ defmodule Heros.Cards.Card do
       Wild.sacrifice_ability(game, key, player_id)
   end
 
+  def full_reset(card) do
+    card
+    |> prepare()
+    |> reset_ally_ability()
+  end
+
   def expend(card), do: %{card | expend_ability_used: true}
 
   def prepare(card), do: %{card | expend_ability_used: false}
