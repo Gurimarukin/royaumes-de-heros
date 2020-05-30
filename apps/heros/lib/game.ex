@@ -361,9 +361,6 @@ defmodule Heros.Game do
           game
           |> update_player(player_id, &%{&1 | pending_interactions: tail})
           |> interaction(player_id, head, interaction)
-
-        _ ->
-          Option.none()
       end
     end)
   end

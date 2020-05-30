@@ -95,6 +95,12 @@ defmodule Heros.Cards.Wild do
     game |> Game.add_combat(player_id, 3)
   end
 
+  def expend_ability(game, :grak, player_id, _card_id) do
+    game
+    |> Game.add_combat(player_id, 6)
+    |> Game.queue_draw_then_discard(player_id)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
@@ -118,6 +124,10 @@ defmodule Heros.Cards.Wild do
 
   def ally_ability(game, :elven_gift, player_id) do
     game |> Game.add_combat(player_id, 4)
+  end
+
+  def ally_ability(game, :grak, player_id) do
+    game |> Game.queue_draw_then_discard(player_id)
   end
 
   def ally_ability(_game, _, _player_id), do: nil

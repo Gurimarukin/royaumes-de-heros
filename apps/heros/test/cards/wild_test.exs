@@ -347,6 +347,69 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "grak" do
+    assert Card.cost(:grak) == 8
+    assert Card.type(:grak) == {:guard, 7}
+    assert Card.faction(:grak) == :wild
+    assert Card.champion?(:grak)
+    assert Card.guard?(:grak)
+
+    [grak] = Cards.with_id(:grak)
+    [cron] = Cards.with_id(:cron)
+    [gold] = Cards.with_id(:gold)
+    [gem] = Cards.with_id(:gem)
+    [dagger] = Cards.with_id(:dagger)
+
+    {id, card} = grak
+    expended_grak = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_grak
+    full_expended_grak = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [grak, gold], fight_zone: [cron], deck: [gem, dagger]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(grak, 0))
+
+    p1 = %{p1 | hand: [gold], fight_zone: [cron, grak]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(grak, 0))
+
+    p1 = %{
+      p1
+      | fight_zone: [cron, expended_grak],
+        combat: 6,
+        pending_interactions: [:draw_then_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interact
+    assert {:ok, game} = Game.interact(game, "p1", {:draw_then_discard, true})
+
+    p1 = %{p1 | pending_interactions: [:discard_card], hand: [gold, gem], deck: [dagger]}
+
+    assert Game.player(game, "p1") == p1
+
+    assert {:ok, game} = Game.interact(game, "p1", {:discard_card, elem(gold, 0)})
+
+    p1 = %{p1 | pending_interactions: [], hand: [gem], discard: [gold]}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(grak, 0))
+
+    p1 = %{
+      p1
+      | fight_zone: [cron, full_expended_grak],
+        pending_interactions: [:draw_then_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
   end
 
   test "natures_bounty" do
