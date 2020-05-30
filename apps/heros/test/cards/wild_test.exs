@@ -754,5 +754,35 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "wolf_shaman" do
+    assert Card.cost(:wolf_shaman) == 2
+    assert Card.type(:wolf_shaman) == {:not_guard, 4}
+    assert Card.faction(:wolf_shaman) == :wild
+    assert Card.champion?(:wolf_shaman)
+    assert not Card.guard?(:wolf_shaman)
+
+    [wolf_shaman] = Cards.with_id(:wolf_shaman)
+    [cron] = Cards.with_id(:cron)
+    [torgen] = Cards.with_id(:torgen)
+    [arkus] = Cards.with_id(:arkus)
+
+    {id, card} = wolf_shaman
+    expended_wolf_shaman = {id, %{card | expend_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [wolf_shaman], fight_zone: [cron, torgen, arkus]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(wolf_shaman, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [cron, torgen, arkus, wolf_shaman]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(wolf_shaman, 0))
+
+    p1 = %{p1 | fight_zone: [cron, torgen, arkus, expended_wolf_shaman], combat: 4}
+
+    assert Game.player(game, "p1") == p1
   end
 end

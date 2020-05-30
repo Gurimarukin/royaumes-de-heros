@@ -137,6 +137,18 @@ defmodule Heros.Cards.Wild do
     |> Game.queue_target_opponent_to_discard(player_id)
   end
 
+  def expend_ability(game, :wolf_shaman, player_id, card_id) do
+    game
+    |> Game.update_player(player_id, fn player ->
+      other_wilds =
+        Enum.count(player.fight_zone, fn {id, c} ->
+          Card.faction(c.key) == :wild and id != card_id
+        end)
+
+      player |> Player.incr_combat(2 + other_wilds * 1)
+    end)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
