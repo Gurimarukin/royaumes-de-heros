@@ -57,6 +57,24 @@ defmodule Heros.Squad do
     |> to_reply(squad)
   end
 
+  def handle_call({:leave, player_id}, _from, squad) do
+    case squad.state do
+      {:lobby, lobby} ->
+        Lobby.leave(lobby, player_id)
+        |> Option.map(fn lobby ->
+          %{
+            squad
+            | members: squad.members |> KeyList.delete(player_id),
+              state: {:lobby, lobby}
+          }
+        end)
+
+      _ ->
+        Option.none()
+    end
+    |> to_reply(squad)
+  end
+
   def handle_call(message, from, squad) do
     case squad.state do
       {:lobby, lobby} ->
@@ -76,13 +94,15 @@ defmodule Heros.Squad do
     |> Game.init_from_players()
   end
 
-  defp to_reply({:ok, squad}, _) do
-    # broadcast state
-    # TODO: projection
-    squad.members
-    |> KeyList.map(fn subscribtions ->
-      subscribtions |> Enum.map(& &1.(squad.state))
-    end)
+  defp to_reply({:ok, squad}, old_squad) do
+    if squad != old_squad do
+      # broadcast state
+      # TODO: projection
+      squad.members
+      |> KeyList.map(fn subscribtions ->
+        subscribtions |> Enum.map(& &1.(squad.state))
+      end)
+    end
 
     {:reply, {:ok, squad.state}, squad}
   end
