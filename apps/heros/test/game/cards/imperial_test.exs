@@ -1,8 +1,9 @@
-defmodule Heros.Cards.ImperialTest do
+defmodule Heros.Game.Cards.ImperialTest do
   use ExUnit.Case, async: true
 
-  alias Heros.{Cards, Game, Player}
-  alias Heros.Cards.Card
+  alias Heros.Game
+  alias Heros.Game.{Cards, Player}
+  alias Heros.Game.Cards.Card
 
   test "arkus" do
     assert Card.cost(:arkus) == 8

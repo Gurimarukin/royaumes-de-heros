@@ -1,8 +1,9 @@
-defmodule Heros.Cards.WildTest do
+defmodule Heros.Game.Cards.WildTest do
   use ExUnit.Case, async: true
 
-  alias Heros.{Cards, Game, Player}
-  alias Heros.Cards.Card
+  alias Heros.Game
+  alias Heros.Game.{Cards, Player}
+  alias Heros.Game.Cards.Card
 
   test "broelyn" do
     assert Card.cost(:broelyn) == 4

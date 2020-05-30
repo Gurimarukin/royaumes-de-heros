@@ -1,6 +1,7 @@
-defmodule Heros.Cards.Necros do
-  alias Heros.{Cards, Game, Player}
-  alias Heros.Cards.Card
+defmodule Heros.Game.Cards.Necros do
+  alias Heros.Game
+  alias Heros.Game.{Cards, Player}
+  alias Heros.Game.Cards.Card
 
   @spec get :: list({Card.id(), Card.t()})
   def get do

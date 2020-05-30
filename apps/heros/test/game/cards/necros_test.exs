@@ -1,8 +1,9 @@
-defmodule Heros.Cards.NecrosTest do
+defmodule Heros.Game.Cards.NecrosTest do
   use ExUnit.Case, async: true
 
-  alias Heros.{Cards, Game, Player}
-  alias Heros.Cards.Card
+  alias Heros.Game
+  alias Heros.Game.{Cards, Player}
+  alias Heros.Game.Cards.Card
 
   test "cult_priest" do
     assert Card.cost(:cult_priest) == 3

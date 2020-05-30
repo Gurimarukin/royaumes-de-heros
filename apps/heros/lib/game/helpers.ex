@@ -1,5 +1,5 @@
 defmodule Heros.Game.Helpers do
-  alias Heros.Cards.Card
+  alias Heros.Game.Cards.Card
 
   def interaction_filter(:put_card_from_discard_to_deck) do
     fn _card -> true end

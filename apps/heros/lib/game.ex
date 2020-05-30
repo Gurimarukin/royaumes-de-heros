@@ -1,7 +1,8 @@
 defmodule Heros.Game do
-  alias Heros.{Cards, Game, KeyListUtils, Option, Player}
-  alias Heros.Cards.Card
-  alias Heros.Game.Helpers
+  alias Heros.Game
+  alias Heros.Game.{Cards, Helpers, Player}
+  alias Heros.Game.Cards.Card
+  alias Heros.Utils.{KeyList, Option}
 
   @type t :: %__MODULE__{
           players: list({Player.id(), Player.t()}),
@@ -61,7 +62,7 @@ defmodule Heros.Game do
 
     player_ids
     |> Enum.with_index()
-    |> KeyListUtils.map(fn i ->
+    |> KeyList.map(fn i ->
       Player.init(
         cond do
           # first player always gets 3 cards
@@ -140,7 +141,7 @@ defmodule Heros.Game do
   end
 
   defp count_from_faction(cards, faction) do
-    KeyListUtils.count(cards, &(Card.faction(&1.key) == faction))
+    KeyList.count(cards, &(Card.faction(&1.key) == faction))
   end
 
   defp use_ally_ability_bis(game, player_id, {card_id, card}) do
@@ -167,7 +168,7 @@ defmodule Heros.Game do
   @spec buy_card(Game.t(), Player.id(), Card.id()) :: update()
   def buy_card(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
-      case KeyListUtils.find(game.market, card_id) do
+      case KeyList.find(game.market, card_id) do
         nil ->
           with_member(game.gems, card_id, fn card ->
             buy_gem(game, {player_id, player}, {card_id, card})
@@ -231,7 +232,7 @@ defmodule Heros.Game do
   end
 
   defp check_victory(game, attacker_id) do
-    players_alive = game.players |> KeyListUtils.count(&Player.alive?/1)
+    players_alive = game.players |> KeyList.count(&Player.alive?/1)
 
     if players_alive == 1 do
       {:victory, attacker_id, game}
@@ -539,7 +540,7 @@ defmodule Heros.Game do
   #
 
   defp with_member(list, key, f) do
-    KeyListUtils.find(list, key)
+    KeyList.find(list, key)
     |> Option.from_nilable()
     |> Option.chain(f)
   end
@@ -624,7 +625,7 @@ defmodule Heros.Game do
     end
   end
 
-  def player(game, player_id), do: KeyListUtils.find(game.players, player_id)
+  def player(game, player_id), do: KeyList.find(game.players, player_id)
 
   # private setters
   defp set_current_player(game, player_id), do: %{game | current_player: player_id}
@@ -642,7 +643,7 @@ defmodule Heros.Game do
   end
 
   defp remove_from_gems(game, card_id) do
-    %{game | gems: game.gems |> KeyListUtils.delete(card_id)}
+    %{game | gems: game.gems |> KeyList.delete(card_id)}
   end
 
   defp add_to_cemetery(game, {card_id, card}) do
@@ -662,7 +663,7 @@ defmodule Heros.Game do
 
   # new_card can be {Card.id(), Card.t()} or nil
   defp replace_market_card(game, card_id, new_card) do
-    %{game | market: game.market |> KeyListUtils.fullreplace(card_id, new_card)}
+    %{game | market: game.market |> KeyList.fullreplace(card_id, new_card)}
   end
 
   # when you have to chose between two effects
@@ -675,7 +676,7 @@ defmodule Heros.Game do
 
   defp apply_effect(game, player_id, {:heal_for_champions, {base, per_champion}}) do
     update_player(game, player_id, fn player ->
-      champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
+      champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
       player |> Player.heal(base + champions * per_champion)
     end)
     |> Option.some()
@@ -699,7 +700,7 @@ defmodule Heros.Game do
 
   @spec update_player(%{players: [tuple]}, any, any) :: %{players: [tuple]}
   def update_player(game, player_id, f) do
-    %{game | players: game.players |> KeyListUtils.update(player_id, f)}
+    %{game | players: game.players |> KeyList.update(player_id, f)}
   end
 
   def heal(game, player_id, amount) do
@@ -732,7 +733,7 @@ defmodule Heros.Game do
   def queue_prepare_champion(game, player_id) do
     update_player(game, player_id, fn player ->
       expended_champions =
-        KeyListUtils.count(
+        KeyList.count(
           player.fight_zone,
           fn c -> Card.champion?(c.key) and c.expend_ability_used end
         )
@@ -763,7 +764,7 @@ defmodule Heros.Game do
   def queue_put_card_from_discard_to_deck(game, player_id) do
     update_player(game, player_id, fn player ->
       cards_in_discard =
-        KeyListUtils.count(
+        KeyList.count(
           player.discard,
           Helpers.interaction_filter(:put_card_from_discard_to_deck)
         )
@@ -779,7 +780,7 @@ defmodule Heros.Game do
   def queue_put_champion_from_discard_to_deck(game, player_id) do
     update_player(game, player_id, fn player ->
       champions_in_discard =
-        KeyListUtils.count(
+        KeyList.count(
           player.discard,
           Helpers.interaction_filter(:put_champion_from_discard_to_deck)
         )

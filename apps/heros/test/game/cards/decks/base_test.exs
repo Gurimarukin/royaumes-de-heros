@@ -1,8 +1,9 @@
-defmodule Heros.Cards.Decks.BaseTest do
+defmodule Heros.Game.Cards.Decks.BaseTest do
   use ExUnit.Case, async: true
 
-  alias Heros.{Cards, Game, Player}
-  alias Heros.Cards.Card
+  alias Heros.Game
+  alias Heros.Game.{Cards, Player}
+  alias Heros.Game.Cards.Card
 
   test "shortsword" do
     assert Card.cost(:shortsword) == nil

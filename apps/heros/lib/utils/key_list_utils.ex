@@ -1,4 +1,4 @@
-defmodule Heros.KeyListUtils do
+defmodule Heros.Utils.KeyList do
   # find(list({A, B}), A, C) :: C | B
   def find(list, key, default \\ nil) do
     case List.keyfind(list, key, 0, default) do

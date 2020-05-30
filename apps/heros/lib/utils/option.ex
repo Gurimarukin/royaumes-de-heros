@@ -1,4 +1,4 @@
-defmodule Heros.Option do
+defmodule Heros.Utils.Option do
   def none, do: :error
   def some(a), do: {:ok, a}
 

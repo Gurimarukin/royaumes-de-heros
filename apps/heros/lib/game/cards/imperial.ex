@@ -1,6 +1,8 @@
-defmodule Heros.Cards.Imperial do
-  alias Heros.{Cards, Game, KeyListUtils, Player}
-  alias Heros.Cards.Card
+defmodule Heros.Game.Cards.Imperial do
+  alias Heros.Game
+  alias Heros.Game.{Cards, Player}
+  alias Heros.Game.Cards.Card
+  alias Heros.Utils.KeyList
 
   @spec get :: list({Card.id(), Card.t()})
   def get do
@@ -77,7 +79,7 @@ defmodule Heros.Cards.Imperial do
   def primary_ability(game, :close_ranks, player_id) do
     game
     |> Game.update_player(player_id, fn player ->
-      champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
+      champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
       player |> Player.incr_combat(5 + champions * 2)
     end)
   end
@@ -107,7 +109,7 @@ defmodule Heros.Cards.Imperial do
     game
     |> Game.add_gold(player_id, 2)
     |> Game.update_player(player_id, fn player ->
-      champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
+      champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
       player |> Player.heal(3 + champions * 1)
     end)
   end
@@ -195,7 +197,7 @@ defmodule Heros.Cards.Imperial do
   def ally_ability(game, :kraka, player_id) do
     game
     |> Game.update_player(player_id, fn player ->
-      champions = KeyListUtils.count(player.fight_zone, &Card.champion?(&1.key))
+      champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
       player |> Player.heal(champions * 2)
     end)
   end

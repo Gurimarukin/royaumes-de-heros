@@ -1,5 +1,5 @@
-defmodule Heros.Cards do
-  alias Heros.Cards.{Card, Guild, Imperial, Necros, Wild}
+defmodule Heros.Game.Cards do
+  alias Heros.Game.Cards.{Card, Guild, Imperial, Necros, Wild}
 
   @spec with_id(atom, integer) :: list({Card.id(), Card.t()})
   def with_id(key, n \\ 1) do

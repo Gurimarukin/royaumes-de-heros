@@ -1,7 +1,7 @@
-defmodule Heros.PlayerTest do
+defmodule Heros.Game.PlayerTest do
   use ExUnit.Case
 
-  alias Heros.Player
+  alias Heros.Game.Player
 
   test "draw_cards" do
     player = %{Player.empty() | hand: [:card]}

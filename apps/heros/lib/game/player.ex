@@ -1,6 +1,7 @@
-defmodule Heros.Player do
-  alias Heros.{Cards, KeyListUtils, Option, Player}
-  alias Heros.Cards.Card
+defmodule Heros.Game.Player do
+  alias Heros.Game.{Cards, Player}
+  alias Heros.Game.Cards.Card
+  alias Heros.Utils.{KeyList, Option}
 
   @type id :: String.t()
 
@@ -180,7 +181,7 @@ defmodule Heros.Player do
   end
 
   def remove_from_hand(player, card_id) do
-    %{player | hand: player.hand |> KeyListUtils.delete(card_id)}
+    %{player | hand: player.hand |> KeyList.delete(card_id)}
   end
 
   def add_to_fight_zone(player, {card_id, card}) do
@@ -188,7 +189,7 @@ defmodule Heros.Player do
   end
 
   def remove_from_fight_zone(player, card_id) do
-    %{player | fight_zone: player.fight_zone |> KeyListUtils.delete(card_id)}
+    %{player | fight_zone: player.fight_zone |> KeyList.delete(card_id)}
   end
 
   def add_to_discard(player, {card_id, card}) do
@@ -196,7 +197,7 @@ defmodule Heros.Player do
   end
 
   def remove_from_discard(player, card_id) do
-    %{player | discard: player.discard |> KeyListUtils.delete(card_id)}
+    %{player | discard: player.discard |> KeyList.delete(card_id)}
   end
 
   def add_to_deck(player, {card_id, card}) do
@@ -204,21 +205,20 @@ defmodule Heros.Player do
   end
 
   def expend_card(player, card_id) do
-    %{player | fight_zone: player.fight_zone |> KeyListUtils.update(card_id, &Card.expend/1)}
+    %{player | fight_zone: player.fight_zone |> KeyList.update(card_id, &Card.expend/1)}
   end
 
   def prepare(player, card_id) do
     %{
       player
-      | fight_zone: player.fight_zone |> KeyListUtils.update(card_id, &Card.prepare/1)
+      | fight_zone: player.fight_zone |> KeyList.update(card_id, &Card.prepare/1)
     }
   end
 
   def consume_ally_ability(player, card_id) do
     %{
       player
-      | fight_zone:
-          player.fight_zone |> KeyListUtils.update(card_id, &Card.consume_ally_ability/1)
+      | fight_zone: player.fight_zone |> KeyList.update(card_id, &Card.consume_ally_ability/1)
     }
   end
 
@@ -236,7 +236,7 @@ defmodule Heros.Player do
         combat: 0,
         hand: [],
         discard: Enum.reverse(player.hand) ++ Enum.reverse(non_champions) ++ player.discard,
-        fight_zone: champions |> KeyListUtils.map(&Card.full_reset/1)
+        fight_zone: champions |> KeyList.map(&Card.full_reset/1)
     }
   end
 

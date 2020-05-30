@@ -3,8 +3,9 @@ defmodule Heros.Game.GenServer do
 
   require Logger
 
-  alias Heros.{Game, Player}
-  alias Heros.Cards.Card
+  alias Heros.Game
+  alias Heros.Game.Player
+  alias Heros.Game.Cards.Card
 
   #
   # Client

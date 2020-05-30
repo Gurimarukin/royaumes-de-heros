@@ -1,7 +1,8 @@
 defmodule Heros.GameTest do
   use ExUnit.Case, async: true
 
-  alias Heros.{Cards, Game, Player}
+  alias Heros.Game
+  alias Heros.Game.{Cards, Player}
 
   test "creates game" do
     {:ok, game} = Game.init_from_players(["p1", "p2"])
@@ -36,7 +37,7 @@ defmodule Heros.GameTest do
     assert length(game.market) == 5
 
     # market_deck
-    assert length(game.market_deck) == length(Heros.Cards.market()) - 5
+    assert length(game.market_deck) == length(Cards.market()) - 5
 
     # cemetery
     assert game.cemetery == []

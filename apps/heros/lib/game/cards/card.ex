@@ -1,6 +1,6 @@
-defmodule Heros.Cards.Card do
+defmodule Heros.Game.Cards.Card do
   alias Heros.Game
-  alias Heros.Cards.{Card, Decks, Guild, Imperial, Necros, Wild}
+  alias Heros.Game.Cards.{Card, Decks, Guild, Imperial, Necros, Wild}
 
   @type id :: binary
 
