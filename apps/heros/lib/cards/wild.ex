@@ -47,6 +47,7 @@ defmodule Heros.Cards.Wild do
   def type(:rampage), do: :action
   def type(:torgen), do: {:guard, 7}
   def type(:spark), do: :action
+  def type(:wolf_form), do: :action
   def type(:wolf_shaman), do: {:not_guard, 4}
   def type(_), do: nil
 
@@ -94,6 +95,12 @@ defmodule Heros.Cards.Wild do
   def primary_ability(game, :spark, player_id) do
     game
     |> Game.add_combat(player_id, 3)
+    |> Game.queue_target_opponent_to_discard(player_id)
+  end
+
+  def primary_ability(game, :wolf_form, player_id) do
+    game
+    |> Game.add_combat(player_id, 8)
     |> Game.queue_target_opponent_to_discard(player_id)
   end
 
@@ -178,6 +185,10 @@ defmodule Heros.Cards.Wild do
   @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
   def sacrifice_ability(game, :natures_bounty, player_id) do
     game |> Game.add_combat(player_id, 4)
+  end
+
+  def sacrifice_ability(game, :wolf_form, player_id) do
+    game |> Game.queue_target_opponent_to_discard(player_id)
   end
 
   def sacrifice_ability(_game, _, _player_id), do: nil

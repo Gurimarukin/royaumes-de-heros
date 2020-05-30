@@ -709,6 +709,48 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "wolf_form" do
+    assert Card.cost(:wolf_form) == 5
+    assert Card.type(:wolf_form) == :action
+    assert Card.faction(:wolf_form) == :wild
+    assert not Card.champion?(:wolf_form)
+    assert not Card.guard?(:wolf_form)
+
+    [wolf_form] = Cards.with_id(:wolf_form)
+    [gold] = Cards.with_id(:gold)
+
+    p1 = %{Player.empty() | hand: [wolf_form]}
+    p2 = %{Player.empty() | hand: [gold]}
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(wolf_form, 0))
+
+    p1 = %{
+      p1
+      | hand: [],
+        fight_zone: [wolf_form],
+        combat: 8,
+        pending_interactions: [:target_opponent_to_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    # interact
+    assert {:ok, game} = Game.interact(game, "p1", {:target_opponent_to_discard, "p2"})
+
+    p1 = %{p1 | pending_interactions: []}
+    p2 = %{p2 | pending_interactions: [:discard_card]}
+
+    assert Game.player(game, "p1") == p1
+    assert Game.player(game, "p2") == p2
+
+    # sacrifice
+    assert {:ok, game} = Game.use_sacrifice_ability(game, "p1", elem(wolf_form, 0))
+
+    p1 = %{p1 | fight_zone: [], pending_interactions: [:target_opponent_to_discard]}
+
+    assert Game.player(game, "p1") == p1
+    assert game.cemetery == [wolf_form]
   end
 
   test "wolf_shaman" do
