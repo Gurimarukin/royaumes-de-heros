@@ -3,7 +3,7 @@ version: '3'
 services:
   postgresql:
     image:
-      postgres:11
+      postgres:13
     container_name:
       heros-postgresql
     environment:
