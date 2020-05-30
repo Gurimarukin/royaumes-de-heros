@@ -473,6 +473,26 @@ defmodule Heros.Game do
     end)
   end
 
+  defp interaction(game, _player_id, :draw_then_discard, {:draw_then_discard, false}),
+    do: Option.some(game)
+
+  defp interaction(game, player_id, :draw_then_discard, {:draw_then_discard, true}) do
+    with_member(game.players, player_id, fn player -> Option.some(length(player.hand)) end)
+    |> Option.chain(fn n_cards_before ->
+      game = game |> draw_card(player_id, 1)
+
+      with_member(game.players, player_id, fn player ->
+        if length(player.hand) == n_cards_before + 1 do
+          game
+          |> queue_discard_card(player_id)
+          |> Option.some()
+        else
+          Option.none()
+        end
+      end)
+    end)
+  end
+
   defp interaction(game, player_id, :discard_card, {:discard_card, card_id}) do
     discard_card(game, player_id, card_id, fn _ -> true end)
   end
@@ -853,6 +873,18 @@ defmodule Heros.Game do
     else
       game
     end
+  end
+
+  def queue_draw_then_discard(game, player_id) do
+    update_player(game, player_id, fn player ->
+      can_draw = 0 < length(player.deck) + length(player.discard)
+
+      if can_draw do
+        player |> Player.queue_interaction(:draw_then_discard)
+      else
+        player
+      end
+    end)
   end
 
   defp queue_discard_card(game, player_id) do

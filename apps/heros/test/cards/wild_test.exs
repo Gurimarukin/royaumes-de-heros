@@ -268,6 +268,82 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "elven_gift" do
+    assert Card.cost(:elven_gift) == 2
+    assert Card.type(:elven_gift) == :action
+    assert Card.faction(:elven_gift) == :wild
+    assert not Card.champion?(:elven_gift)
+    assert not Card.guard?(:elven_gift)
+
+    [elven_gift] = Cards.with_id(:elven_gift)
+    [cron] = Cards.with_id(:cron)
+    [gold] = Cards.with_id(:gold)
+    [gem] = Cards.with_id(:gem)
+
+    {id, card} = elven_gift
+    expended_elven_gift = {id, %{card | ally_ability_used: true}}
+
+    # some cards to draw
+
+    p1 = %{Player.empty() | hand: [gold, elven_gift], fight_zone: [cron], discard: [gem]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(elven_gift, 0))
+
+    p1 = %{
+      p1
+      | hand: [gold],
+        fight_zone: [cron, elven_gift],
+        gold: 2,
+        pending_interactions: [:draw_then_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
+
+    before_interact = {game, p1}
+
+    # interact: draw
+    assert {:ok, game} = Game.interact(game, "p1", {:draw_then_discard, true})
+
+    p1 = %{p1 | pending_interactions: [:discard_card], hand: [gold, gem], discard: []}
+
+    assert Game.player(game, "p1") == p1
+
+    assert {:ok, game} = Game.interact(game, "p1", {:discard_card, elem(gold, 0)})
+
+    p1 = %{p1 | pending_interactions: [], hand: [gem], discard: [gold]}
+
+    assert Game.player(game, "p1") == p1
+
+    # interact: don't draw
+    {game, p1} = before_interact
+
+    assert {:ok, game} = Game.interact(game, "p1", {:draw_then_discard, false})
+
+    p1 = %{p1 | pending_interactions: []}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(elven_gift, 0))
+
+    p1 = %{p1 | fight_zone: [cron, expended_elven_gift], combat: 4}
+
+    assert Game.player(game, "p1") == p1
+
+    # no cards to draw
+
+    p1 = %{Player.empty() | hand: [gold, elven_gift], fight_zone: [cron]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    # primary
+    assert {:ok, game} = Game.play_card(game, "p1", elem(elven_gift, 0))
+
+    p1 = %{p1 | hand: [gold], fight_zone: [cron, elven_gift], gold: 2}
+
+    assert Game.player(game, "p1") == p1
   end
 
   test "grak" do

@@ -40,6 +40,7 @@ defmodule Heros.Cards.Wild do
   def type(:cron), do: {:not_guard, 6}
   def type(:dire_wolf), do: {:guard, 5}
   def type(:elven_curse), do: :action
+  def type(:elven_gift), do: :action
   def type(:grak), do: {:guard, 7}
   def type(:orc_grunt), do: {:guard, 3}
   def type(:torgen), do: {:guard, 7}
@@ -69,6 +70,12 @@ defmodule Heros.Cards.Wild do
     game
     |> Game.add_combat(player_id, 6)
     |> Game.queue_target_opponent_to_discard(player_id)
+  end
+
+  def primary_ability(game, :elven_gift, player_id) do
+    game
+    |> Game.add_gold(player_id, 2)
+    |> Game.queue_draw_then_discard(player_id)
   end
 
   def primary_ability(_game, _, _player_id), do: nil
@@ -107,6 +114,10 @@ defmodule Heros.Cards.Wild do
 
   def ally_ability(game, :elven_curse, player_id) do
     game |> Game.add_combat(player_id, 3)
+  end
+
+  def ally_ability(game, :elven_gift, player_id) do
+    game |> Game.add_combat(player_id, 4)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
