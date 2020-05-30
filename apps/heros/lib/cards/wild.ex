@@ -117,6 +117,12 @@ defmodule Heros.Cards.Wild do
     game |> Game.add_combat(player_id, 2)
   end
 
+  def expend_ability(game, :torgen, player_id, _card_id) do
+    game
+    |> Game.add_combat(player_id, 4)
+    |> Game.queue_target_opponent_to_discard(player_id)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities

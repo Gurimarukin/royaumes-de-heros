@@ -625,6 +625,41 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "torgen" do
+    assert Card.cost(:torgen) == 7
+    assert Card.type(:torgen) == {:guard, 7}
+    assert Card.faction(:torgen) == :wild
+    assert Card.champion?(:torgen)
+    assert Card.guard?(:torgen)
+
+    [torgen] = Cards.with_id(:torgen)
+    [gold] = Cards.with_id(:gold)
+
+    {id, card} = torgen
+    expended_torgen = {id, %{card | expend_ability_used: true}}
+
+    # no cards to draw
+
+    p1 = %{Player.empty() | hand: [torgen]}
+    p2 = %{Player.empty() | hand: [gold]}
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(torgen, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [torgen]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(torgen, 0))
+
+    p1 = %{
+      p1
+      | fight_zone: [expended_torgen],
+        combat: 4,
+        pending_interactions: [:target_opponent_to_discard]
+    }
+
+    assert Game.player(game, "p1") == p1
   end
 
   test "spark" do
