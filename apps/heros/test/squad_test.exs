@@ -55,7 +55,9 @@ defmodule Heros.SquadTest do
 
     assert p1.get.() == lobby
 
-    assert {:ok, state} = GenServer.call(pid, :start_game)
+    assert :error = GenServer.call(pid, {"p2", :start_game})
+
+    assert {:ok, state} = GenServer.call(pid, {"p1", :start_game})
 
     assert {:game, game} = state
     assert game.__struct__ == Game

@@ -23,10 +23,10 @@ defmodule Heros.Squad do
      }}
   end
 
-  def handle_call(:start_game, _from, squad) do
+  def handle_call({player_id, :start_game}, _from, squad) do
     case squad.state do
       {:lobby, lobby} ->
-        if lobby.ready do
+        if Lobby.start_game?(lobby, player_id) do
           start_game(lobby)
           |> Option.map(fn game -> %{squad | state: {:game, game}} end)
         else

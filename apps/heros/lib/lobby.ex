@@ -15,6 +15,10 @@ defmodule Heros.Lobby do
     Enum.empty?(lobby.players)
   end
 
+  def start_game?(lobby, player_id) do
+    lobby.ready and lobby.owner == player_id
+  end
+
   def create(player_id, player_name) do
     %Lobby{
       owner: player_id,
