@@ -467,6 +467,45 @@ defmodule Heros.Cards.WildTest do
   end
 
   test "orc_grunt" do
+    assert Card.cost(:orc_grunt) == 3
+    assert Card.type(:orc_grunt) == {:guard, 3}
+    assert Card.faction(:orc_grunt) == :wild
+    assert Card.champion?(:orc_grunt)
+    assert Card.guard?(:orc_grunt)
+
+    [orc_grunt] = Cards.with_id(:orc_grunt)
+    [cron] = Cards.with_id(:cron)
+    [dagger] = Cards.with_id(:dagger)
+
+    {id, card} = orc_grunt
+    expended_orc_grunt = {id, %{card | expend_ability_used: true}}
+
+    {id, card} = expended_orc_grunt
+    full_expended_orc_grunt = {id, %{card | ally_ability_used: true}}
+
+    p1 = %{Player.empty() | hand: [orc_grunt], fight_zone: [cron], deck: [dagger]}
+    p2 = Player.empty()
+    game = Game.empty([{"p1", p1}, {"p2", p2}], "p1")
+
+    assert {:ok, game} = Game.play_card(game, "p1", elem(orc_grunt, 0))
+
+    p1 = %{p1 | hand: [], fight_zone: [cron, orc_grunt]}
+
+    assert Game.player(game, "p1") == p1
+
+    # expend
+    assert {:ok, game} = Game.use_expend_ability(game, "p1", elem(orc_grunt, 0))
+
+    p1 = %{p1 | fight_zone: [cron, expended_orc_grunt], combat: 2}
+
+    assert Game.player(game, "p1") == p1
+
+    # ally
+    assert {:ok, game} = Game.use_ally_ability(game, "p1", elem(orc_grunt, 0))
+
+    p1 = %{p1 | fight_zone: [cron, full_expended_orc_grunt], hand: [dagger], deck: []}
+
+    assert Game.player(game, "p1") == p1
   end
 
   test "rampage" do

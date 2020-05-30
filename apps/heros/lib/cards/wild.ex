@@ -106,6 +106,10 @@ defmodule Heros.Cards.Wild do
     |> Game.queue_draw_then_discard(player_id)
   end
 
+  def expend_ability(game, :orc_grunt, player_id, _card_id) do
+    game |> Game.add_combat(player_id, 2)
+  end
+
   def expend_ability(_game, _, _player_id, _card_id), do: nil
 
   # Ally abilities
@@ -137,6 +141,10 @@ defmodule Heros.Cards.Wild do
 
   def ally_ability(game, :natures_bounty, player_id) do
     game |> Game.queue_target_opponent_to_discard(player_id)
+  end
+
+  def ally_ability(game, :orc_grunt, player_id) do
+    game |> Game.draw_card(player_id, 1)
   end
 
   def ally_ability(_game, _, _player_id), do: nil
