@@ -2,7 +2,7 @@ defmodule HerosWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "squads", HerosWeb.SquadsChannel
+  channel "squads", HerosWeb.SquadsChannel
   # channel "squad:*", HerosWeb.SquadChannel
 
   # Socket params are passed from the client and can
