@@ -5,14 +5,15 @@ defmodule Heros.Squad do
   use GenServer, restart: :temporary
 
   @type t :: %__MODULE__{
+          owner: nil | Player.id(),
           members: list({Player.id(), list((any -> any))}),
           state: {:lobby, Lobby.t()} | {:game, Game.t()}
         }
-  @enforce_keys [:members, :state]
-  defstruct [:members, :state]
+  @enforce_keys [:owner, :members, :state]
+  defstruct [:owner, :members, :state]
 
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+    GenServer.start_link(__MODULE__, :ok, opts)
   end
 
   def get(squad) do
@@ -24,12 +25,8 @@ defmodule Heros.Squad do
     %{stage: stage, n_players: length(squad.members)}
   end
 
-  def init({player_id, player_name, subscribe}) do
-    {:ok,
-     %Squad{
-       members: [{player_id, [subscribe]}],
-       state: {:lobby, Lobby.create(player_id, player_name)}
-     }}
+  def init(:ok) do
+    {:ok, %Squad{owner: nil, members: [], state: {:lobby, Lobby.empty()}}}
   end
 
   def handle_call(:get, _from, squad) do
@@ -39,7 +36,7 @@ defmodule Heros.Squad do
   def handle_call({player_id, :start_game}, _from, squad) do
     case squad.state do
       {:lobby, lobby} ->
-        if Lobby.start_game?(lobby, player_id) do
+        if lobby.ready and squad.owner == player_id do
           start_game(lobby)
           |> Option.map(fn game -> %{squad | state: {:game, game}} end)
         else
@@ -57,11 +54,9 @@ defmodule Heros.Squad do
       {:lobby, lobby} ->
         Lobby.join(lobby, player_id, player_name)
         |> Option.map(fn lobby ->
-          %{
-            squad
-            | members: squad.members ++ [{player_id, [subscribe]}],
-              state: {:lobby, lobby}
-          }
+          members = squad.members ++ [{player_id, [subscribe]}]
+          owner = squad.owner || hd(members) |> elem(0)
+          %{squad | owner: owner, members: members, state: {:lobby, lobby}}
         end)
 
       _ ->
@@ -75,11 +70,19 @@ defmodule Heros.Squad do
       {:lobby, lobby} ->
         Lobby.leave(lobby, player_id)
         |> Option.map(fn lobby ->
-          %{
-            squad
-            | members: squad.members |> KeyList.delete(player_id),
-              state: {:lobby, lobby}
-          }
+          members = squad.members |> KeyList.delete(player_id)
+
+          owner =
+            if squad.owner == player_id do
+              case members do
+                [] -> nil
+                [head | _] -> head |> elem(0)
+              end
+            else
+              squad.owner
+            end
+
+          %{squad | owner: owner, members: members, state: {:lobby, lobby}}
         end)
 
       _ ->

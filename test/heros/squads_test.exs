@@ -3,26 +3,15 @@ defmodule Heros.SquadsTest do
 
   alias Heros.Squads
 
-  defp user do
-    {:ok, agent} = Agent.start_link(fn -> nil end)
-
-    %{
-      get: fn -> Agent.get(agent, & &1) end,
-      update: fn new_state -> Agent.update(agent, fn _ -> new_state end) end
-    }
-  end
-
   setup do
     squads = start_supervised!(Squads)
     %{squads: squads}
   end
 
   test "spawns squads", %{squads: squads} do
-    p1 = user()
-
     assert Squads.lookup(squads, "squad") == :error
 
-    squad_id = Squads.create(squads, {"p1", "Player 1", p1.update})
+    squad_id = Squads.create(squads)
 
     assert {:ok, squad_pid} = Squads.lookup(squads, squad_id)
 
@@ -32,15 +21,13 @@ defmodule Heros.SquadsTest do
              %{
                id: squad_id,
                stage: :lobby,
-               n_players: 1
+               n_players: 0
              }
            ]
   end
 
   test "removes squads on exit", %{squads: squads} do
-    p1 = user()
-
-    squad_id = Squads.create(squads, {"p1", "Player 1", p1.update})
+    squad_id = Squads.create(squads)
 
     {:ok, squad} = Squads.lookup(squads, squad_id)
 

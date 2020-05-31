@@ -8,17 +8,10 @@ defmodule HerosWeb.SquadsChannel do
   end
 
   def handle_in("create", _message, socket) do
-    # These should be returned for current user
-    player_id = "p1"
-    player_name = "Player 1"
-    subscribe = fn -> nil end
+    id = Squads.create(Squads)
 
-    Squads.create(Squads, {player_id, player_name, subscribe})
-
-    payload = %{body: Squads.list(Squads)}
-
-    broadcast!(socket, "update", payload)
-    {:noreply, socket}
+    broadcast!(socket, "update", %{body: Squads.list(Squads)})
+    {:reply, {:ok, %{id: id}}, socket}
   end
 
   intercept ["update"]

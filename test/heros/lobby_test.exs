@@ -5,10 +5,13 @@ defmodule Heros.LobbyTest do
   alias Heros.Lobby.Player
 
   test "lobby" do
-    lobby = Lobby.create("p1", "Player 1")
+    lobby = Lobby.empty()
+
+    assert lobby == %Lobby{players: [], ready: false}
+
+    assert {:ok, lobby} = Lobby.join(lobby, "p1", "Player 1")
 
     assert lobby == %Lobby{
-             owner: "p1",
              players: [{"p1", %Player{name: "Player 1"}}],
              ready: false
            }
@@ -18,7 +21,6 @@ defmodule Heros.LobbyTest do
     assert {:ok, lobby} = Lobby.join(lobby, "p2", "Player 2")
 
     assert lobby == %Lobby{
-             owner: "p1",
              players: [{"p1", %Player{name: "Player 1"}}, {"p2", %Player{name: "Player 2"}}],
              ready: true
            }
@@ -28,7 +30,6 @@ defmodule Heros.LobbyTest do
     assert {:ok, lobby} = Lobby.join(lobby, "p3", "Player 3")
 
     assert lobby == %Lobby{
-             owner: "p1",
              players: [
                {"p1", %Player{name: "Player 1"}},
                {"p2", %Player{name: "Player 2"}},
@@ -41,14 +42,13 @@ defmodule Heros.LobbyTest do
     assert {:ok, lobby} = Lobby.leave(lobby, "p1")
 
     assert lobby == %Lobby{
-             owner: "p2",
              players: [{"p2", %Player{name: "Player 2"}}],
              ready: false
            }
 
     assert {:ok, lobby} = Lobby.leave(lobby, "p2")
 
-    assert lobby == %Lobby{owner: nil, players: [], ready: false}
+    assert lobby == %Lobby{players: [], ready: false}
     assert Lobby.empty?(lobby)
   end
 end

@@ -4,25 +4,19 @@ defmodule Heros.Lobby do
   alias Heros.Utils.{KeyList, Option}
 
   @type t :: %__MODULE__{
-          owner: nil | Player.id(),
           players: list({Player.id(), Player.t()}),
           ready: boolean
         }
-  @enforce_keys [:owner, :players, :ready]
-  defstruct [:owner, :players, :ready]
+  @enforce_keys [:players, :ready]
+  defstruct [:players, :ready]
 
   def empty?(lobby) do
     Enum.empty?(lobby.players)
   end
 
-  def start_game?(lobby, player_id) do
-    lobby.ready and lobby.owner == player_id
-  end
-
-  def create(player_id, player_name) do
+  def empty do
     %Lobby{
-      owner: player_id,
-      players: [{player_id, Player.from_name(player_name)}],
+      players: [],
       ready: false
     }
   end
@@ -42,16 +36,9 @@ defmodule Heros.Lobby do
   def leave(lobby, player_id) do
     with_member(lobby.players, player_id, fn _player ->
       players = lobby.players |> KeyList.delete(player_id)
-      lobby = %{lobby | players: players} |> update_ready()
 
-      if player_id == lobby.owner do
-        case players do
-          [] -> %{lobby | owner: nil}
-          [{id, _} | _] -> %{lobby | owner: id}
-        end
-      else
-        lobby
-      end
+      %{lobby | players: players}
+      |> update_ready()
       |> Option.some()
     end)
   end
