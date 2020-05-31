@@ -17,9 +17,9 @@ defmodule Heros.SquadTest do
     p2 = user()
     p3 = user()
 
-    assert {:ok, pid} = Squad.start_link("p1", "Player 1", p1.update)
+    assert {:ok, pid} = Squad.start_link({"p1", "Player 1", p1.update})
 
-    assert :sys.get_state(pid) == %Squad{
+    assert Squad.get(pid) == %Squad{
              members: [{"p1", [p1.update]}],
              state:
                {:lobby,
@@ -51,7 +51,7 @@ defmodule Heros.SquadTest do
 
     assert state == lobby
 
-    assert :sys.get_state(pid) == %Squad{
+    assert Squad.get(pid) == %Squad{
              members: [{"p1", [p1.update]}, {"p2", [p2.update]}],
              state: lobby
            }
@@ -78,7 +78,7 @@ defmodule Heros.SquadTest do
 
     assert state == lobby
 
-    assert :sys.get_state(pid) == %Squad{
+    assert Squad.get(pid) == %Squad{
              members: [{"p1", [p1.update]}, {"p2", [p2.update]}, {"p3", [p3.update]}],
              state: lobby
            }
@@ -102,7 +102,7 @@ defmodule Heros.SquadTest do
 
     assert state == lobby
 
-    assert :sys.get_state(pid) == %Squad{
+    assert Squad.get(pid) == %Squad{
              members: [{"p1", [p1.update]}, {"p2", [p2.update]}],
              state: lobby
            }

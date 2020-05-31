@@ -11,8 +11,17 @@ defmodule Heros.Squad do
   @enforce_keys [:members, :state]
   defstruct [:members, :state]
 
-  def start_link(player_id, player_name, subscribe) do
-    GenServer.start_link(__MODULE__, {player_id, player_name, subscribe})
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, opts)
+  end
+
+  def get(squad) do
+    GenServer.call(squad, :get)
+  end
+
+  def short(squad) do
+    squad = %{state: {stage, _}} = GenServer.call(squad, :get)
+    %{stage: stage, n_players: length(squad.members)}
   end
 
   def init({player_id, player_name, subscribe}) do
@@ -21,6 +30,10 @@ defmodule Heros.Squad do
        members: [{player_id, [subscribe]}],
        state: {:lobby, Lobby.create(player_id, player_name)}
      }}
+  end
+
+  def handle_call(:get, _from, squad) do
+    {:reply, squad, squad}
   end
 
   def handle_call({player_id, :start_game}, _from, squad) do
