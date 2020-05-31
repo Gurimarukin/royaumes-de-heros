@@ -1,5 +1,6 @@
 {
   "repository": {},
+  "description": "Hero Realms Online with Phoenix.",
   "license": "MIT",
   "scripts": {
     "deploy": "webpack --mode production",
