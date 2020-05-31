@@ -15,6 +15,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "test/**/*.js"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx", "test/**/*.js"],
   "exclude": ["node_modules", "static"]
 }

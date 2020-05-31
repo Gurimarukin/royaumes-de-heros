@@ -1,12 +1,11 @@
 /** @jsx jsx */
 import * as t from 'io-ts'
 import { jsx } from '@emotion/core'
-import { Socket, Channel } from 'phoenix'
 import { useContext, FunctionComponent, useState } from 'react'
 
 import { HistoryContext } from '../contexts/HistoryContext'
 import { Squad } from '../models/Squad'
-import { pipe, Either, Future } from '../utils/fp'
+import { pipe, Future } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 import { Router } from './Router'
 
@@ -14,7 +13,7 @@ export const Squads: FunctionComponent = () => {
   const history = useContext(HistoryContext)
 
   const [squads, setSquads] = useState<Squad[]>([])
-  const [[, channel]] = useState(squadsSocketAndChan)
+  const [[, channel]] = useState(() => PhoenixUtils.initSocket(setSquads, t.array(Squad.codec)))
 
   return (
     <div>
@@ -41,27 +40,6 @@ export const Squads: FunctionComponent = () => {
     </div>
   )
 
-  function squadsSocketAndChan(): [Socket, Channel] {
-    const socket = new Socket('/socket' /*{ params: { token: window.userToken } }*/)
-    socket.connect()
-
-    const channel = socket.channel('squads')
-
-    channel
-      .join()
-      .receive('ok', onPayload)
-      .receive('error', resp => console.log('error:', resp))
-
-    channel.on('update', onPayload)
-
-    return [socket, channel]
-  }
-
-  function onPayload(u: unknown): void {
-    const { body } = u as any
-    return setSquads(body)
-  }
-
   function createGame(): () => void {
     return () => {
       pipe(
@@ -73,19 +51,3 @@ export const Squads: FunctionComponent = () => {
     }
   }
 }
-
-// const payloadCodec = t.strict({ body: t.array(Squad.codec) })
-
-// function decodePayload(f: (squads: Squad[]) => void): (resp: any) => void {
-//   return resp => {
-//     console.log('ok:', resp)
-//     pipe(
-//       resp,
-//       payloadCodec.decode,
-//       Either.fold(
-//         e => console.error("Couldn't decode response:", failure(e)),
-//         payload => f(payload.body)
-//       )
-//     )
-//   }
-// }

@@ -6,7 +6,8 @@ import { useEffect, ReactElement } from 'react'
 
 import { NotFound } from './NotFound'
 import { Squads } from './Squads'
-import { Maybe, pipe, Dict, List } from '../utils/fp'
+import { Maybe, pipe, List } from '../utils/fp'
+import { Squad } from './Squad'
 
 type Route = (path: string) => Maybe<SubtitleWithElt>
 type SubtitleWithElt = [Maybe<string>, ReactElement]
@@ -35,11 +36,12 @@ export namespace Router {
 
 const routes = Router.routes
 
+/* eslint-disable react/jsx-key */
 function route(path: string): SubtitleWithElt {
   return pipe(
     [
       exactMatcher(routes.squads)(() => [Maybe.none, <Squads />]),
-      simpleExtractor('game')(id => [Maybe.none, <div>Game {id}</div>])
+      simpleExtractor('game')(id => [Maybe.none, <Squad id={id} />])
     ],
     List.reduce<Route, Maybe<SubtitleWithElt>>(Maybe.none, (acc, route) =>
       pipe(
@@ -50,6 +52,7 @@ function route(path: string): SubtitleWithElt {
     Maybe.getOrElse(() => [Maybe.some('Page non trouvée'), <NotFound />])
   )
 }
+/* eslint-enable react/jsx-key */
 
 function exactMatcher(str: string): (f: () => SubtitleWithElt) => Route {
   return f => path =>
@@ -58,6 +61,8 @@ function exactMatcher(str: string): (f: () => SubtitleWithElt) => Route {
       Maybe.map(_ => f())
     )
 }
+
+const alphanum = S.many(C.alphanum)
 
 // matches "/prefix/:param"
 function simpleExtractor(prefix: string): (f: (a: string) => SubtitleWithElt) => Route
@@ -81,5 +86,3 @@ function simpleExtractor<A>(
   )
   return f => path => pipe(run(parser, path), Maybe.fromEither, Maybe.map(f))
 }
-
-const alphanum = S.many(C.alphanum)
