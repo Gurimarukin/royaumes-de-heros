@@ -1,0 +1,20 @@
+{
+  "extends": "@type-config/strict",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "../priv/static/js",
+    "module": "esnext",
+    "target": "es5",
+    "lib": ["es6", "dom"],
+    "allowJs": false,
+    "jsx": "react",
+    "moduleResolution": "node",
+    "rootDir": ".",
+    "declaration": false,
+    "sourceMap": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "test/**/*.js"],
+  "exclude": ["node_modules", "static"]
+}
