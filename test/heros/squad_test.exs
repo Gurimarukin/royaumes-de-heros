@@ -16,19 +16,38 @@ defmodule Heros.SquadTest do
 
     # p1 joins
 
-    assert {:ok, _} = Squad.connect(pid, "p1", "Player 1")
+    assert {:ok, _} = Squad.connect(pid, "p1", "Player 1", :p1_1)
 
     lobby = %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}
 
     assert Squad.get(pid) == %Squad{
              owner: "p1",
-             members: ["p1"],
+             members: [{"p1", MapSet.new([:p1_1])}],
+             state: {:lobby, lobby}
+           }
+
+    # p1 joins again
+
+    assert {:ok, _} = Squad.connect(pid, "p1", "Player 1", :p1_1)
+
+    assert Squad.get(pid) == %Squad{
+             owner: "p1",
+             members: [{"p1", MapSet.new([:p1_1])}],
+             state: {:lobby, lobby}
+           }
+
+    # with other pid
+    assert {:ok, _} = Squad.connect(pid, "p1", "whatever", :p1_2)
+
+    assert Squad.get(pid) == %Squad{
+             owner: "p1",
+             members: [{"p1", MapSet.new([:p1_1, :p1_2])}],
              state: {:lobby, lobby}
            }
 
     # p2 joins
 
-    assert {:ok, _} = Squad.connect(pid, "p2", "Player 2")
+    assert {:ok, _} = Squad.connect(pid, "p2", "Player 2", :p2_1)
 
     lobby = %Lobby{
       players: [
@@ -40,13 +59,13 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(pid) == %Squad{
              owner: "p1",
-             members: ["p1", "p2"],
+             members: [{"p1", MapSet.new([:p1_1, :p1_2])}, {"p2", MapSet.new([:p2_1])}],
              state: {:lobby, lobby}
            }
 
     # p3 joins
 
-    assert {:ok, _} = Squad.connect(pid, "p3", "Player 3")
+    assert {:ok, _} = Squad.connect(pid, "p3", "Player 3", :p3)
 
     lobby = %Lobby{
       players: [
@@ -59,13 +78,30 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(pid) == %Squad{
              owner: "p1",
-             members: ["p1", "p2", "p3"],
+             members: [
+               {"p1", MapSet.new([:p1_1, :p1_2])},
+               {"p2", MapSet.new([:p2_1])},
+               {"p3", MapSet.new([:p3])}
+             ],
              state: {:lobby, lobby}
            }
 
     # p1 leaves
 
-    assert {:ok, _} = Squad.disconnect(pid, "p1")
+    assert {:ok, _} = Squad.disconnect(pid, "p1", :p3)
+    assert {:ok, _} = Squad.disconnect(pid, "p1", :p1_1)
+
+    assert Squad.get(pid) == %Squad{
+             owner: "p1",
+             members: [
+               {"p1", MapSet.new([:p1_2])},
+               {"p2", MapSet.new([:p2_1])},
+               {"p3", MapSet.new([:p3])}
+             ],
+             state: {:lobby, lobby}
+           }
+
+    assert {:ok, _} = Squad.disconnect(pid, "p1", :p1_2)
 
     lobby = %Lobby{
       players: [
@@ -77,7 +113,7 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(pid) == %Squad{
              owner: "p2",
-             members: ["p2", "p3"],
+             members: [{"p2", MapSet.new([:p2_1])}, {"p3", MapSet.new([:p3])}],
              state: {:lobby, lobby}
            }
 
@@ -90,5 +126,28 @@ defmodule Heros.SquadTest do
     %{state: {:game, game}} = Squad.get(pid)
 
     assert game.__struct__ == Game
+
+    # p1 can't rejoin as game started
+
+    assert :error = Squad.connect(pid, "p1", "Player 1", :p1_1)
+
+    # but p2 can
+    assert {:ok, _} = Squad.connect(pid, "p2", "whatever", :p2_2)
+
+    assert Squad.get(pid) == %Squad{
+             owner: "p2",
+             members: [{"p2", MapSet.new([:p2_1, :p2_2])}, {"p3", MapSet.new([:p3])}],
+             state: {:game, game}
+           }
+
+    # when p3 leaves, doesn't change game
+
+    assert {:ok, _} = Squad.disconnect(pid, "p3", :p3)
+
+    assert Squad.get(pid) == %Squad{
+             owner: "p2",
+             members: [{"p2", MapSet.new([:p2_1, :p2_2])}],
+             state: {:game, game}
+           }
   end
 end

@@ -4,9 +4,11 @@ defmodule Heros.Squad do
 
   use GenServer, restart: :temporary
 
+  require Logger
+
   @type t :: %__MODULE__{
           owner: nil | Player.id(),
-          members: list({Player.id(), list((any -> any))}),
+          members: list({Player.id(), MapSet.t(pid)}),
           state: {:lobby, Lobby.t()} | {:game, Game.t()}
         }
   @enforce_keys [:owner, :members, :state]
@@ -25,12 +27,12 @@ defmodule Heros.Squad do
     %{stage: stage, n_players: length(squad.members)}
   end
 
-  def connect(squad, player_id, player_name) do
-    GenServer.call(squad, {:connect, player_id, player_name})
+  def connect(squad, member_id, player_name, socket) do
+    GenServer.call(squad, {:connect, member_id, player_name, socket})
   end
 
-  def disconnect(squad, player_id) do
-    GenServer.call(squad, {:disconnect, player_id})
+  def disconnect(squad, member_id, socket) do
+    GenServer.call(squad, {:disconnect, member_id, socket})
   end
 
   def init(:ok) do
@@ -57,88 +59,58 @@ defmodule Heros.Squad do
     |> to_reply(squad)
   end
 
-  # TODO: remove join and leave
-  def handle_call({:join, player_id, player_name, subscribe}, _from, squad) do
+  def handle_call({:connect, member_id, player_name, socket}, _from, squad) do
     case squad.state do
       {:lobby, lobby} ->
-        Lobby.join(lobby, player_id, player_name)
-        |> Option.map(fn lobby ->
-          members = squad.members ++ [{player_id, [subscribe]}]
-          owner = squad.owner || hd(members) |> elem(0)
-          %{squad | owner: owner, members: members, state: {:lobby, lobby}}
-        end)
+        case KeyList.find(squad.members, member_id) do
+          nil ->
+            Logger.debug(~s"Squad #{inspect(self())}: #{player_name} joined")
+
+            Lobby.join(lobby, member_id, player_name)
+            |> Option.map(fn lobby ->
+              members = squad.members ++ [{member_id, MapSet.new([socket])}]
+              owner = squad.owner || hd(members) |> elem(0)
+              %{squad | owner: owner, members: members, state: {:lobby, lobby}}
+            end)
+
+          _sockets ->
+            members = squad.members |> KeyList.update(member_id, &MapSet.put(&1, socket))
+            Option.some(%{squad | members: members})
+        end
 
       _ ->
-        Option.none()
+        with_member(squad.members, member_id, fn _sockets ->
+          %{squad | members: squad.members |> KeyList.update(member_id, &MapSet.put(&1, socket))}
+          |> Option.some()
+        end)
     end
     |> to_reply(squad)
   end
 
-  def handle_call({:leave, player_id}, _from, squad) do
-    case squad.state do
-      {:lobby, lobby} ->
-        Lobby.leave(lobby, player_id)
-        |> Option.map(fn lobby ->
-          members = squad.members |> KeyList.delete(player_id)
+  def handle_call({:disconnect, member_id, socket}, _from, squad) do
+    with_member(squad.members, member_id, fn sockets ->
+      Logger.debug(~s"Squad #{inspect(self())}: #{member_id} disconected #{inspect(socket)}")
 
-          owner =
-            if squad.owner == player_id do
-              case members do
-                [] -> nil
-                [head | _] -> head |> elem(0)
-              end
-            else
-              squad.owner
-            end
+      sockets = MapSet.delete(sockets, socket)
 
-          %{squad | owner: owner, members: members, state: {:lobby, lobby}}
-        end)
+      if MapSet.size(sockets) == 0 do
+        Logger.debug(~s"Squad #{inspect(self())}: no more connections for #{member_id}")
+        Logger.debug(~s"Squad #{inspect(self())}: #{member_id} left")
 
-      _ ->
-        Option.none()
-    end
-    |> to_reply(squad)
-  end
+        case squad.state do
+          {:lobby, lobby} ->
+            Lobby.leave(lobby, member_id)
+            |> Option.map(fn lobby -> member_left(squad, member_id, {:lobby, lobby}) end)
 
-  def handle_call({:connect, player_id, player_name}, _from, squad) do
-    case squad.state do
-      {:lobby, lobby} ->
-        Lobby.join(lobby, player_id, player_name)
-        |> Option.map(fn lobby ->
-          members = squad.members ++ [player_id]
-          owner = squad.owner || hd(members)
-          %{squad | owner: owner, members: members, state: {:lobby, lobby}}
-        end)
-
-      _ ->
-        Option.none()
-    end
-    |> to_reply(squad)
-  end
-
-  def handle_call({:disconnect, player_id}, _from, squad) do
-    case squad.state do
-      {:lobby, lobby} ->
-        Lobby.leave(lobby, player_id)
-        |> Option.map(fn lobby ->
-          members = squad.members |> Enum.filter(&(&1 != player_id))
-
-          owner =
-            if squad.owner == player_id do
-              case members do
-                [] -> nil
-                [head | _] -> head
-              end
-            else
-              squad.owner
-            end
-
-          %{squad | owner: owner, members: members, state: {:lobby, lobby}}
-        end)
-
-      _ ->
-        Option.none()
-    end
+          state ->
+            member_left(squad, member_id, state)
+            |> Option.some()
+        end
+      else
+        %{squad | members: squad.members |> KeyList.update(member_id, fn _ -> sockets end)}
+        |> Option.some()
+      end
+    end)
     |> to_reply(squad)
   end
 
@@ -161,6 +133,22 @@ defmodule Heros.Squad do
     |> Game.init_from_players()
   end
 
+  defp member_left(squad, member_id, state) do
+    members = squad.members |> KeyList.delete(member_id)
+
+    owner =
+      if squad.owner == member_id do
+        case members do
+          [] -> nil
+          [head | _] -> head |> elem(0)
+        end
+      else
+        squad.owner
+      end
+
+    %{squad | owner: owner, members: members, state: state}
+  end
+
   defp to_reply({:ok, squad}, _old_squad) do
     # if squad != old_squad do
     #   # broadcast state
@@ -175,4 +163,10 @@ defmodule Heros.Squad do
   end
 
   defp to_reply(:error, squad), do: {:reply, :error, squad}
+
+  defp with_member(list, key, f) do
+    KeyList.find(list, key)
+    |> Option.from_nilable()
+    |> Option.chain(f)
+  end
 end

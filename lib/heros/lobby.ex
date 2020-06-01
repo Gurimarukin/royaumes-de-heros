@@ -16,10 +16,7 @@ defmodule Heros.Lobby do
   end
 
   def empty do
-    %Lobby{
-      players: [],
-      ready: false
-    }
+    %Lobby{players: [], ready: false}
   end
 
   def join(lobby, player_id, player_name) do
