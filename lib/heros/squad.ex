@@ -43,7 +43,7 @@ defmodule Heros.Squad do
     {:reply, squad, squad}
   end
 
-  def handle_call({player_id, :start_game}, _from, squad) do
+  def handle_call({player_id, "start_game"}, _from, squad) do
     case squad.state do
       {:lobby, lobby} ->
         if lobby.ready and squad.owner == player_id do
@@ -69,7 +69,7 @@ defmodule Heros.Squad do
             Lobby.join(lobby, member_id, player_name)
             |> Option.map(fn lobby ->
               members = squad.members ++ [{member_id, MapSet.new([socket])}]
-              owner = squad.owner || hd(members) |> elem(0)
+              owner = squad.owner || member_id
               %{squad | owner: owner, members: members, state: {:lobby, lobby}}
             end)
 
@@ -78,7 +78,7 @@ defmodule Heros.Squad do
             Option.some(%{squad | members: members})
         end
 
-      _ ->
+      {:game, _game} ->
         with_member(squad.members, member_id, fn _sockets ->
           %{squad | members: squad.members |> KeyList.update(member_id, &MapSet.put(&1, socket))}
           |> Option.some()
@@ -100,10 +100,19 @@ defmodule Heros.Squad do
         case squad.state do
           {:lobby, lobby} ->
             Lobby.leave(lobby, member_id)
-            |> Option.map(fn lobby -> member_left(squad, member_id, {:lobby, lobby}) end)
+            |> Option.map(fn lobby ->
+              %{squad | state: {:lobby, lobby}}
+              |> delete_member(member_id)
+              |> update_owner(member_id)
+            end)
 
           state ->
-            member_left(squad, member_id, state)
+            %{
+              squad
+              | state: state,
+                members: squad.members |> KeyList.update(member_id, fn _ -> sockets end)
+            }
+            |> update_owner(member_id)
             |> Option.some()
         end
       else
@@ -115,6 +124,10 @@ defmodule Heros.Squad do
   end
 
   def handle_call(message, from, squad) do
+    Logger.debug(
+      ~s"Squad: didn't handle message #{inspect(message)}; dispatching to #{elem(squad.state, 0)}"
+    )
+
     case squad.state do
       {:lobby, lobby} ->
         Lobby.Helpers.handle_call(message, from, lobby)
@@ -133,12 +146,17 @@ defmodule Heros.Squad do
     |> Game.init_from_players()
   end
 
-  defp member_left(squad, member_id, state) do
-    members = squad.members |> KeyList.delete(member_id)
+  defp delete_member(squad, member_id) do
+    %{squad | members: squad.members |> KeyList.delete(member_id)}
+  end
+
+  defp update_owner(squad, member_id) do
+    non_empty_members =
+      squad.members |> Enum.filter(fn {_, sockets} -> MapSet.size(sockets) != 0 end)
 
     owner =
       if squad.owner == member_id do
-        case members do
+        case non_empty_members do
           [] -> nil
           [head | _] -> head |> elem(0)
         end
@@ -146,22 +164,10 @@ defmodule Heros.Squad do
         squad.owner
       end
 
-    %{squad | owner: owner, members: members, state: state}
+    %{squad | owner: owner}
   end
 
-  defp to_reply({:ok, squad}, _old_squad) do
-    # if squad != old_squad do
-    #   # broadcast state
-    #   # TODO: projection
-    #   squad.members
-    #   |> KeyList.map(fn subscribtions ->
-    #     subscribtions |> Enum.map(& &1.(squad.state))
-    #   end)
-    # end
-
-    {:reply, {:ok, squad.state}, squad}
-  end
-
+  defp to_reply({:ok, squad}, _old_squad), do: {:reply, {:ok, squad}, squad}
   defp to_reply(:error, squad), do: {:reply, :error, squad}
 
   defp with_member(list, key, f) do

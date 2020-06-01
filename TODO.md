@@ -1,4 +1,4 @@
 * prevent players from performing actions on finished game
-* better test `:stun_champion`
-* (un)subscribe in squad; on leave, kill all subscribtions
+* better test `:stun_champion` 
 * private + public id; don't send private id to client
+* handle reconnect

@@ -7,11 +7,16 @@ import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { Either, pipe, flow } from '../utils/fp'
 
-export function useChannel<A>(
+interface Listeners {
+  readonly onJoinSuccess: (resp: unknown) => void
+  readonly onJoinError: (resp: unknown) => void
+  readonly onUpdate: (resp: unknown) => void
+}
+
+export function useChannel(
   userToken: string,
   topic: string,
-  setState: (state: AsyncState<ChannelError, A>) => void,
-  decode: (u: unknown) => t.Validation<A>
+  { onJoinSuccess, onJoinError, onUpdate }: Partial<Listeners>
 ): [Socket, Channel] {
   const [socket, channel] = useMemo<[Socket, Channel]>(() => {
     const socket = new Socket('/socket', { params: { token: userToken } })
@@ -19,35 +24,14 @@ export function useChannel<A>(
     return [socket, channel]
   }, [])
 
-  const handleSuccess = useCallback(
-    handleResponse(
-      flow(
-        t.strict({ body: t.unknown }).decode,
-        Either.chain(({ body }) => decode(body))
-      )
-    )(state => {
-      console.log('new state:', state)
-      pipe(state, AsyncState.Success, setState)
-    }),
-    []
-  )
-
-  const handleError = useCallback(
-    handleResponse(ChannelError.codec.decode)(error => {
-      if (error.status === 403 || error.status === 404) {
-        channel.leave()
-      }
-      pipe(error, AsyncState.Error, setState)
-    }),
-    []
-  )
-
   useEffect(() => {
     socket.connect()
 
-    channel.join().receive('ok', handleSuccess).receive('error', handleError)
+    const join = channel.join()
+    if (onJoinSuccess !== undefined) join.receive('ok', onJoinSuccess)
+    if (onJoinError !== undefined) join.receive('error', onJoinError)
 
-    channel.on('update', handleSuccess)
+    if (onUpdate !== undefined) channel.on('update', onUpdate)
 
     return () => {
       channel.leave()
@@ -55,17 +39,4 @@ export function useChannel<A>(
   }, [])
 
   return [socket, channel]
-}
-
-function handleResponse<A>(
-  decode: (u: unknown) => t.Validation<A>
-): (onRight: (a: A) => void) => (resp: string) => void {
-  return onRight => resp => {
-    console.log('decoding response:', resp)
-    pipe(
-      resp,
-      decode,
-      Either.fold(e => console.error("couldn't decode response:", failure(e)), onRight)
-    )
-  }
 }

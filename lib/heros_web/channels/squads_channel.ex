@@ -4,7 +4,7 @@ defmodule HerosWeb.SquadsChannel do
   use Phoenix.Channel
 
   def join("squads", _message, socket) do
-    {:ok, body(), socket}
+    {:ok, squads_list(), socket}
   end
 
   def handle_in("create", _message, socket) do
@@ -16,7 +16,7 @@ defmodule HerosWeb.SquadsChannel do
   intercept ["update"]
 
   def handle_out("update", _msg, socket) do
-    push(socket, "update", body())
+    push(socket, "update", squads_list())
     {:noreply, socket}
   end
 
@@ -24,7 +24,7 @@ defmodule HerosWeb.SquadsChannel do
     broadcast!(socket, "update", %{})
   end
 
-  defp body do
+  defp squads_list do
     %{body: Squads.list(Squads)}
   end
 end

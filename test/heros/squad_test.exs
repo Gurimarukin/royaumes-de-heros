@@ -16,11 +16,13 @@ defmodule Heros.SquadTest do
 
     # p1 joins
 
-    assert {:ok, _} = Squad.connect(pid, "p1", "Player 1", :p1_1)
+    assert {:ok, squad} = Squad.connect(pid, "p1", "Player 1", :p1_1)
 
     lobby = %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}
 
-    assert Squad.get(pid) == %Squad{
+    assert Squad.get(pid) == squad
+
+    assert squad == %Squad{
              owner: "p1",
              members: [{"p1", MapSet.new([:p1_1])}],
              state: {:lobby, lobby}
@@ -119,9 +121,9 @@ defmodule Heros.SquadTest do
 
     # start
 
-    assert :error = GenServer.call(pid, {"p3", :start_game})
+    assert :error = GenServer.call(pid, {"p3", "start_game"})
 
-    assert {:ok, _} = GenServer.call(pid, {"p2", :start_game})
+    assert {:ok, _} = GenServer.call(pid, {"p2", "start_game"})
 
     %{state: {:game, game}} = Squad.get(pid)
 
@@ -146,7 +148,7 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(pid) == %Squad{
              owner: "p2",
-             members: [{"p2", MapSet.new([:p2_1, :p2_2])}],
+             members: [{"p2", MapSet.new([:p2_1, :p2_2])}, {"p3", MapSet.new()}],
              state: {:game, game}
            }
   end

@@ -4,6 +4,7 @@ import { LobbyPlayer } from './LobbyPlayer'
 
 export namespace LobbyState {
   export const codec = t.strict({
+    owner: t.string,
     players: t.array(t.tuple([t.string, LobbyPlayer.codec])),
     ready: t.boolean
   })

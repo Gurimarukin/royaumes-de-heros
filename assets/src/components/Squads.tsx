@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import * as t from 'io-ts'
 import { jsx } from '@emotion/core'
-import { useContext, FunctionComponent, useState } from 'react'
+import { useContext, FunctionComponent, useState, useCallback } from 'react'
 
 import { Link } from './Link'
 import { Router } from './Router'
@@ -11,7 +11,7 @@ import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadShort } from '../models/SquadShort'
-import { pipe, Future } from '../utils/fp'
+import { pipe, Future, flow, Either } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 export const Squads: FunctionComponent = () => {
@@ -20,7 +20,14 @@ export const Squads: FunctionComponent = () => {
 
   const [state, setState] = useState<AsyncState<ChannelError, SquadShort[]>>(AsyncState.Loading)
 
-  const [, channel] = useChannel(user.token, 'squads', setState, t.array(SquadShort.codec).decode)
+  const onJoinSuccess = useCallback(
+    PhoenixUtils.handleResponse(PhoenixUtils.decodeBody(t.array(SquadShort.codec).decode))(
+      flow(AsyncState.Success, setState)
+    ),
+    []
+  )
+
+  const [, channel] = useChannel(user.token, 'squads', { onJoinSuccess, onUpdate: onJoinSuccess })
 
   return (
     <div>
@@ -72,7 +79,7 @@ export const Squads: FunctionComponent = () => {
     return () => {
       pipe(
         channel.push('create', {}),
-        PhoenixUtils.toFuture,
+        PhoenixUtils.channelToFuture,
         Future.map(({ id }) => history.push(Router.routes.squad(id))),
         Future.runUnsafe
       )

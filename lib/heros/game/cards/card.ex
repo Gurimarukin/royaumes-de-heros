@@ -10,6 +10,7 @@ defmodule Heros.Game.Cards.Card do
           ally_ability_used: boolean
         }
   @enforce_keys [:key, :expend_ability_used, :ally_ability_used]
+  @derive Jason.Encoder
   defstruct [:key, :expend_ability_used, :ally_ability_used]
 
   @spec get(atom) :: Heros.Cards.Card.t()

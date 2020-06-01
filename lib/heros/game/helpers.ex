@@ -11,6 +11,49 @@ defmodule Heros.Game.Helpers do
     fn card -> Card.champion?(card.key) end
   end
 
+  def project(game, player_id) do
+    %{
+      player: game.players |> Enum.map(&project_player(&1, player_id)),
+      current_player: game.current_player,
+      gems: length(game.gems),
+      market: game.market,
+      market_deck: length(game.market_deck),
+      cemetery: game.cemetery
+    }
+  end
+
+  defp project_player({player_id, player}, player_id) do
+    {player_id,
+     %{
+       pending_interactions: player.pending_interactions,
+       temporary_effects: player.temporary_effects,
+       discard_phase_done: player.discard_phase_done,
+       hp: player.hp,
+       max_hp: player.max_hp,
+       gold: player.gold,
+       combat: player.combat,
+       hand: player.hand,
+       deck: length(player.deck),
+       discard: player.discard,
+       fight_zone: player.fight_zone
+     }}
+  end
+
+  defp project_player({player_id, player}, _player_id) do
+    {player_id,
+     %{
+       temporary_effects: player.temporary_effects,
+       hp: player.hp,
+       max_hp: player.max_hp,
+       gold: player.gold,
+       combat: player.combat,
+       hand: length(player.hand),
+       deck: length(player.deck),
+       discard: player.discard,
+       fight_zone: player.fight_zone
+     }}
+  end
+
   def handle_call({player_id, {:play_card, card_id}}, _from, game) do
     Game.play_card(game, player_id, card_id)
   end
