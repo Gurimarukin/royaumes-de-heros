@@ -7,6 +7,8 @@ defmodule HerosWeb.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug HerosWeb.Session
+    plug :put_user_token
   end
 
   pipeline :api do
@@ -23,4 +25,13 @@ defmodule HerosWeb.Router do
   # scope "/api", HerosWeb do
   #   pipe_through :api
   # end
+
+  defp put_user_token(conn, _) do
+    if user = conn.assigns[:user] do
+      token = Phoenix.Token.sign(conn, "user socket", %{id: user.id, name: user.name})
+      assign(conn, :user, Map.put(user, :token, token))
+    else
+      conn
+    end
+  end
 end

@@ -4,6 +4,13 @@ defmodule Heros.LobbyTest do
   alias Heros.Lobby
   alias Heros.Lobby.Player
 
+  test "encode" do
+    assert Jason.encode!(%Lobby{
+             players: [{"p1", %Player{name: "Player 1"}}],
+             ready: true
+           })
+  end
+
   test "lobby" do
     lobby = Lobby.empty()
 

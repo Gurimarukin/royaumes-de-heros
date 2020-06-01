@@ -1,6 +1,6 @@
 import * as t from 'io-ts'
 
-export namespace Squad {
+export namespace SquadShort {
   export const codec = t.strict({
     id: t.string,
     stage: t.union([t.literal('lobby'), t.literal('game')]),
@@ -9,4 +9,4 @@ export namespace Squad {
   })
 }
 
-export type Squad = t.TypeOf<typeof Squad.codec>
+export type SquadShort = t.TypeOf<typeof SquadShort.codec>

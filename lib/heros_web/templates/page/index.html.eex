@@ -1,1 +1,1 @@
-<%= ReactPhoenix.ClientSide.react_component("MyComponents.App") %>
+<%= ReactPhoenix.ClientSide.react_component("MyComponents.App", %{user: assigns[:user]}) %>

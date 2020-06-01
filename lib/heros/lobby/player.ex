@@ -5,6 +5,7 @@ defmodule Heros.Lobby.Player do
           name: String.t()
         }
   @enforce_keys [:name]
+  @derive Jason.Encoder
   defstruct [:name]
 
   def from_name(name) do

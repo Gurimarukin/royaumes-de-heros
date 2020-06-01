@@ -8,6 +8,7 @@ defmodule Heros.Lobby do
           ready: boolean
         }
   @enforce_keys [:players, :ready]
+  @derive Jason.Encoder
   defstruct [:players, :ready]
 
   def empty?(lobby) do

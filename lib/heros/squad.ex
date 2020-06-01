@@ -25,6 +25,14 @@ defmodule Heros.Squad do
     %{stage: stage, n_players: length(squad.members)}
   end
 
+  def connect(squad, player_id, player_name) do
+    GenServer.call(squad, {:connect, player_id, player_name})
+  end
+
+  def disconnect(squad, player_id) do
+    GenServer.call(squad, {:disconnect, player_id})
+  end
+
   def init(:ok) do
     {:ok, %Squad{owner: nil, members: [], state: {:lobby, Lobby.empty()}}}
   end
@@ -49,6 +57,7 @@ defmodule Heros.Squad do
     |> to_reply(squad)
   end
 
+  # TODO: remove join and leave
   def handle_call({:join, player_id, player_name, subscribe}, _from, squad) do
     case squad.state do
       {:lobby, lobby} ->
@@ -91,6 +100,48 @@ defmodule Heros.Squad do
     |> to_reply(squad)
   end
 
+  def handle_call({:connect, player_id, player_name}, _from, squad) do
+    case squad.state do
+      {:lobby, lobby} ->
+        Lobby.join(lobby, player_id, player_name)
+        |> Option.map(fn lobby ->
+          members = squad.members ++ [player_id]
+          owner = squad.owner || hd(members)
+          %{squad | owner: owner, members: members, state: {:lobby, lobby}}
+        end)
+
+      _ ->
+        Option.none()
+    end
+    |> to_reply(squad)
+  end
+
+  def handle_call({:disconnect, player_id}, _from, squad) do
+    case squad.state do
+      {:lobby, lobby} ->
+        Lobby.leave(lobby, player_id)
+        |> Option.map(fn lobby ->
+          members = squad.members |> Enum.filter(&(&1 != player_id))
+
+          owner =
+            if squad.owner == player_id do
+              case members do
+                [] -> nil
+                [head | _] -> head
+              end
+            else
+              squad.owner
+            end
+
+          %{squad | owner: owner, members: members, state: {:lobby, lobby}}
+        end)
+
+      _ ->
+        Option.none()
+    end
+    |> to_reply(squad)
+  end
+
   def handle_call(message, from, squad) do
     case squad.state do
       {:lobby, lobby} ->
@@ -110,15 +161,15 @@ defmodule Heros.Squad do
     |> Game.init_from_players()
   end
 
-  defp to_reply({:ok, squad}, old_squad) do
-    if squad != old_squad do
-      # broadcast state
-      # TODO: projection
-      squad.members
-      |> KeyList.map(fn subscribtions ->
-        subscribtions |> Enum.map(& &1.(squad.state))
-      end)
-    end
+  defp to_reply({:ok, squad}, _old_squad) do
+    # if squad != old_squad do
+    #   # broadcast state
+    #   # TODO: projection
+    #   squad.members
+    #   |> KeyList.map(fn subscribtions ->
+    #     subscribtions |> Enum.map(& &1.(squad.state))
+    #   end)
+    # end
 
     {:reply, {:ok, squad.state}, squad}
   end
