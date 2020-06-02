@@ -9,6 +9,12 @@ export interface Referential {
 }
 
 export namespace Referential {
+  export const market: Referential = {
+    position: [0, params.playerZone.height],
+    width: params.market.width,
+    height: params.market.height
+  }
+
   export const self: Referential = playerZone(Coord.playerZone(0, 1))
 
   export function playerZone(position: Coord): Referential {

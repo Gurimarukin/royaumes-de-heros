@@ -13,6 +13,7 @@ interface Props {
   readonly call: (msg: any) => void
   readonly game: Game
   readonly referentials: {
+    readonly market: Referential
     readonly player: Referential
     readonly others: Referential[]
   }
@@ -23,8 +24,10 @@ export const Cards: FunctionComponent<Props> = ({ call, game, referentials }) =>
 
   return (
     <div>
-      {referential(referentials.player)}
-      {referentials.others.map(referential)}
+      {referential('lightblue')(referentials.player)}
+      {referentials.others.map(referential('red'))}
+      {referential('lightgreen')(referentials.market)}
+
       {player.hand.map(([cardId, card], i) => {
         const [left, top] = pipe(
           referentials.player,
@@ -32,21 +35,25 @@ export const Cards: FunctionComponent<Props> = ({ call, game, referentials }) =>
         )
         return <CardComponent key={cardId} card={card} call={call} style={{ left, top }} />
       })}
-      {/* <button onClick={play}>Jouer</button> */}
     </div>
   )
 
-  function referential(ref: Referential, key?: string | number): JSX.Element {
-    const [left, top] = ref.position
-    const width = ref.width
-    const height = ref.height
-    return <div key={key} css={styles.referential} style={{ left, top, width, height }}></div>
+  function referential(color: string): (ref: Referential, key?: string | number) => JSX.Element {
+    return (ref, key) => {
+      const [left, top] = ref.position
+      const width = ref.width
+      const height = ref.height
+      return (
+        <div key={key} css={styles.referential(color)} style={{ left, top, width, height }}></div>
+      )
+    }
   }
 }
 
 const styles = {
-  referential: css({
-    position: 'absolute',
-    border: '5px solid red'
-  })
+  referential: (color: string) =>
+    css({
+      position: 'absolute',
+      border: `2px solid ${color}`
+    })
 }

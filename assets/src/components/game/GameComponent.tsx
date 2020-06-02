@@ -40,13 +40,14 @@ const moveStepMs = 100
 
 export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
   const referentials = {
+    market: Referential.market,
     player: Referential.playerZone(Coord.playerZone(0, 1)),
     others: Referential.otherPlayers(game.other_players.length)
   }
 
   const board = {
     width: params.playerZone.width * Math.ceil(referentials.others.length / 2),
-    height: params.playerZone.height * 2
+    height: params.playerZone.height * 2 + params.market.height
   }
 
   const boardPropsRef = useRef<BoardProps>({ s: 1, x: 0, y: window.innerHeight - board.height })
@@ -207,8 +208,3 @@ const styles = {
       backgroundImage: 'radial-gradient(red,orange,yellow,green,blue,indigo,violet)'
     })
 }
-
-const stylesPre = css({
-  position: 'absolute',
-  top: 0
-})

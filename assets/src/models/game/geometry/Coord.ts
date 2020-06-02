@@ -4,6 +4,9 @@ export type Coord = [number, number]
 
 export namespace Coord {
   export function playerZone(col: number, row: number): Coord {
-    return [col * params.playerZone.width, row * params.playerZone.height]
+    return [
+      col * params.playerZone.width,
+      row * params.playerZone.height + (row === 0 ? 0 : params.market.height)
+    ]
   }
 }
