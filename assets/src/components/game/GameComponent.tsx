@@ -44,10 +44,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, state }) => {
     const minScaleW = window.innerWidth / board.width
     const minScaleH = window.innerHeight / board.height
 
-    const minScale = Math.min(minScaleW, minScaleH)
-    const scale = posRef.current.s + deltaY * -0.03
-    const s = scale < minScale ? minScale : maxScale < scale ? maxScale : scale
-
+    const s = getS()
     const getX = getCoord(window.innerWidth, board.width, posRef.current.x, clientX)
     const getY = getCoord(window.innerHeight, board.height, posRef.current.y, clientY)
 
@@ -58,6 +55,12 @@ export const GameComponent: FunctionComponent<Props> = ({ call, state }) => {
     }
     set(posRef.current)
 
+    function getS() {
+      const minScale = Math.min(minScaleW, minScaleH)
+      const scale = posRef.current.s + deltaY * -0.03
+      return scale < minScale ? minScale : maxScale < scale ? maxScale : scale
+    }
+
     function getCoord(
       windowSize: number,
       boardSize: number,
@@ -66,12 +69,11 @@ export const GameComponent: FunctionComponent<Props> = ({ call, state }) => {
     ): (s: number) => number {
       return s => {
         const min = windowSize - boardSize * s
-        if (zoomIn) {
-          const percent = clientPos / windowSize
-          return bounded(min, 0)(prevCoord - percent * windowSize)
-        } else {
-          return bounded(min, 0)((prevCoord * s) / posRef.current.s)
-        }
+
+        const ratio = s / posRef.current.s
+        const X = zoomIn ? clientPos : windowSize / 2
+
+        return bounded(min, 0)((1 - ratio) * X + ratio * prevCoord)
       }
     }
   }
