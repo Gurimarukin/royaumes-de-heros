@@ -41,8 +41,14 @@ defmodule HerosWeb.SquadChannel do
 
   intercept ["update"]
 
-  def handle_out("update", msg, socket) do
-    push(socket, "update", msg)
+  def handle_out("update", squad, socket) do
+    projection =
+      case squad.state do
+        {:lobby, lobby} -> {:lobby, Heros.Lobby.Helpers.project(lobby, squad)}
+        {:game, game} -> {:game, Heros.Game.Helpers.project(game, socket.assigns.user.id)}
+      end
+
+    push(socket, "update", %{body: projection})
     {:noreply, socket}
   end
 
@@ -60,13 +66,6 @@ defmodule HerosWeb.SquadChannel do
 
   defp broadcast_update(squad, socket) do
     HerosWeb.Endpoint.broadcast!("squads", "update", %{})
-
-    projection =
-      case squad.state do
-        {:lobby, lobby} -> {:lobby, Heros.Lobby.Helpers.project(lobby, squad)}
-        {:game, game} -> {:game, Heros.Game.Helpers.project(game, socket.assigns.user.id)}
-      end
-
-    broadcast!(socket, "update", %{body: projection})
+    broadcast!(socket, "update", squad)
   end
 end
