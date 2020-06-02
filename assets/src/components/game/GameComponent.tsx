@@ -1,6 +1,7 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import React, { FunctionComponent, useCallback, useRef } from 'react'
+import { Lazy } from 'fp-ts/lib/function'
+import React, { FunctionComponent, useRef } from 'react'
 import { useSpring, animated as a } from 'react-spring'
 
 import { Game } from '../../models/game/Game'
@@ -16,58 +17,90 @@ interface BoardProps {
   readonly y: number
 }
 
+interface Moving {
+  readonly h: -1 | 0 | 1
+  readonly v: -1 | 0 | 1
+}
+
+namespace Moving {
+  export function isStill({ h, v }: Moving): boolean {
+    return h === 0 && v === 0
+  }
+}
+
 const maxScale = 1.5
 
+const moveDetect = 40
+const moveStepPx = 300
+const moveStepMs = 100
+
 export const GameComponent: FunctionComponent<Props> = ({ call, state }) => {
-  const posRef = useRef<BoardProps>({ s: 1, x: 0, y: window.innerHeight - board.height })
+  const boardPropsRef = useRef<BoardProps>({ s: 1, x: 0, y: window.innerHeight - board.height })
   const [props, set] = useSpring(() => ({ s: 1, x: 0, y: window.innerHeight - board.height }))
 
-  // ({ deltaY }: React.WheelEvent) => setScale(scale.current + deltaY / (-50 * scale.current)),
+  const moveRef = useRef<Moving>({ h: 0, v: 0 })
 
   return (
-    <div css={styles.container} onWheel={onWheel}>
+    <div css={styles.container} onWheel={onWheel} onMouseMove={move} onMouseLeave={resetMove}>
       <a.div
         css={styles.board}
         style={{ transform: props.s.interpolate(trans), left: props.x, top: props.y }}
       />
-      <pre css={stylesPre}>{JSON.stringify(state, null, 2)}</pre>
+      {/* <pre css={stylesPre}>{JSON.stringify(state, null, 2)}</pre> */}
       {/* <button onClick={play}>Jouer</button> */}
     </div>
   )
 
   function onWheel({ deltaY, clientX, clientY }: React.WheelEvent) {
     // const zoomIn = deltaY < 0
-    const minScaleW = window.innerWidth / board.width
-    const minScaleH = window.innerHeight / board.height
 
-    const s = getS(posRef.current.s, deltaY, minScaleW, minScaleH)
+    const { s, x, y } = boardPropsRef.current
+
+    const minScaleW = minScale(window.innerWidth, board.width)
+    const minScaleH = minScale(window.innerHeight, board.height)
+
+    const newS = getS(s, deltaY, minScaleW, minScaleH)
 
     setBoardProps({
-      s,
-      x: getCoord(
-        posRef.current.s,
-        minScaleW,
-        window.innerWidth,
-        board.width,
-        posRef.current.x,
-        clientX,
-        s
-      ),
-      y: getCoord(
-        posRef.current.s,
-        minScaleH,
-        window.innerHeight,
-        board.height,
-        posRef.current.y,
-        clientY,
-        s
-      )
+      s: newS,
+      x: coordOnZoom(s, minScaleW, window.innerWidth, board.width, x, clientX, newS),
+      y: coordOnZoom(s, minScaleH, window.innerHeight, board.height, y, clientY, newS)
+    })
+  }
+
+  function move({ clientX, clientY }: React.MouseEvent) {
+    const wasStill = Moving.isStill(moveRef.current)
+
+    moveRef.current = {
+      h: clientX <= moveDetect ? -1 : window.innerWidth - moveDetect <= clientX ? 1 : 0,
+      v: clientY <= moveDetect ? -1 : window.innerHeight - moveDetect <= clientY ? 1 : 0
+    }
+
+    if (wasStill && !Moving.isStill(moveRef.current)) loopMove()
+  }
+
+  function resetMove() {
+    moveRef.current = { h: 0, v: 0 }
+  }
+
+  function loopMove() {
+    const { s, x, y } = boardPropsRef.current
+    const { h, v } = moveRef.current
+
+    const minScaleW = minScale(window.innerWidth, board.width)
+    const minScaleH = minScale(window.innerHeight, board.height)
+
+    setBoardProps({
+      x: coordOnLoop(minScaleW, window.innerWidth, board.width, x, h, s),
+      y: coordOnLoop(minScaleH, window.innerHeight, board.height, y, v, s)
     })
 
-    function setBoardProps(props: Partial<BoardProps>) {
-      posRef.current = { ...posRef.current, ...props }
-      set(props)
-    }
+    if (!Moving.isStill(moveRef.current)) setTimeout(loopMove, moveStepMs)
+  }
+
+  function setBoardProps(props: Partial<BoardProps>) {
+    boardPropsRef.current = { ...boardPropsRef.current, ...props }
+    set(props)
   }
 }
 
@@ -77,7 +110,7 @@ function getS(oldS: number, deltaY: number, minScaleW: number, minScaleH: number
   return scale < minScale ? minScale : maxScale < scale ? maxScale : scale
 }
 
-function getCoord(
+function coordOnZoom(
   oldS: number,
   minScale: number,
   windowSize: number,
@@ -86,13 +119,51 @@ function getCoord(
   clientPos: number,
   newS: number
 ): number {
-  return newS < minScale
-    ? (windowSize - boardSize * newS) / 2
-    : (() => {
-        const min = windowSize - boardSize * newS
-        const ratio = newS / oldS
-        return bounded(min, 0)((1 - ratio) * clientPos + ratio * prevCoord)
-      })()
+  return coordOrMin(
+    minScale,
+    windowSize,
+    boardSize,
+    newS
+  )(() => {
+    const ratio = newS / oldS
+    return bounded(
+      minCoord(windowSize, boardSize, newS),
+      0
+    )((1 - ratio) * clientPos + ratio * prevCoord)
+  })
+}
+
+function coordOnLoop(
+  minScale: number,
+  windowSize: number,
+  boardSize: number,
+  prevCoord: number,
+  direction: number,
+  s: number
+): number {
+  return coordOrMin(
+    minScale,
+    windowSize,
+    boardSize,
+    s
+  )(() => bounded(minCoord(windowSize, boardSize, s), 0)(prevCoord - direction * moveStepPx * s))
+}
+
+function coordOrMin(
+  minScale: number,
+  windowSize: number,
+  boardSize: number,
+  s: number
+): (coord: Lazy<number>) => number {
+  return coord => (s < minScale ? minCoord(windowSize, boardSize, s) / 2 : coord())
+}
+
+function minScale(windowSize: number, boardSize: number): number {
+  return windowSize / boardSize
+}
+
+function minCoord(windowSize: number, boardSize: number, s: number): number {
+  return windowSize - boardSize * s
 }
 
 function bounded(min: number, max: number): (x: number) => number {
@@ -122,8 +193,6 @@ const styles = {
     height: board.height,
     transformOrigin: 'top left',
     backgroundImage: 'radial-gradient(red,orange,yellow,green,blue,indigo,violet)'
-    // backgroundImage: 'linear-gradient(to bottom right, red,orange,yellow,green,blue,indigo,violet)',
-    // border: '1px solid red'
   })
 }
 
