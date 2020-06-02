@@ -1,11 +1,5 @@
-import * as t from 'io-ts'
-import { failure } from 'io-ts/lib/PathReporter'
 import { Socket, Channel } from 'phoenix'
 import { useMemo, useEffect, useCallback } from 'react'
-
-import { AsyncState } from '../models/AsyncState'
-import { ChannelError } from '../models/ChannelError'
-import { Either, pipe, flow } from '../utils/fp'
 
 interface Listeners {
   readonly onJoinSuccess: (resp: unknown) => void

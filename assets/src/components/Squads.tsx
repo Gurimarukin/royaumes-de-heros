@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import * as t from 'io-ts'
+import * as D from 'io-ts/lib/Decoder'
 import { jsx } from '@emotion/core'
 import { useContext, FunctionComponent, useState, useCallback } from 'react'
 
@@ -21,7 +21,7 @@ export const Squads: FunctionComponent = () => {
   const [state, setState] = useState<AsyncState<ChannelError, SquadShort[]>>(AsyncState.Loading)
 
   const onJoinSuccess = useCallback(
-    PhoenixUtils.handleResponse(PhoenixUtils.decodeBody(t.array(SquadShort.codec).decode))(
+    PhoenixUtils.handleResponse(PhoenixUtils.decodeBody(D.array(SquadShort.codec).decode))(
       flow(AsyncState.Success, setState)
     ),
     []

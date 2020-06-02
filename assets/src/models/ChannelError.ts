@@ -1,9 +1,9 @@
-import * as t from 'io-ts'
+import * as D from 'io-ts/lib/Decoder'
 
 export namespace ChannelError {
-  export const codec = t.strict({
-    status: t.number
+  export const codec = D.type({
+    status: D.number
   })
 }
 
-export type ChannelError = t.TypeOf<typeof ChannelError.codec>
+export type ChannelError = D.TypeOf<typeof ChannelError.codec>

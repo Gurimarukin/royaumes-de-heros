@@ -1,13 +1,19 @@
-import * as t from 'io-ts'
+import * as D from 'io-ts/lib/Decoder'
 
-import { GameState } from './game/GameState'
-import { LobbyState } from './lobby/LobbyState'
+import { Game } from './game/Game'
+import { Lobby } from './lobby/Lobby'
+import { pipe, Either } from '../utils/fp'
 
 export namespace SquadState {
-  export const codec = t.union([
-    t.tuple([t.literal('lobby'), LobbyState.codec]),
-    t.tuple([t.literal('game'), GameState.codec])
-  ])
+  export const codec: D.Decoder<SquadState> = {
+    decode: (u: unknown) =>
+      pipe(
+        D.tuple(D.literal('lobby'), Lobby.codec).decode(u),
+        Either.alt<D.DecodeError, SquadState>(() =>
+          D.tuple(D.literal('game'), Game.codec).decode(u)
+        )
+      )
+  }
 }
 
-export type SquadState = t.TypeOf<typeof SquadState.codec>
+export type SquadState = ['lobby', Lobby] | ['game', Game]

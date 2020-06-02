@@ -13,7 +13,7 @@ defmodule Heros.Game.Helpers do
 
   def project(game, player_id) do
     %{
-      player: game.players |> Enum.map(&project_player(&1, player_id)),
+      players: game.players |> Enum.map(&project_player(&1, player_id)),
       current_player: game.current_player,
       gems: length(game.gems),
       market: game.market,

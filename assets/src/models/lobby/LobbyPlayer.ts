@@ -1,9 +1,9 @@
-import * as t from 'io-ts'
+import * as D from 'io-ts/lib/Decoder'
 
 export namespace LobbyPlayer {
-  export const codec = t.strict({
-    name: t.string
+  export const codec = D.type({
+    name: D.string
   })
 }
 
-export type LobbyPlayer = t.TypeOf<typeof LobbyPlayer.codec>
+export type LobbyPlayer = D.TypeOf<typeof LobbyPlayer.codec>
