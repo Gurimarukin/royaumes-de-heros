@@ -48,4 +48,13 @@ defmodule Heros.Utils.KeyList do
 
   # delete(list({A, B}), (B -> boolean)) :: number
   def count(list, pred), do: Enum.count(list, fn {_, val} -> pred.(val) end)
+
+  def cycle(list, key) do
+    {left, right} = Enum.split_while(list, fn {k, _} -> k != key end)
+
+    case right do
+      [] -> {nil, left}
+      [{_, elt} | right] -> {elt, right ++ left}
+    end
+  end
 end

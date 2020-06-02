@@ -1,7 +1,7 @@
 defmodule Heros.Game.Helpers do
   alias Heros.Game
   alias Heros.Game.Cards.Card
-  alias Heros.Utils.Option
+  alias Heros.Utils.{KeyList, Option}
 
   def interaction_filter(:put_card_from_discard_to_deck) do
     fn _card -> true end
@@ -12,8 +12,11 @@ defmodule Heros.Game.Helpers do
   end
 
   def project(game, player_id) do
+    {player, others} = KeyList.cycle(game.players, player_id)
+
     %{
-      players: game.players |> Enum.map(&project_player(&1, player_id)),
+      player: {player_id, project_player(player)},
+      other_players: others |> Enum.map(&project_other_player/1),
       current_player: game.current_player,
       gems: length(game.gems),
       market: game.market,
@@ -22,24 +25,23 @@ defmodule Heros.Game.Helpers do
     }
   end
 
-  defp project_player({player_id, player}, player_id) do
-    {player_id,
-     %{
-       pending_interactions: player.pending_interactions,
-       temporary_effects: player.temporary_effects,
-       discard_phase_done: player.discard_phase_done,
-       hp: player.hp,
-       max_hp: player.max_hp,
-       gold: player.gold,
-       combat: player.combat,
-       hand: player.hand,
-       deck: length(player.deck),
-       discard: player.discard,
-       fight_zone: player.fight_zone
-     }}
+  defp project_player(player) do
+    %{
+      pending_interactions: player.pending_interactions,
+      temporary_effects: player.temporary_effects,
+      discard_phase_done: player.discard_phase_done,
+      hp: player.hp,
+      max_hp: player.max_hp,
+      gold: player.gold,
+      combat: player.combat,
+      hand: player.hand,
+      deck: length(player.deck),
+      discard: player.discard,
+      fight_zone: player.fight_zone
+    }
   end
 
-  defp project_player({player_id, player}, _player_id) do
+  defp project_other_player({player_id, player}) do
     {player_id,
      %{
        temporary_effects: player.temporary_effects,

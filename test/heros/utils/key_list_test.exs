@@ -20,4 +20,13 @@ defmodule Heros.Utils.KeyListTest do
     assert KeyList.member?(list, "a")
     assert not KeyList.member?(list, "c")
   end
+
+  test "cycle" do
+    list = [{"a", 1}, {"b", 2}, {"c", 3}, {"d", 4}]
+    assert KeyList.cycle(list, "a") == {1, [{"b", 2}, {"c", 3}, {"d", 4}]}
+    assert KeyList.cycle(list, "b") == {2, [{"c", 3}, {"d", 4}, {"a", 1}]}
+    assert KeyList.cycle(list, "c") == {3, [{"d", 4}, {"a", 1}, {"b", 2}]}
+    assert KeyList.cycle(list, "d") == {4, [{"a", 1}, {"b", 2}, {"c", 3}]}
+    assert KeyList.cycle(list, "e") == {nil, list}
+  end
 end
