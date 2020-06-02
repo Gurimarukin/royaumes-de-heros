@@ -1,14 +1,18 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
 import { Lazy } from 'fp-ts/lib/function'
-import React, { FunctionComponent, useRef } from 'react'
+import { FunctionComponent, useRef } from 'react'
 import { useSpring, animated as a } from 'react-spring'
 
+import { Cards } from './Cards'
 import { Game } from '../../models/game/Game'
+import { Referential } from '../../models/game/geometry/Referential'
+import { Coord } from '../../models/game/geometry/Coord'
+import { params } from '../../params'
 
 interface Props {
   readonly call: (msg: any) => void
-  readonly state: Game
+  readonly game: Game
 }
 
 interface BoardProps {
@@ -34,7 +38,17 @@ const moveDetect = 40
 const moveStepPx = 300
 const moveStepMs = 100
 
-export const GameComponent: FunctionComponent<Props> = ({ call, state }) => {
+export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
+  const referentials = {
+    player: Referential.playerZone(Coord.playerZone(0, 1)),
+    others: Referential.otherPlayers(game.other_players.length)
+  }
+
+  const board = {
+    width: params.playerZone.width * Math.ceil(referentials.others.length / 2),
+    height: params.playerZone.height * 2
+  }
+
   const boardPropsRef = useRef<BoardProps>({ s: 1, x: 0, y: window.innerHeight - board.height })
   const [props, set] = useSpring(() => ({ s: 1, x: 0, y: window.innerHeight - board.height }))
 
@@ -43,10 +57,12 @@ export const GameComponent: FunctionComponent<Props> = ({ call, state }) => {
   return (
     <div css={styles.container} onWheel={onWheel} onMouseMove={move} onMouseLeave={resetMove}>
       <a.div
-        css={styles.board}
+        css={styles.board(board.width, board.height)}
         style={{ transform: props.s.interpolate(trans), left: props.x, top: props.y }}
-      />
-      {/* <pre css={stylesPre}>{JSON.stringify(state, null, 2)}</pre> */}
+      >
+        <Cards call={call} game={game} referentials={referentials} />
+      </a.div>
+      {/* <pre css={stylesPre}>{JSON.stringify(game, null, 2)}</pre> */}
       {/* <button onClick={play}>Jouer</button> */}
     </div>
   )
@@ -174,11 +190,6 @@ function trans(s: number): string {
   return `scale(${s})`
 }
 
-const board = {
-  width: 1920 * 3,
-  height: 1080 * 3
-}
-
 const styles = {
   container: css({
     width: '100vw',
@@ -187,13 +198,14 @@ const styles = {
     position: 'relative'
   }),
 
-  board: css({
-    position: 'absolute',
-    width: board.width,
-    height: board.height,
-    transformOrigin: 'top left',
-    backgroundImage: 'radial-gradient(red,orange,yellow,green,blue,indigo,violet)'
-  })
+  board: (width: number, height: number) =>
+    css({
+      position: 'absolute',
+      width,
+      height,
+      transformOrigin: 'top left',
+      backgroundImage: 'radial-gradient(red,orange,yellow,green,blue,indigo,violet)'
+    })
 }
 
 const stylesPre = css({

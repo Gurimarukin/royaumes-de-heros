@@ -54,7 +54,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
         return <LobbyComponent call={call} state={state[1]} />
 
       case 'game':
-        return <GameComponent call={call} state={state[1]} />
+        return <GameComponent call={call} game={state[1]} />
     }
   }
 

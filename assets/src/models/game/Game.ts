@@ -4,21 +4,6 @@ import { Card } from './Card'
 import { OtherPlayer } from './OtherPlayer'
 import { Player } from './Player'
 import { WithId } from '../WithId'
-// import { Either, pipe } from '../../utils/fp'
-
-// const eitherPlayer: D.Decoder<Either<OtherPlayer, Player>> = {
-//   decode: (u: unknown) =>
-//     pipe(
-//       Player.codec.decode(u),
-//       Either.map(_ => Either.right<OtherPlayer, Player>(_)),
-//       Either.alt(() =>
-//         pipe(
-//           OtherPlayer.codec.decode(u),
-//           Either.map(_ => Either.left<OtherPlayer, Player>(_))
-//         )
-//       )
-//     )
-// }
 
 export namespace Game {
   export const codec = D.type({
