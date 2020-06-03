@@ -50,8 +50,12 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
     height: params.playerZone.height * 2 + params.market.height
   }
 
-  const boardPropsRef = useRef<BoardProps>({ s: 1, x: 0, y: window.innerHeight - board.height })
-  const [props, set] = useSpring(() => ({ s: 1, x: 0, y: window.innerHeight - board.height }))
+  const boardPropsRef = useRef<BoardProps>({
+    s: startScale(),
+    x: 0,
+    y: window.innerHeight - board.height
+  })
+  const [props, set] = useSpring(() => boardPropsRef.current)
 
   const moveRef = useRef<Moving>({ h: 0, v: 0 })
 
@@ -63,10 +67,15 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
       >
         <Cards call={call} game={game} referentials={referentials} />
       </a.div>
-      {/* <pre css={stylesPre}>{JSON.stringify(game, null, 2)}</pre> */}
-      {/* <button onClick={play}>Jouer</button> */}
     </div>
   )
+
+  function startScale(): number {
+    return Math.min(
+      minScale(window.innerWidth, board.width),
+      minScale(window.innerHeight, board.height)
+    )
+  }
 
   function onWheel({ deltaY, clientX, clientY }: React.WheelEvent) {
     // const zoomIn = deltaY < 0
@@ -163,7 +172,7 @@ function coordOnLoop(
     windowSize,
     boardSize,
     s
-  )(() => bounded(minCoord(windowSize, boardSize, s), 0)(prevCoord - direction * moveStepPx * s))
+  )(() => bounded(minCoord(windowSize, boardSize, s), 0)(prevCoord - (direction * moveStepPx) / s))
 }
 
 function coordOrMin(
