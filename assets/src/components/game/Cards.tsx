@@ -1,13 +1,14 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent } from 'react'
+import { FunctionComponent, Fragment } from 'react'
 
-import { CardComponent } from './CardComponent'
+import { CardComponent, HiddenCard } from './CardComponent'
+import { params } from '../../params'
+import { Card } from '../../models/game/Card'
 import { Game } from '../../models/game/Game'
 import { Coord } from '../../models/game/geometry/Coord'
 import { Referential } from '../../models/game/geometry/Referential'
-import { pipe } from '../../utils/fp'
-import { params } from '../../params'
+import { pipe, List } from '../../utils/fp'
 
 interface Props {
   readonly call: (msg: any) => void
@@ -21,6 +22,7 @@ interface Props {
 
 export const Cards: FunctionComponent<Props> = ({ call, game, referentials }) => {
   const [playerId, player] = game.player
+  const otherPlayers = List.zip(referentials.others, game.other_players)
 
   return (
     <div>
@@ -28,13 +30,19 @@ export const Cards: FunctionComponent<Props> = ({ call, game, referentials }) =>
       {referentials.others.map(referential('red'))}
       {referential('lightgreen')(referentials.market)}
 
-      {player.hand.map(([cardId, card], i) => {
-        const [left, top] = pipe(
-          referentials.player,
-          Referential.coord([i * params.card.width, params.playerZone.height - params.card.height])
-        )
-        return <CardComponent key={cardId} card={card} call={call} style={{ left, top }} />
-      })}
+      {game.market.map(card(referentials.market, i => [i * params.card.width, 0]))}
+      {game.gems.map(card(referentials.market, _ => [5 * params.card.width, 0]))}
+      {player.hand.map(
+        card(referentials.player, i => [
+          i * params.card.width,
+          params.playerZone.height - params.card.height
+        ])
+      )}
+      {otherPlayers.map(([referential, [playerId, player]]) => (
+        <Fragment key={playerId}>
+          {List.range(0, player.hand - 1).map(hidden(referential, i => [i * params.card.width, 0]))}
+        </Fragment>
+      ))}
     </div>
   )
 
@@ -43,9 +51,27 @@ export const Cards: FunctionComponent<Props> = ({ call, game, referentials }) =>
       const [left, top] = ref.position
       const width = ref.width
       const height = ref.height
-      return (
-        <div key={key} css={styles.referential(color)} style={{ left, top, width, height }}></div>
-      )
+      return <div key={key} css={styles.referential(color)} style={{ left, top, width, height }} />
+    }
+  }
+
+  function card(
+    referential: Referential,
+    coord: (i: number) => Coord
+  ): (card: [string, Card], i: number) => JSX.Element {
+    return ([cardId, card], i) => {
+      const [left, top] = pipe(referential, Referential.coord(coord(i)))
+      return <CardComponent key={cardId} card={card} call={call} style={{ left, top }} />
+    }
+  }
+
+  function hidden(
+    referential: Referential,
+    coord: (i: number) => Coord
+  ): (i: number) => JSX.Element {
+    return i => {
+      const [left, top] = pipe(referential, Referential.coord(coord(i)))
+      return <HiddenCard key={i} style={{ left, top }} />
     }
   }
 }

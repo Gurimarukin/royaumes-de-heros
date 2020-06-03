@@ -1,3 +1,5 @@
+import { lookup } from 'fp-ts/lib/Record'
+
 import { Coord } from './Coord'
 import { params } from '../../../params'
 import { pipe, Maybe, List } from '../../../utils/fp'
@@ -23,8 +25,7 @@ export namespace Referential {
 
   export function otherPlayers(n: number): Referential[] {
     return pipe(
-      referentials[n],
-      Maybe.fromNullable,
+      lookup(String(n), referentials),
       Maybe.map(List.map(playerZone)),
       Maybe.getOrElse<Referential[]>(() => [])
     )

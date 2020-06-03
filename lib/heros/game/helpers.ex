@@ -18,7 +18,7 @@ defmodule Heros.Game.Helpers do
       player: {player_id, project_player(player)},
       other_players: others |> Enum.map(&project_other_player/1),
       current_player: game.current_player,
-      gems: length(game.gems),
+      gems: game.gems,
       market: game.market,
       market_deck: length(game.market_deck),
       cemetery: game.cemetery

@@ -10,7 +10,7 @@ export namespace Game {
     player: WithId.codec(Player.codec),
     other_players: D.array(WithId.codec(OtherPlayer.codec)),
     current_player: D.string,
-    gems: D.number,
+    gems: D.array(WithId.codec(Card.codec)),
     market: D.array(WithId.codec(Card.codec)),
     market_deck: D.number,
     cemetery: D.array(WithId.codec(Card.codec))
