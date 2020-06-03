@@ -9,7 +9,7 @@ import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadState } from '../models/SquadState'
-import { pipe, flow, Future, Task, inspect } from '../utils/fp'
+import { pipe, flow, Future, Task, inspect, Either } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 interface Props {
@@ -63,8 +63,14 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
     pipe(
       channel.push('call', msg),
       PhoenixUtils.channelToFuture,
-      Task.map(inspect('response from call:')),
-      Future.runUnsafe
+      Task.map(
+        Either.fold(
+          _ => 'error',
+          _ => 'ok'
+        )
+      ),
+      Task.map(_ => console.log(`response from call: ${_}`)),
+      Task.run
     )
   }
 }

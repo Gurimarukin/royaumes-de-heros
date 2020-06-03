@@ -23,6 +23,7 @@ module.exports = {
   reportUnusedDisableDirectives: true,
   rules: {
     '@typescript-eslint/array-type': ['warn', { default: 'array', readonly: 'array' }],
+    '@typescript-eslint/camelcase': 'warn',
     '@typescript-eslint/consistent-type-definitions': ['warn', 'interface'],
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/no-empty-function': 'off',

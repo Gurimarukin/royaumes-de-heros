@@ -29,6 +29,7 @@ export namespace CardData {
   }
 }
 
+/* eslint-disable @typescript-eslint/camelcase */
 const cards: Dict<CardData> = {
   shortsword: d(
     'Épée courte',
@@ -323,3 +324,4 @@ const cards: Dict<CardData> = {
     { expend: true }
   )
 }
+/* eslint-enable @typescript-eslint/camelcase */

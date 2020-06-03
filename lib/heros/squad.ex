@@ -124,19 +124,22 @@ defmodule Heros.Squad do
   end
 
   def handle_call(message, from, squad) do
-    Logger.debug(
-      ~s"Squad: didn't handle message #{inspect(message)}; dispatching to #{elem(squad.state, 0)}"
-    )
+    res =
+      case squad.state do
+        {:lobby, lobby} ->
+          Lobby.Helpers.handle_call(message, from, lobby)
+          |> Option.map(&%{squad | state: {:lobby, &1}})
 
-    case squad.state do
-      {:lobby, lobby} ->
-        Lobby.Helpers.handle_call(message, from, lobby)
-        |> Option.map(&%{squad | state: {:lobby, &1}})
+        {:game, game} ->
+          Game.Helpers.handle_call(message, from, game)
+          |> Option.map(&%{squad | state: {:game, &1}})
+      end
 
-      {:game, game} ->
-        Game.Helpers.handle_call(message, from, game)
-        |> Option.map(&%{squad | state: {:game, &1}})
+    if res == :error do
+      Logger.debug(~s"Squad: #{elem(squad.state, 0)} couldn't handle message #{inspect(message)}")
     end
+
+    res
     |> to_reply(squad)
   end
 

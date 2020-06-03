@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent, ReactNode } from 'react'
+import { FunctionComponent, ReactNode, useCallback } from 'react'
 import { animated } from 'react-spring'
 
 import { params } from '../../params'
@@ -13,21 +13,34 @@ interface CommonProps {
 }
 
 type CardProps = {
-  readonly call: (msg: any) => void
   readonly card: Card
-} & CommonProps
+} & GeneralCardProps &
+  CommonProps
 
-export const CardComponent: FunctionComponent<CardProps> = ({ call, card, style }) => (
-  <div css={styles.container} style={style}>
-    {pipe(
-      CardData.get(card.key),
-      Maybe.fold<CardData, ReactNode>(
-        () => `carte inconnue: ${card.key}`,
-        _ => <img src={_.image} />
-      )
-    )}
-  </div>
-)
+export interface GeneralCardProps {
+  readonly onLeftClick?: React.MouseEventHandler<HTMLDivElement>
+}
+
+export const CardComponent: FunctionComponent<CardProps> = ({ card, onLeftClick, style }) => {
+  const onClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (onLeftClick !== undefined && e.button === 0) onLeftClick(e)
+    },
+    [onLeftClick]
+  )
+
+  return (
+    <div onClick={onClick} css={styles.container} style={style}>
+      {pipe(
+        CardData.get(card.key),
+        Maybe.fold<CardData, ReactNode>(
+          () => `carte inconnue: ${card.key}`,
+          _ => <img src={_.image} />
+        )
+      )}
+    </div>
+  )
+}
 
 export const AnimatedCardComponent = animated(CardComponent)
 

@@ -41,7 +41,7 @@ const moveStepMs = 100
 export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
   const referentials = {
     market: Referential.market,
-    player: Referential.playerZone(Coord.playerZone(0, 1)),
+    player: Referential.playerZone([0, 1]),
     others: Referential.otherPlayers(game.other_players.length)
   }
 
@@ -50,10 +50,19 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
     height: params.playerZone.height * 2 + params.market.height
   }
 
+  const minScaleW = minScale(window.innerWidth, board.width)
+  const minScaleH = minScale(window.innerHeight, board.height)
+  const s = Math.min(minScaleW, minScaleH)
   const boardPropsRef = useRef<BoardProps>({
-    s: startScale(),
-    x: 0,
-    y: window.innerHeight - board.height
+    s,
+    x: coord(minScaleW, window.innerWidth, board.width, s, () => 0),
+    y: coord(
+      minScaleH,
+      window.innerHeight,
+      board.height,
+      s,
+      () => window.innerHeight - board.height * s
+    )
   })
   const [props, set] = useSpring(() => boardPropsRef.current)
 
@@ -69,13 +78,6 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
       </a.div>
     </div>
   )
-
-  function startScale(): number {
-    return Math.min(
-      minScale(window.innerWidth, board.width),
-      minScale(window.innerHeight, board.height)
-    )
-  }
 
   function onWheel({ deltaY, clientX, clientY }: React.WheelEvent) {
     // const zoomIn = deltaY < 0
@@ -145,12 +147,7 @@ function coordOnZoom(
   clientPos: number,
   newS: number
 ): number {
-  return coordOrMin(
-    minScale,
-    windowSize,
-    boardSize,
-    newS
-  )(() => {
+  return coord(minScale, windowSize, boardSize, newS, () => {
     const ratio = newS / oldS
     return bounded(
       minCoord(windowSize, boardSize, newS),
@@ -167,12 +164,19 @@ function coordOnLoop(
   direction: number,
   s: number
 ): number {
-  return coordOrMin(
-    minScale,
-    windowSize,
-    boardSize,
-    s
-  )(() => bounded(minCoord(windowSize, boardSize, s), 0)(prevCoord - (direction * moveStepPx) / s))
+  return coord(minScale, windowSize, boardSize, s, () =>
+    bounded(minCoord(windowSize, boardSize, s), 0)(prevCoord - (direction * moveStepPx) / s)
+  )
+}
+
+function coord(
+  minScale: number,
+  windowSize: number,
+  boardSize: number,
+  s: number,
+  coordL: Lazy<number>
+): number {
+  return coordOrMin(minScale, windowSize, boardSize, s)(coordL)
 }
 
 function coordOrMin(
@@ -180,8 +184,8 @@ function coordOrMin(
   windowSize: number,
   boardSize: number,
   s: number
-): (coord: Lazy<number>) => number {
-  return coord => (s < minScale ? minCoord(windowSize, boardSize, s) / 2 : coord())
+): (coordL: Lazy<number>) => number {
+  return coordL => (s < minScale ? minCoord(windowSize, boardSize, s) / 2 : coordL())
 }
 
 function minScale(windowSize: number, boardSize: number): number {

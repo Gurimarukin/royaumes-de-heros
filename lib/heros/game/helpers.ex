@@ -56,7 +56,7 @@ defmodule Heros.Game.Helpers do
      }}
   end
 
-  def handle_call({player_id, {:play_card, card_id}}, _from, game) do
+  def handle_call({player_id, ["play_card", card_id]}, _from, game) do
     Game.play_card(game, player_id, card_id)
   end
 

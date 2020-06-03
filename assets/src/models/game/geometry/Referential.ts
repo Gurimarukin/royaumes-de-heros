@@ -1,6 +1,7 @@
 import { lookup } from 'fp-ts/lib/Record'
 
 import { Coord } from './Coord'
+import { Rectangle } from './Rectangle'
 import { params } from '../../../params'
 import { pipe, Maybe, List } from '../../../utils/fp'
 
@@ -8,19 +9,26 @@ export interface Referential {
   readonly position: Coord
   readonly width: number
   readonly height: number
+  readonly invertedY: boolean
 }
 
 export namespace Referential {
   export const market: Referential = {
     position: [0, params.playerZone.height],
     width: params.market.width,
-    height: params.market.height
+    height: params.market.height,
+    invertedY: false
   }
 
-  export const self: Referential = playerZone(Coord.playerZone(0, 1))
+  export const self: Referential = playerZone([0, 1])
 
   export function playerZone(position: Coord): Referential {
-    return { position, width: params.playerZone.width, height: params.playerZone.height }
+    return {
+      position: Coord.playerZone(position),
+      width: params.playerZone.width,
+      height: params.playerZone.height,
+      invertedY: position[1] === 0 // invert first row
+    }
   }
 
   export function otherPlayers(n: number): Referential[] {
@@ -31,8 +39,14 @@ export namespace Referential {
     )
   }
 
-  export function coord([x2, y2]: Coord): (ref: Referential) => Coord {
-    return ({ position: [x1, y1] }) => [x1 + x2, y1 + y2]
+  export function coord({
+    position: [x2, y2],
+    height: rectHeight
+  }: Rectangle): (ref: Referential) => Coord {
+    return ({ position: [x1, y1], height, invertedY }) => [
+      x1 + x2,
+      invertedY ? y1 + (height - y2) - rectHeight : y1 + y2
+    ]
   }
 }
 

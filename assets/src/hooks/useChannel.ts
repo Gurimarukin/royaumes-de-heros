@@ -1,5 +1,5 @@
 import { Socket, Channel } from 'phoenix'
-import { useMemo, useEffect, useCallback } from 'react'
+import { useMemo, useEffect } from 'react'
 
 interface Listeners {
   readonly onJoinSuccess: (resp: unknown) => void

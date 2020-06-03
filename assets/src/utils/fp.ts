@@ -115,7 +115,11 @@ export const Try = {
  * Task
  */
 export type Task<A> = _Task.Task<A>
-export const Task = _Task
+export const Task = {
+  ..._Task,
+
+  run: <A>(task: Task<A>): Promise<A> => task()
+}
 
 /**
  * Future
