@@ -31,37 +31,32 @@ export const Cards: FunctionComponent<Props> = ({
 }) => {
   const [_playerId, player] = game.player
 
-  const marketLeft = params.market.borderWidth + params.market.padding
-  const marketTop = marketLeft
-  const cardMarginX2 = 2 * params.card.margin
-  const cardHeightPlusCardMargin = params.card.height + params.card.margin
-
   return (
     <div>
       {game.market.map(
-        card(
-          referentials.market,
-          i => [marketLeft, cardMarginX2 + (i + 1) * cardHeightPlusCardMargin],
-          'market'
-        )
+        card(referentials.market, i => [0, (i + 1) * params.card.heightPlusMargin], 'market')
       )}
-      {game.gems.map(card(referentials.market, _ => [marketLeft, marketTop], 'market'))}
+      {game.gems.map(card(referentials.market, _ => [0, 0], 'market'))}
       {player.hand.map(
         card(
-          referentials.player,
-          i => [(i + 2) * params.card.width, params.playerZone.height - params.card.height],
+          pipe(referentials.player, Referential.combine(Referential.bottomZone)),
+          i => [(i + 2) * params.card.widthPlusMargin, 0],
           'hand'
         )
       )}
       {player.fight_zone.map(
-        card(referentials.player, i => [(i + 1) * params.card.width, 0], 'fightZone')
+        card(
+          pipe(referentials.player, Referential.combine(Referential.fightZone)),
+          i => [(i + 1) * params.card.widthPlusMargin, 0],
+          'fightZone'
+        )
       )}
       {zippedOtherPlayers.map(([referential, [playerId, player]]) => (
         <Fragment key={playerId}>
           {List.range(2, player.hand + 1).map(
-            hidden(referential, i => [
-              i * params.card.width,
-              params.playerZone.height - params.card.height
+            hidden(pipe(referential, Referential.combine(Referential.bottomZone)), i => [
+              i * params.card.widthPlusMargin,
+              0
             ])
           )}
         </Fragment>

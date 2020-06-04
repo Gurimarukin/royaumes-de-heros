@@ -15,9 +15,8 @@ interface Props {
 export const Discard: FunctionComponent<Props> = ({ playerRef }) => {
   const [left, top] = pipe(
     playerRef,
-    Referential.coord(
-      Rectangle.card([params.card.width, params.playerZone.height - params.card.height])
-    )
+    Referential.combine(Referential.bottomZone),
+    Referential.coord(Rectangle.card([params.card.widthPlusMargin, 0]))
   )
   return (
     <div css={styles.container} style={{ left, top }}>

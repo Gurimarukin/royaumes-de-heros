@@ -17,7 +17,7 @@ export const Hero: FunctionComponent<Props> = ({ playerRef, player: { name, hp }
   const [left, top] = pipe(
     playerRef,
     Referential.combine(Referential.fightZone),
-    Referential.coord(Rectangle.card([0, params.fightZone.height - params.card.height]))
+    Referential.coord(Rectangle.card([0, params.fightZone.innerHeight - params.card.height]))
   )
   return (
     <div css={styles.container} style={{ left, top }}>
@@ -44,7 +44,8 @@ const styles = {
 
   hp: css({
     textShadow: '0 0 10px black',
-    fontSize: '4.33em'
+    fontSize: '4.33em',
+    fontWeight: 'bold'
   }),
 
   name: css({

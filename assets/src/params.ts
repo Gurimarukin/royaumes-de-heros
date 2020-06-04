@@ -1,45 +1,60 @@
 import { Referentials } from './models/game/Referentials'
 
 const cardWidth = 298
-const cardMargin = 0.06 * cardWidth
+const cardHeight = 417
+const cardMargin = 0.05 * cardWidth
 const card = {
   width: cardWidth,
-  height: 417,
+  height: cardHeight,
+  widthPlusMargin: cardWidth + cardMargin,
+  heightPlusMargin: cardHeight + cardMargin,
   margin: cardMargin,
   borderRadius: 24
 }
 
+const fightZoneInnerWidth = 9 * card.widthPlusMargin - card.margin
+const fightZoneInnerHeight = 2 * card.heightPlusMargin - card.margin
+const fightZoneBorderWidth = 0.05 * card.width
 const fightZone = {
-  width: 9 * card.width,
-  height: 2 * card.height,
-  borderWidth: 0.05 * card.width
+  width: fightZoneInnerWidth + 2 * (fightZoneBorderWidth + card.margin),
+  height: fightZoneInnerHeight + 2 * (fightZoneBorderWidth + card.margin),
+  innerWidth: fightZoneInnerWidth,
+  innerHeight: fightZoneInnerHeight,
+  borderWidth: fightZoneBorderWidth
+}
+
+const bottomZone = {
+  width: fightZoneInnerWidth,
+  height: card.height
 }
 
 const playerZone = {
   width: fightZone.width,
-  height: fightZone.height + card.height
+  height: fightZone.height + bottomZone.height + 2 * card.margin
 }
 
-const marketPadding = cardMargin
+const marketInnerWidth = card.width
+const marketInnerHeight = 6 * card.heightPlusMargin - card.margin
 const marketBorderWidth = fightZone.borderWidth
 const market = {
-  width: card.width + 2 * (marketBorderWidth + marketPadding),
-  height: card.height * 6 + 2 * (marketBorderWidth + marketPadding) + 5 * card.margin,
-  borderWidth: marketBorderWidth,
-  padding: marketPadding
+  width: marketInnerWidth + 2 * (marketBorderWidth + card.margin),
+  height: marketInnerHeight + 2 * (marketBorderWidth + card.margin),
+  innerWidth: marketInnerWidth,
+  innerHeight: marketInnerHeight,
+  borderWidth: marketBorderWidth
 }
 
 export const params = {
-  board: (referentials: Referentials) => ({
-    width: market.width + playerZone.width * Math.ceil((referentials.others.length + 1) / 2),
-    height: market.height
-  }),
-
+  board: {
+    width: (referentials: Referentials) =>
+      market.width +
+      Math.ceil((referentials.others.length + 1) / 2) * (playerZone.width + card.margin) +
+      2 * card.margin,
+    height: 2 * playerZone.height + card.margin
+  },
   card,
-
   playerZone,
-
   fightZone,
-
+  bottomZone,
   market
 }

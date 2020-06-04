@@ -14,9 +14,12 @@ export interface Referential {
 
 export namespace Referential {
   export const market: Referential = {
-    position: [0, 0],
-    width: params.market.width,
-    height: params.market.height,
+    position: [
+      params.card.margin * 2 + params.market.borderWidth,
+      (params.board.height - params.market.innerHeight) / 2
+    ],
+    width: params.market.innerWidth,
+    height: params.market.innerHeight,
     inverted: false
   }
 
@@ -39,10 +42,21 @@ export namespace Referential {
     )
   }
 
+  const borderPlusMargin = params.fightZone.borderWidth + params.card.margin
   export const fightZone: Referential = {
-    position: [0, 0],
-    width: params.fightZone.width,
-    height: params.fightZone.height,
+    position: [borderPlusMargin, borderPlusMargin],
+    width: params.fightZone.innerWidth,
+    height: params.fightZone.innerHeight,
+    inverted: false
+  }
+
+  export const bottomZone: Referential = {
+    position: [
+      params.fightZone.borderWidth + params.card.margin,
+      params.playerZone.height - params.card.heightPlusMargin
+    ],
+    width: params.bottomZone.width,
+    height: params.bottomZone.height,
     inverted: false
   }
 

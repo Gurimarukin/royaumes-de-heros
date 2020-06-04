@@ -20,7 +20,8 @@ export const CombatAndGold: FunctionComponent<Props> = ({
 }) => {
   const [left, top] = pipe(
     playerRef,
-    Referential.coord(Rectangle.card([0, params.playerZone.height - params.card.height]))
+    Referential.combine(Referential.bottomZone),
+    Referential.coord(Rectangle.card([0, 0]))
   )
   return (
     <div css={styles.container} style={{ left, top }}>
@@ -49,15 +50,21 @@ const styles = {
 
   section: css({
     flexGrow: 1,
-    padding: '0 0.67em',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    fontWeight: 'bold',
+
+    '& > *': {
+      flexGrow: 1,
+      flexBasis: 0,
+      display: 'flex',
+      justifyContent: 'center'
+    }
   }),
 
   combat: css({
     backgroundColor: 'darkred',
-    color: 'wheat',
+    color: 'bisque',
 
     '& > svg': {
       transform: 'rotate(180deg)'

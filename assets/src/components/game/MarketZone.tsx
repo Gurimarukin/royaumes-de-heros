@@ -7,9 +7,14 @@ import { Rectangle } from '../../models/game/geometry/Rectangle'
 import { Referential } from '../../models/game/geometry/Referential'
 import { pipe } from '../../utils/fp'
 
+const borderPlusMargin = params.market.borderWidth + params.card.margin
+
 export const MarketZone: FunctionComponent = () => {
-  const [left, right] = pipe(Referential.market, Referential.coord(Rectangle.market([0, 0])))
-  return <div css={styles.container} style={{ left, right }} />
+  const [left, top] = pipe(
+    Referential.market,
+    Referential.coord(Rectangle.market([-borderPlusMargin, -borderPlusMargin]))
+  )
+  return <div css={styles.container} style={{ left, top }} />
 }
 
 const styles = {

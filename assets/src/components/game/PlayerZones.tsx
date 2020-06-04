@@ -33,12 +33,12 @@ export const PlayerZones: FunctionComponent<Props> = ({
   const [playerId, player] = game.player
   return (
     <div>
-      {referential(referentials.player, playerId, player)}
-      {zippedOtherPlayers.map(([ref, [id, player]]) => referential(ref, id, player))}
+      {playerZone(referentials.player, playerId, player)}
+      {zippedOtherPlayers.map(([ref, [id, player]]) => playerZone(ref, id, player))}
     </div>
   )
 
-  function referential(ref: Referential, playerId: string, player: PartialPlayer): JSX.Element {
+  function playerZone(ref: Referential, playerId: string, player: PartialPlayer): JSX.Element {
     return (
       <div key={playerId}>
         <FightZone playerRef={ref} current={playerId === game.current_player} />

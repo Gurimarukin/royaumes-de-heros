@@ -47,7 +47,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
     others: Referential.otherPlayers(game.other_players.length)
   }
 
-  const board = params.board(referentials)
+  const board = { width: params.board.width(referentials), height: params.board.height }
 
   const minScaleW = minScale(window.innerWidth, board.width)
   const minScaleH = minScale(window.innerHeight, board.height)
