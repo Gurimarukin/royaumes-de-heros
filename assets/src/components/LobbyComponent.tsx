@@ -6,9 +6,10 @@ import { Link } from './Link'
 import { Router } from './Router'
 import { UserContext } from '../contexts/UserContext'
 import { Lobby } from '../models/lobby/Lobby'
+import { Future, Either, pipe } from '../utils/fp'
 
 interface Props {
-  readonly call: (msg: any) => void
+  readonly call: (msg: any) => Future<Either<void, void>>
   readonly state: Lobby
 }
 
@@ -25,6 +26,6 @@ export const LobbyComponent: FunctionComponent<Props> = ({ call, state }) => {
   )
 
   function play() {
-    call('start_game')
+    pipe(call('start_game'), Future.runUnsafe)
   }
 }

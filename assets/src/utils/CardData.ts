@@ -318,7 +318,7 @@ const cards: Dict<CardData> = {
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-078-wolf-form.jpg',
     { sacrifice: true }
   ),
-  wolfs_shaman: d(
+  wolf_shaman: d(
     'Shamane des Loups',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-079-wolf-shaman.jpg',
     { expend: true }

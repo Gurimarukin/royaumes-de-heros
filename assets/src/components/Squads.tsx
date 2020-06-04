@@ -11,7 +11,7 @@ import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadShort } from '../models/SquadShort'
-import { pipe, Future, flow } from '../utils/fp'
+import { pipe, Future, flow, Either } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 export const Squads: FunctionComponent = () => {
@@ -78,11 +78,23 @@ export const Squads: FunctionComponent = () => {
   function createGame(): () => void {
     return () => {
       pipe(
-        channel.push('create', {}),
-        PhoenixUtils.channelToFuture,
-        Future.map(({ id }) => history.push(Router.routes.squad(id))),
+        () => channel.push('create', {}),
+        PhoenixUtils.pushToFuture,
+        Future.map(
+          Either.fold(
+            _ => {},
+            flow(
+              idCodec.decode,
+              Either.map(({ id }) => history.push(Router.routes.squad(id)))
+            )
+          )
+        ),
         Future.runUnsafe
       )
     }
   }
 }
+
+const idCodec = D.type({
+  id: D.string
+})

@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
 import { Lazy } from 'fp-ts/lib/function'
-import { FunctionComponent, useRef } from 'react'
+import { FunctionComponent, useRef, useState } from 'react'
 import { useSpring, animated as a } from 'react-spring'
 
 import { Cards } from './Cards'
@@ -10,10 +10,10 @@ import { PlayerZones } from './PlayerZones'
 import { params } from '../../params'
 import { Game } from '../../models/game/Game'
 import { Referential } from '../../models/game/geometry/Referential'
-import { List } from '../../utils/fp'
+import { List, pipe, Future, Either, Task } from '../../utils/fp'
 
 interface Props {
-  readonly call: (msg: any) => void
+  readonly call: (msg: any) => Future<Either<void, void>>
   readonly game: Game
 }
 
@@ -69,6 +69,8 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
 
   const zippedOtherPlayers = List.zip(referentials.others, game.other_players)
 
+  const [endTurnSent, setEndTurnSent] = useState(false)
+
   return (
     <div css={styles.container} onWheel={onWheel} onMouseMove={move} onMouseLeave={resetMove}>
       <a.div
@@ -88,8 +90,35 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
           zippedOtherPlayers={zippedOtherPlayers}
         />
       </a.div>
+      <button
+        disabled={endTurnSent}
+        onClick={endTurn}
+        css={styles.endTurn}
+        className={Game.isCurrentPlayer(game) ? 'current' : undefined}
+      >
+        Fin du tour
+      </button>
     </div>
   )
+
+  function endTurn() {
+    setEndTurnSent(true)
+    pipe(
+      call('discard_phase'),
+      Future.chain(
+        Either.fold(
+          _ => Future.right(setEndTurnSent(false)),
+          _ =>
+            pipe(
+              call('draw_phase'),
+              Task.delay(1000),
+              Future.map(_ => setEndTurnSent(false))
+            )
+        )
+      ),
+      Future.runUnsafe
+    )
+  }
 
   function onWheel({ deltaY, clientX, clientY }: React.WheelEvent) {
     // const zoomIn = deltaY < 0
@@ -233,5 +262,18 @@ const styles = {
       height,
       transformOrigin: 'top left',
       backgroundImage: "url('/images/wood.png')"
-    })
+    }),
+
+  endTurn: css({
+    display: 'flex',
+    verticalAlign: 'center',
+    height: '2em',
+    position: 'absolute',
+    right: 0,
+    top: 'calc(50vh - 1em)',
+
+    '&:not(.current)': {
+      display: 'none'
+    }
+  })
 }

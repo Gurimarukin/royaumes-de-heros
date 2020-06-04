@@ -86,11 +86,11 @@ defmodule Heros.Game.Helpers do
     Game.interact(game, player_id, interaction)
   end
 
-  def handle_call({player_id, :discard_phase}, _from, game) do
+  def handle_call({player_id, "discard_phase"}, _from, game) do
     Game.discard_phase(game, player_id)
   end
 
-  def handle_call({player_id, :draw_phase}, _from, game) do
+  def handle_call({player_id, "draw_phase"}, _from, game) do
     Game.draw_phase(game, player_id)
   end
 

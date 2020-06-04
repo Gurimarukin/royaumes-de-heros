@@ -12,10 +12,10 @@ import { Referentials } from '../../models/game/Referentials'
 import { Coord } from '../../models/game/geometry/Coord'
 import { Rectangle } from '../../models/game/geometry/Rectangle'
 import { Referential } from '../../models/game/geometry/Referential'
-import { pipe, List } from '../../utils/fp'
+import { pipe, List, Future, Either } from '../../utils/fp'
 
 interface Props {
-  readonly call: (msg: any) => void
+  readonly call: (msg: any) => Future<Either<void, void>>
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, WithId<OtherPlayer>][]
@@ -101,7 +101,7 @@ export const Cards: FunctionComponent<Props> = ({
   }
 
   function playCard(id: string): () => void {
-    return () => call(['play_card', id])
+    return () => pipe(call(['play_card', id]), Future.runUnsafe)
   }
 }
 

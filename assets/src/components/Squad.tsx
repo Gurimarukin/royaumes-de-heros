@@ -11,7 +11,7 @@ import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadState } from '../models/SquadState'
-import { pipe, flow, Task, Either } from '../utils/fp'
+import { pipe, flow, Task, Either, Future } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 interface Props {
@@ -70,19 +70,17 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
     }
   }
 
-  function call(msg: any): void {
+  function call(msg: any): Future<Either<void, void>> {
     console.log('call:', msg)
-    pipe(
-      channel.push('call', msg),
-      PhoenixUtils.channelToFuture,
-      Task.map(
-        Either.fold(
-          _ => 'error',
-          _ => 'ok'
+    return pipe(
+      () => channel.push('call', msg),
+      PhoenixUtils.pushToFuture,
+      Future.map(
+        Either.bimap(
+          _ => console.log('response: error'),
+          _ => console.log('response: ok')
         )
-      ),
-      Task.map(_ => console.log(`response from call: ${_}`)),
-      Task.run
+      )
     )
   }
 }
