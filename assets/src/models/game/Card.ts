@@ -1,5 +1,6 @@
 import * as D from 'io-ts/lib/Decoder'
 
+/* eslint-disable @typescript-eslint/camelcase */
 export namespace Card {
   export const codec = D.type({
     key: D.string,
@@ -7,5 +8,6 @@ export namespace Card {
     ally_ability_used: D.boolean
   })
 }
+/* eslint-enable @typescript-eslint/camelcase */
 
 export type Card = D.TypeOf<typeof Card.codec>

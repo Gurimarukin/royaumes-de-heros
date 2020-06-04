@@ -56,6 +56,7 @@ const styles = {
     width: params.card.width,
     height: params.card.height,
     borderRadius: params.card.borderRadius,
+    boxShadow: '0 0 4px black',
     overflow: 'hidden',
 
     '& > img': {

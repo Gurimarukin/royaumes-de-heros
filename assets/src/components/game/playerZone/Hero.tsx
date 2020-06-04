@@ -33,6 +33,7 @@ const styles = {
     width: params.card.width,
     height: params.card.height,
     borderRadius: params.card.borderRadius,
+    boxShadow: '0 0 4px black',
     backgroundImage: "url('/images/counter_green.png')",
     backgroundSize: '100% 100%',
     color: 'wheat',

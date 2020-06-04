@@ -23,6 +23,7 @@ const styles = {
     width: params.market.width,
     height: params.market.height,
     border: `${params.market.borderWidth}px solid darkred`,
+    boxShadow: '0 0 6px black',
     backgroundImage: "url('/images/wool_colored_red.png')"
   })
 }

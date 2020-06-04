@@ -5,6 +5,7 @@ import { OtherPlayer } from './OtherPlayer'
 import { Player } from './Player'
 import { WithId } from '../WithId'
 
+/* eslint-disable @typescript-eslint/camelcase */
 export namespace Game {
   export const codec = D.type({
     player: WithId.codec(Player.codec),
@@ -16,5 +17,6 @@ export namespace Game {
     cemetery: D.array(WithId.codec(Card.codec))
   })
 }
+/* eslint-enable @typescript-eslint/camelcase */
 
 export type Game = D.TypeOf<typeof Game.codec>

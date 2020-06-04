@@ -25,6 +25,7 @@ const styles = {
     width: params.fightZone.width,
     height: params.fightZone.height,
     border: `${params.fightZone.borderWidth}px solid darkgoldenrod`,
+    boxShadow: '0 0 6px black',
     backgroundImage: "url('/images/hardened_clay_stained_blue.png')",
 
     '&.current': {

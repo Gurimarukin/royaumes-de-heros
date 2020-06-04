@@ -16,7 +16,7 @@ export const Discard: FunctionComponent<Props> = ({ playerRef }) => {
   const [left, top] = pipe(
     playerRef,
     Referential.combine(Referential.bottomZone),
-    Referential.coord(Rectangle.card([params.card.widthPlusMargin, 0]))
+    Referential.coord(Rectangle.card([0, 0]))
   )
   return (
     <div css={styles.container} style={{ left, top }}>
