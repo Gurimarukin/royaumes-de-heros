@@ -26,6 +26,9 @@ config :heros, HerosWeb.Endpoint,
       "--mode",
       "development",
       "--watch-stdin",
+    # npm: [
+    #   "run",
+    #   "watch",
       cd: Path.expand("../assets", __DIR__)
     ]
   ]

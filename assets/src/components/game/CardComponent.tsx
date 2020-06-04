@@ -55,7 +55,12 @@ const styles = {
     position: 'absolute',
     width: params.card.width,
     height: params.card.height,
-    borderRadius: 24,
-    overflow: 'hidden'
+    borderRadius: params.card.borderRadius,
+    overflow: 'hidden',
+
+    '& > img': {
+      width: '100%',
+      height: '100%'
+    }
   })
 }

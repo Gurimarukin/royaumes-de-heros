@@ -2,6 +2,8 @@
 import { jsx } from '@emotion/core'
 import { FunctionComponent, useState, useContext, useCallback } from 'react'
 
+import { Link } from './Link'
+import { Router } from './Router'
 import { LobbyComponent } from './LobbyComponent'
 import { GameComponent } from './game/GameComponent'
 import { UserContext } from '../contexts/UserContext'
@@ -9,7 +11,7 @@ import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadState } from '../models/SquadState'
-import { pipe, flow, Future, Task, inspect, Either } from '../utils/fp'
+import { pipe, flow, Task, Either } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 interface Props {
@@ -41,11 +43,21 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
   return pipe(state, AsyncState.fold({ onLoading, onError, onSuccess }))
 
   function onLoading(): JSX.Element {
-    return <div>Loading...</div>
+    return (
+      <div>
+        <Link to={Router.routes.squads}>retour</Link>
+        <div>Loading...</div>
+      </div>
+    )
   }
 
   function onError(error: ChannelError): JSX.Element {
-    return <pre>Error: {JSON.stringify(error, null, 2)}</pre>
+    return (
+      <div>
+        <Link to={Router.routes.squads}>retour</Link>
+        <pre>Error: {JSON.stringify(error, null, 2)}</pre>
+      </div>
+    )
   }
 
   function onSuccess(state: SquadState): JSX.Element {

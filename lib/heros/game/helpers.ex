@@ -11,12 +11,12 @@ defmodule Heros.Game.Helpers do
     fn card -> Card.champion?(card.key) end
   end
 
-  def project(game, player_id) do
+  def project(game, player_id, names) do
     {player, others} = KeyList.cycle(game.players, player_id)
 
     %{
-      player: {player_id, project_player(player)},
-      other_players: others |> Enum.map(&project_other_player/1),
+      player: {player_id, project_player(player, KeyList.find(names, player_id))},
+      other_players: others |> Enum.map(&project_other_player(&1, names)),
       current_player: game.current_player,
       gems: game.gems,
       market: game.market,
@@ -25,11 +25,12 @@ defmodule Heros.Game.Helpers do
     }
   end
 
-  defp project_player(player) do
+  defp project_player(player, player_name) do
     %{
       pending_interactions: player.pending_interactions,
       temporary_effects: player.temporary_effects,
       discard_phase_done: player.discard_phase_done,
+      name: player_name,
       hp: player.hp,
       max_hp: player.max_hp,
       gold: player.gold,
@@ -41,10 +42,11 @@ defmodule Heros.Game.Helpers do
     }
   end
 
-  defp project_other_player({player_id, player}) do
+  defp project_other_player({player_id, player}, names) do
     {player_id,
      %{
        temporary_effects: player.temporary_effects,
+       name: KeyList.find(names, player_id),
        hp: player.hp,
        max_hp: player.max_hp,
        gold: player.gold,

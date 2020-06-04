@@ -1,5 +1,6 @@
 defmodule Heros.Squad do
   alias Heros.{Game, Lobby, Squad}
+  alias Heros.Squad.Member
   alias Heros.Utils.{KeyList, Option}
 
   use GenServer, restart: :temporary
@@ -8,7 +9,7 @@ defmodule Heros.Squad do
 
   @type t :: %__MODULE__{
           owner: nil | Player.id(),
-          members: list({Player.id(), MapSet.t(pid)}),
+          members: list({Player.id(), Member.t()}),
           state: {:lobby, Lobby.t()} | {:game, Game.t()}
         }
   @enforce_keys [:owner, :members, :state]
@@ -68,19 +69,21 @@ defmodule Heros.Squad do
 
             Lobby.join(lobby, member_id, player_name)
             |> Option.map(fn lobby ->
-              members = squad.members ++ [{member_id, MapSet.new([socket])}]
+              members = squad.members ++ [{member_id, Member.init(player_name, socket)}]
               owner = squad.owner || member_id
               %{squad | owner: owner, members: members, state: {:lobby, lobby}}
             end)
 
-          _sockets ->
-            members = squad.members |> KeyList.update(member_id, &MapSet.put(&1, socket))
-            Option.some(%{squad | members: members})
+          _member ->
+            squad
+            |> update_member(member_id, &Member.put_socket(&1, socket))
+            |> Option.some()
         end
 
       {:game, _game} ->
-        with_member(squad.members, member_id, fn _sockets ->
-          %{squad | members: squad.members |> KeyList.update(member_id, &MapSet.put(&1, socket))}
+        with_member(squad.members, member_id, fn _member ->
+          squad
+          |> update_member(member_id, &Member.put_socket(&1, socket))
           |> Option.some()
         end)
     end
@@ -88,10 +91,10 @@ defmodule Heros.Squad do
   end
 
   def handle_call({:disconnect, member_id, socket}, _from, squad) do
-    with_member(squad.members, member_id, fn sockets ->
+    with_member(squad.members, member_id, fn member ->
       Logger.debug(~s"Squad #{inspect(self())}: #{member_id} disconected #{inspect(socket)}")
 
-      sockets = MapSet.delete(sockets, socket)
+      sockets = MapSet.delete(member.sockets, socket)
 
       if MapSet.size(sockets) == 0 do
         Logger.debug(~s"Squad #{inspect(self())}: no more connections for #{member_id}")
@@ -107,16 +110,14 @@ defmodule Heros.Squad do
             end)
 
           state ->
-            %{
-              squad
-              | state: state,
-                members: squad.members |> KeyList.update(member_id, fn _ -> sockets end)
-            }
+            %{squad | state: state}
+            |> update_member(member_id, &%{&1 | sockets: sockets})
             |> update_owner(member_id)
             |> Option.some()
         end
       else
-        %{squad | members: squad.members |> KeyList.update(member_id, fn _ -> sockets end)}
+        squad
+        |> update_member(member_id, &%{&1 | sockets: sockets})
         |> Option.some()
       end
     end)
@@ -155,7 +156,7 @@ defmodule Heros.Squad do
 
   defp update_owner(squad, member_id) do
     non_empty_members =
-      squad.members |> Enum.filter(fn {_, sockets} -> MapSet.size(sockets) != 0 end)
+      squad.members |> Enum.filter(fn {_, member} -> MapSet.size(member.sockets) != 0 end)
 
     owner =
       if squad.owner == member_id do
@@ -168,6 +169,10 @@ defmodule Heros.Squad do
       end
 
     %{squad | owner: owner}
+  end
+
+  defp update_member(squad, member_id, f) do
+    %{squad | members: squad.members |> KeyList.update(member_id, f)}
   end
 
   defp to_reply({:ok, squad}, _old_squad), do: {:reply, {:ok, squad}, squad}

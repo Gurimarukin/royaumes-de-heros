@@ -9,15 +9,15 @@ export interface Referential {
   readonly position: Coord
   readonly width: number
   readonly height: number
-  readonly invertedY: boolean
+  readonly inverted: boolean
 }
 
 export namespace Referential {
   export const market: Referential = {
-    position: [0, params.playerZone.height],
+    position: [0, 0],
     width: params.market.width,
     height: params.market.height,
-    invertedY: false
+    inverted: false
   }
 
   export const self: Referential = playerZone([0, 1])
@@ -27,7 +27,7 @@ export namespace Referential {
       position: Coord.playerZone(position),
       width: params.playerZone.width,
       height: params.playerZone.height,
-      invertedY: position[1] === 0 // invert first row
+      inverted: position[1] === 0 // invert first row
     }
   }
 
@@ -39,14 +39,31 @@ export namespace Referential {
     )
   }
 
+  export const fightZone: Referential = {
+    position: [0, 0],
+    width: params.fightZone.width,
+    height: params.fightZone.height,
+    inverted: false
+  }
+
   export function coord({
     position: [x2, y2],
+    width: rectWidth,
     height: rectHeight
   }: Rectangle): (ref: Referential) => Coord {
-    return ({ position: [x1, y1], height, invertedY }) => [
-      x1 + x2,
-      invertedY ? y1 + (height - y2) - rectHeight : y1 + y2
+    return ({ position: [x1, y1], width, height, inverted }) => [
+      inverted ? x1 + (width - x2) - rectWidth : x1 + x2,
+      inverted ? y1 + (height - y2) - rectHeight : y1 + y2
     ]
+  }
+
+  export function combine(other: Referential): (ref: Referential) => Referential {
+    return ref => ({
+      position: coord(other)(ref),
+      width: other.width,
+      height: other.height,
+      inverted: other.inverted !== ref.inverted
+    })
   }
 }
 

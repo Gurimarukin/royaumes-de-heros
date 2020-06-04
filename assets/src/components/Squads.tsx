@@ -11,7 +11,7 @@ import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadShort } from '../models/SquadShort'
-import { pipe, Future, flow, Either } from '../utils/fp'
+import { pipe, Future, flow } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 export const Squads: FunctionComponent = () => {

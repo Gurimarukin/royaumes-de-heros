@@ -2,6 +2,7 @@ defmodule Heros.SquadTest do
   use ExUnit.Case, async: true
 
   alias Heros.{Game, Lobby, Squad}
+  alias Heros.Squad.Member
 
   test "create squad" do
     assert {:ok, pid} = Squad.start_link([])
@@ -24,17 +25,17 @@ defmodule Heros.SquadTest do
 
     assert squad == %Squad{
              owner: "p1",
-             members: [{"p1", MapSet.new([:p1_1])}],
+             members: [{"p1", %Member{name: "Player 1", sockets: MapSet.new([:p1_1])}}],
              state: {:lobby, lobby}
            }
 
     # p1 joins again
 
-    assert {:ok, _} = Squad.connect(pid, "p1", "Player 1", :p1_1)
+    assert {:ok, _} = Squad.connect(pid, "p1", "whatever", :p1_1)
 
     assert Squad.get(pid) == %Squad{
              owner: "p1",
-             members: [{"p1", MapSet.new([:p1_1])}],
+             members: [{"p1", %Member{name: "Player 1", sockets: MapSet.new([:p1_1])}}],
              state: {:lobby, lobby}
            }
 
@@ -43,7 +44,7 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(pid) == %Squad{
              owner: "p1",
-             members: [{"p1", MapSet.new([:p1_1, :p1_2])}],
+             members: [{"p1", %Member{name: "Player 1", sockets: MapSet.new([:p1_1, :p1_2])}}],
              state: {:lobby, lobby}
            }
 
@@ -61,7 +62,10 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(pid) == %Squad{
              owner: "p1",
-             members: [{"p1", MapSet.new([:p1_1, :p1_2])}, {"p2", MapSet.new([:p2_1])}],
+             members: [
+               {"p1", %Member{name: "Player 1", sockets: MapSet.new([:p1_1, :p1_2])}},
+               {"p2", %Member{name: "Player 2", sockets: MapSet.new([:p2_1])}}
+             ],
              state: {:lobby, lobby}
            }
 
@@ -81,9 +85,9 @@ defmodule Heros.SquadTest do
     assert Squad.get(pid) == %Squad{
              owner: "p1",
              members: [
-               {"p1", MapSet.new([:p1_1, :p1_2])},
-               {"p2", MapSet.new([:p2_1])},
-               {"p3", MapSet.new([:p3])}
+               {"p1", %Member{name: "Player 1", sockets: MapSet.new([:p1_1, :p1_2])}},
+               {"p2", %Member{name: "Player 2", sockets: MapSet.new([:p2_1])}},
+               {"p3", %Member{name: "Player 3", sockets: MapSet.new([:p3])}}
              ],
              state: {:lobby, lobby}
            }
@@ -96,9 +100,9 @@ defmodule Heros.SquadTest do
     assert Squad.get(pid) == %Squad{
              owner: "p1",
              members: [
-               {"p1", MapSet.new([:p1_2])},
-               {"p2", MapSet.new([:p2_1])},
-               {"p3", MapSet.new([:p3])}
+               {"p1", %Member{name: "Player 1", sockets: MapSet.new([:p1_2])}},
+               {"p2", %Member{name: "Player 2", sockets: MapSet.new([:p2_1])}},
+               {"p3", %Member{name: "Player 3", sockets: MapSet.new([:p3])}}
              ],
              state: {:lobby, lobby}
            }
@@ -115,7 +119,10 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(pid) == %Squad{
              owner: "p2",
-             members: [{"p2", MapSet.new([:p2_1])}, {"p3", MapSet.new([:p3])}],
+             members: [
+               {"p2", %Member{name: "Player 2", sockets: MapSet.new([:p2_1])}},
+               {"p3", %Member{name: "Player 3", sockets: MapSet.new([:p3])}}
+             ],
              state: {:lobby, lobby}
            }
 
@@ -138,7 +145,10 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(pid) == %Squad{
              owner: "p2",
-             members: [{"p2", MapSet.new([:p2_1, :p2_2])}, {"p3", MapSet.new([:p3])}],
+             members: [
+               {"p2", %Member{name: "Player 2", sockets: MapSet.new([:p2_1, :p2_2])}},
+               {"p3", %Member{name: "Player 3", sockets: MapSet.new([:p3])}}
+             ],
              state: {:game, game}
            }
 
@@ -148,7 +158,10 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(pid) == %Squad{
              owner: "p2",
-             members: [{"p2", MapSet.new([:p2_1, :p2_2])}, {"p3", MapSet.new()}],
+             members: [
+               {"p2", %Member{name: "Player 2", sockets: MapSet.new([:p2_1, :p2_2])}},
+               {"p3", %Member{name: "Player 3", sockets: MapSet.new()}}
+             ],
              state: {:game, game}
            }
   end

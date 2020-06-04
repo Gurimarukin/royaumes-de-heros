@@ -5,10 +5,12 @@ import { FunctionComponent, useRef } from 'react'
 import { useSpring, animated as a } from 'react-spring'
 
 import { Cards } from './Cards'
+import { MarketZone } from './MarketZone'
+import { PlayerZones } from './PlayerZones'
+import { params } from '../../params'
 import { Game } from '../../models/game/Game'
 import { Referential } from '../../models/game/geometry/Referential'
-import { Coord } from '../../models/game/geometry/Coord'
-import { params } from '../../params'
+import { List } from '../../utils/fp'
 
 interface Props {
   readonly call: (msg: any) => void
@@ -32,7 +34,7 @@ namespace Moving {
   }
 }
 
-const maxScale = 1.5
+const maxScale = 1
 
 const moveDetect = 40
 const moveStepPx = 300
@@ -45,10 +47,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
     others: Referential.otherPlayers(game.other_players.length)
   }
 
-  const board = {
-    width: params.playerZone.width * Math.ceil(referentials.others.length / 2),
-    height: params.playerZone.height * 2 + params.market.height
-  }
+  const board = params.board(referentials)
 
   const minScaleW = minScale(window.innerWidth, board.width)
   const minScaleH = minScale(window.innerHeight, board.height)
@@ -68,13 +67,26 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
 
   const moveRef = useRef<Moving>({ h: 0, v: 0 })
 
+  const zippedOtherPlayers = List.zip(referentials.others, game.other_players)
+
   return (
     <div css={styles.container} onWheel={onWheel} onMouseMove={move} onMouseLeave={resetMove}>
       <a.div
         css={styles.board(board.width, board.height)}
         style={{ transform: props.s.interpolate(trans), left: props.x, top: props.y }}
       >
-        <Cards call={call} game={game} referentials={referentials} />
+        <MarketZone />
+        <PlayerZones
+          game={game}
+          referentials={referentials}
+          zippedOtherPlayers={zippedOtherPlayers}
+        />
+        <Cards
+          call={call}
+          game={game}
+          referentials={referentials}
+          zippedOtherPlayers={zippedOtherPlayers}
+        />
       </a.div>
     </div>
   )
@@ -209,7 +221,9 @@ const styles = {
     width: '100vw',
     height: '100vh',
     overflow: 'hidden',
-    position: 'relative'
+    position: 'relative',
+    backgroundImage: "url('/images/bg.jpg')",
+    backgroundSize: '100% 100%'
   }),
 
   board: (width: number, height: number) =>
@@ -218,6 +232,6 @@ const styles = {
       width,
       height,
       transformOrigin: 'top left',
-      backgroundImage: 'radial-gradient(red,orange,yellow,green,blue,indigo,violet)'
+      backgroundImage: "url('/images/wood.png')"
     })
 }

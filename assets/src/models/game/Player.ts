@@ -4,11 +4,13 @@ import { Card } from './Card'
 import { Unknown } from '../Unknown'
 import { WithId } from '../WithId'
 
+/* eslint-disable @typescript-eslint/camelcase */
 export namespace Player {
   export const codec = D.type({
     pending_interactions: D.array(Unknown.codec),
     temporary_effects: D.array(Unknown.codec),
     discard_phase_done: D.boolean,
+    name: D.string,
     hp: D.number,
     max_hp: D.number,
     gold: D.number,
@@ -19,5 +21,6 @@ export namespace Player {
     fight_zone: D.array(WithId.codec(Card.codec))
   })
 }
+/* eslint-enable @typescript-eslint/camelcase */
 
 export type Player = D.TypeOf<typeof Player.codec>

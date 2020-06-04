@@ -1,5 +1,6 @@
 defmodule HerosWeb.SquadChannel do
   alias Heros.{Squad, Squads}
+  alias Heros.Utils.KeyList
 
   use Phoenix.Channel
 
@@ -44,8 +45,12 @@ defmodule HerosWeb.SquadChannel do
   def handle_out("update", squad, socket) do
     projection =
       case squad.state do
-        {:lobby, lobby} -> {:lobby, Heros.Lobby.Helpers.project(lobby, squad)}
-        {:game, game} -> {:game, Heros.Game.Helpers.project(game, socket.assigns.user.id)}
+        {:lobby, lobby} ->
+          {:lobby, Heros.Lobby.Helpers.project(lobby, squad)}
+
+        {:game, game} ->
+          names = squad.members |> KeyList.map(& &1.name)
+          {:game, Heros.Game.Helpers.project(game, socket.assigns.user.id, names)}
       end
 
     push(socket, "update", %{body: projection})
