@@ -2,3 +2,6 @@
 * better test `:stun_champion` 
 * private + public id; don't send private id to client
 * handle reconnect
+* delete empty squad
+
+* shortcuts: center players, center market

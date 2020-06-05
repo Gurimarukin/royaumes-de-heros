@@ -27,43 +27,46 @@ export const Cards: FunctionComponent<Props> = ({
   referentials,
   zippedOtherPlayers
 }) => {
-  const [_playerId, player] = game.player
+  const [currentId, current] = game.player
 
   return (
     <div>
       {/* market */}
-      {game.gems.map(card(referentials.market, _ => [0, 0], ['market', true]))}
+      {game.gems.map(card(referentials.market, _ => [0, 0], currentId, 'market'))}
       {game.market.map(
-        card(referentials.market, i => [0, (i + 1) * params.card.heightPlusMargin], [
-          'market',
-          true
-        ])
+        card(
+          referentials.market,
+          i => [0, (i + 1) * params.card.heightPlusMargin],
+          currentId,
+          'market'
+        )
       )}
 
       {/* player */}
-      {deck(referentials.player, player.deck)}
-      {discard(referentials.player, player.discard, false)}
-      {player.hand.map(
+      {deck(referentials.player, current.deck)}
+      {discard(referentials.player, current.discard, currentId)}
+      {current.hand.map(
         card(
           pipe(referentials.player, Referential.combine(Referential.bottomZone)),
           i => [(i + 2) * params.card.widthPlusMargin, 0],
-          ['hand', false]
+          currentId,
+          'hand'
         )
       )}
-      {fightZone(referentials.player, player.fight_zone, false)}
+      {fightZone(referentials.player, current.fight_zone, currentId)}
 
       {/* others */}
       {zippedOtherPlayers.map(([referential, [playerId, player]]) => (
         <Fragment key={playerId}>
           {deck(referential, player.deck)}
-          {discard(referential, player.discard, true)}
+          {discard(referential, player.discard, playerId)}
           {List.range(2, player.hand + 1).map(
             hidden(pipe(referential, Referential.combine(Referential.bottomZone)), i => [
               i * params.card.widthPlusMargin,
               0
             ])
           )}
-          {fightZone(referential, player.fight_zone, true)}
+          {fightZone(referential, player.fight_zone, playerId)}
         </Fragment>
       ))}
     </div>
@@ -72,6 +75,7 @@ export const Cards: FunctionComponent<Props> = ({
   function card(
     referential: Referential,
     coord: (i: number) => Coord,
+    playerId: string,
     zone: Zone
   ): (card: [string, Card], i: number) => JSX.Element {
     return ([cardId, card], i) => {
@@ -82,6 +86,7 @@ export const Cards: FunctionComponent<Props> = ({
           key={cardId}
           call={call}
           game={game}
+          playerId={playerId}
           zone={zone}
           card={[cardId, card]}
           style={{ left, top }}
@@ -93,23 +98,30 @@ export const Cards: FunctionComponent<Props> = ({
   function fightZone(
     referential: Referential,
     cards: WithId<Card>[],
-    other: boolean
+    playerId: string
   ): JSX.Element[] {
     return cards.map(
       card(
         pipe(referential, Referential.combine(Referential.fightZone)),
         i => [(i + 1) * params.card.widthPlusMargin, 0],
-        ['fightZone', other]
+        playerId,
+        'fightZone'
       )
     )
   }
 
-  function discard(referential: Referential, cards: WithId<Card>[], other: boolean): JSX.Element[] {
+  function discard(
+    referential: Referential,
+    cards: WithId<Card>[],
+    playerId: string
+  ): JSX.Element[] {
     return cards.map(
-      card(pipe(referential, Referential.combine(Referential.bottomZone)), _i => [0, 0], [
-        'discard',
-        other
-      ])
+      card(
+        pipe(referential, Referential.combine(Referential.bottomZone)),
+        _i => [0, 0],
+        playerId,
+        'discard'
+      )
     )
   }
 }
