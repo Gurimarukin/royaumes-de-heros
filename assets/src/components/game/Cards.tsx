@@ -55,10 +55,10 @@ export const Cards: FunctionComponent<Props> = ({
 
         // player
         ...discard(referentials.player, current.discard, currentId),
-        ...current.hand.map(
+        ...hand(current.hand, left =>
           card(
             pipe(referentials.player, Referential.combine(Referential.bottomZone)),
-            i => [(i + 2) * params.card.widthPlusMargin, 0],
+            i => [left + i * params.card.widthPlusMargin, 0],
             currentId,
             'hand'
           )
@@ -79,9 +79,9 @@ export const Cards: FunctionComponent<Props> = ({
         [
           ...h,
           ...deck(referential, player.deck),
-          ...List.range(2, player.hand + 1).map(
+          ...hand(List.range(0, player.hand - 1), left =>
             hidden(pipe(referential, Referential.combine(Referential.bottomZone)), i => [
-              i * params.card.widthPlusMargin,
+              left + i * params.card.widthPlusMargin,
               0
             ])
           )
@@ -138,10 +138,12 @@ function fightZone(
   cards: WithId<Card>[],
   playerId: string
 ): CardWithCoord[] {
+  const cardsWidth = cards.length * params.card.widthPlusMargin - params.card.margin
+  const left = (params.fightZone.innerWidth - cardsWidth) / 2
   return cards.map(
     card(
       pipe(referential, Referential.combine(Referential.fightZone)),
-      i => [(i + 1) * params.card.widthPlusMargin, 0],
+      i => [left + i * params.card.widthPlusMargin, 0],
       playerId,
       'fightZone'
     )
@@ -189,4 +191,12 @@ function deck(referential: Referential, cards: number): Coord[] {
 // array.length - i as key
 function hidden(referential: Referential, coord: (i: number) => Coord): (i: number) => Coord {
   return i => pipe(referential, Referential.coord(Rectangle.card(coord(i))))
+}
+
+function hand<A, B>(cards: A[], f: (left: number) => (a: A, i: number) => B): B[] {
+  const cardsWidth = cards.length * params.card.widthPlusMargin - params.card.margin
+  const discardPlusInfos = 2 * params.card.widthPlusMargin
+  const bottomZoneRemain = params.bottomZone.width - discardPlusInfos - params.card.widthPlusMargin
+  const left = discardPlusInfos + (bottomZoneRemain - cardsWidth) / 2
+  return cards.map(f(left))
 }
