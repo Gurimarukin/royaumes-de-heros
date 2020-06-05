@@ -5,8 +5,7 @@ export function useValTransition<A extends {}>(
 ): UseTransitionResult<A, AnimatedValue<Pick<A, keyof A>>>[] {
   return useTransition<A, A>(values, null, {
     ...values,
-    from: values,
-    leave: values,
+    enter: (_: any) => _,
     update: (_: any) => _
   } as any) as any
 }

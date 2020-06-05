@@ -16,11 +16,6 @@ interface Props {
   readonly player: PartialPlayer
 }
 
-interface AnimationProps {
-  readonly combat: number
-  readonly gold: number
-}
-
 export const CombatAndGold: FunctionComponent<Props> = ({
   playerRef,
   player: { combat, gold }

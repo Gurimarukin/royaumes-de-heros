@@ -105,7 +105,7 @@ export const CardComponent: FunctionComponent<CardProps> = ({
   )
 }
 
-export const AnimatedCardComponent = animated(CardComponent)
+export const AnimatedCard = animated(CardComponent)
 
 export const HiddenCard: FunctionComponent<CommonProps> = ({ style }) => (
   <div css={styles.container} style={style}>
