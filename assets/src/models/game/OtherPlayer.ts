@@ -4,9 +4,9 @@ import { Card } from './Card'
 import { Unknown } from '../Unknown'
 import { WithId } from '../WithId'
 
-/* eslint-disable @typescript-eslint/camelcase */
 export namespace OtherPlayer {
   export const codec = D.type({
+    /* eslint-disable @typescript-eslint/camelcase */
     temporary_effects: D.array(Unknown.codec),
     name: D.string,
     hp: D.number,
@@ -17,8 +17,8 @@ export namespace OtherPlayer {
     deck: D.number,
     discard: D.array(WithId.codec(Card.codec)),
     fight_zone: D.array(WithId.codec(Card.codec))
+    /* eslint-enable @typescript-eslint/camelcase */
   })
 }
-/* eslint-enable @typescript-eslint/camelcase */
 
 export type OtherPlayer = D.TypeOf<typeof OtherPlayer.codec>

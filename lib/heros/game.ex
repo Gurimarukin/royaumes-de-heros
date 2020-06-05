@@ -1,4 +1,48 @@
 defmodule Heros.Game do
+  @doc """
+
+  ## Interactions:
+
+  pending -> interaction:
+
+    {:select_effect, effects} -> {:select_effect, index}
+
+    :prepare_champion -> {:prepare_champion, card_id}
+
+    :stun_champion -> {:stun_champion, defender_id, card_id}
+
+    :put_card_from_discard_to_deck -> {:put_card_from_discard_to_deck, card_id}
+
+    :put_champion_from_discard_to_deck -> {:put_champion_from_discard_to_deck, card_id}
+
+    args = %{amount: amount, combat_per_card: combat_per_card}
+    {:sacrifice_from_hand_or_discard, args} -> {:sacrifice_from_hand_or_discard, card_ids}
+
+    :target_opponent_to_discard -> {:target_opponent_to_discard, nil}
+    :target_opponent_to_discard -> {:target_opponent_to_discard, defender_id}
+
+    :draw_then_discard -> {:draw_then_discard, false}
+    :draw_then_discard -> {:draw_then_discard, true}
+
+    :discard_card -> {:discard_card, card_id}
+
+
+  ## Effects:
+
+  {:heal, amount}
+  {:heal_for_champions, {base, per_champion}}
+  {:add_gold, amount}
+  {:add_combat, amount}
+
+
+  ## Temporary effects:
+
+  :put_next_purchased_action_on_deck
+  :put_next_purchased_card_in_hand
+  :put_next_purchased_card_on_deck
+
+  """
+
   alias Heros.Game
   alias Heros.Game.{Cards, Helpers, Player}
   alias Heros.Game.Cards.Card

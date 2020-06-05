@@ -89,7 +89,7 @@ export const CardComponent: FunctionComponent<CardProps> = ({
           () => `carte inconnue: ${card.key}`,
           ({ image, expend, ally, sacrifice }) => (
             <Fragment>
-              <img src={image} />
+              <img src={image} alt={card.key} />
               {abilitiesOpened ? (
                 <div css={styles.abilities}>
                   {expend && !card.expend_ability_used ? ability('expend', 'Activer') : null}

@@ -6,8 +6,8 @@ import { Player } from './Player'
 import { WithId } from '../WithId'
 
 export namespace Game {
-  /* eslint-disable @typescript-eslint/camelcase */
   export const codec = D.type({
+    /* eslint-disable @typescript-eslint/camelcase */
     player: WithId.codec(Player.codec),
     other_players: D.array(WithId.codec(OtherPlayer.codec)),
     current_player: D.string,
@@ -15,8 +15,8 @@ export namespace Game {
     market: D.array(WithId.codec(Card.codec)),
     market_deck: D.number,
     cemetery: D.array(WithId.codec(Card.codec))
+    /* eslint-enable @typescript-eslint/camelcase */
   })
-  /* eslint-enable @typescript-eslint/camelcase */
 
   export function isCurrentPlayer(game: Game): boolean {
     return game.current_player === game.player[0]

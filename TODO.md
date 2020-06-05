@@ -5,3 +5,4 @@
 * delete empty squad
 
 * shortcuts: center players, center market
+* reduce opacity hand when not turn

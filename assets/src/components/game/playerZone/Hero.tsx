@@ -1,6 +1,7 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent, useMemo } from 'react'
+import { useTransition, animated as a } from 'react-spring'
 
 import { PartialPlayer } from '../PlayerZones'
 import { params } from '../../../params'
@@ -32,14 +33,26 @@ export const Hero: FunctionComponent<Props> = ({
         : undefined,
     [call, isOther, isCurrent, playerId]
   )
+
+  const transitions = useTransition({ opacity: hp }, null, {
+    from: { opacity: hp },
+    leave: { opacity: hp },
+    update: _ => _
+  })
+
   const [left, top] = pipe(
     playerRef,
     Referential.combine(Referential.fightZone),
     Referential.coord(Rectangle.card([0, params.fightZone.innerHeight - params.card.height]))
   )
+
   return (
     <div onClick={onClick} css={styles.container} style={{ left, top }}>
-      <div css={styles.hp}>{hp}</div>
+      {transitions.map(({ key, props }) => (
+        <a.div key={key} css={styles.hp}>
+          {props.opacity?.interpolate(_ => Math.round(_ as number))}
+        </a.div>
+      ))}
       <div css={styles.name}>{name}</div>
     </div>
   )

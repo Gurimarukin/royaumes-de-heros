@@ -105,7 +105,7 @@ const cards: Dict<CardData> = {
   rasmus: d(
     'Rasmus, le Contrebandier',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-037-rasmus-the-smuggler.jpg',
-    { ally: true }
+    { expend: true, ally: true }
   ),
   smash_and_grab: d(
     'Casser et Piller',

@@ -2,10 +2,11 @@ import * as D from 'io-ts/lib/Decoder'
 
 export namespace SquadShort {
   export const codec = D.type({
+    /* eslint-disable @typescript-eslint/camelcase */
     id: D.string,
     stage: D.union(D.literal('lobby'), D.literal('game')),
-    // eslint-disable-next-line @typescript-eslint/camelcase
     n_players: D.number
+    /* eslint-disable @typescript-eslint/camelcase */
   })
 }
 

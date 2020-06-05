@@ -115,7 +115,7 @@ export const Cards: FunctionComponent<Props> = ({
     cards: WithId<Card>[],
     playerId: string
   ): JSX.Element[] {
-    return cards.map(
+    return pipe(cards, List.reverse).map(
       card(
         pipe(referential, Referential.combine(Referential.bottomZone)),
         _i => [0, 0],
