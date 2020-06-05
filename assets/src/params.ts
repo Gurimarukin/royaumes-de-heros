@@ -12,7 +12,7 @@ const card = {
   borderRadius: 24
 }
 
-const fightZoneInnerWidth = 9 * card.widthPlusMargin - card.margin
+const fightZoneInnerWidth = 10 * card.widthPlusMargin - card.margin
 const fightZoneInnerHeight = 2 * card.heightPlusMargin - card.margin
 const fightZoneBorderWidth = 0.05 * card.width
 const fightZone = {
