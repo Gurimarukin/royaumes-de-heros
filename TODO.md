@@ -6,3 +6,9 @@
 
 * shortcuts: center players, center market
 * reduce opacity hand when not turn
+* count cards in discard (if no cards)
+* discard detail
+* count cards in deck
+* button end turn on deck
+* damage and heal animations
+* cursors

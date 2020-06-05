@@ -87,20 +87,35 @@ export const CardComponent: FunctionComponent<CardProps> = ({
         data,
         Maybe.fold<CardData, ReactNode>(
           () => `carte inconnue: ${card.key}`,
-          ({ image, expend, ally, sacrifice }) => (
-            <Fragment>
-              <img src={image} alt={card.key} />
-              {abilitiesOpened ? (
-                <div css={styles.abilities}>
-                  {expend && !card.expend_ability_used ? ability('expend', 'Activer') : null}
-                  {ally && !card.ally_ability_used ? ability('ally', 'Allié') : null}
-                  {sacrifice ? ability('sacrifice', 'Sacrifice') : null}
+          ({ image, faction, expend, ally, sacrifice }) => {
+            const f = Maybe.toUndefined(faction)
+            return (
+              <Fragment>
+                <img src={image} alt={card.key} />
+                <div css={styles.icons}>
+                  {card.expend_ability_used ? icon('/images/expend.png', f) : null}
+                  {card.ally_ability_used ? icon(`/images/factions/${f}.png`, f) : null}
                 </div>
-              ) : null}
-            </Fragment>
-          )
+                {abilitiesOpened ? (
+                  <div css={styles.abilities}>
+                    {expend && !card.expend_ability_used ? ability('expend', 'Activer') : null}
+                    {ally && !card.ally_ability_used ? ability('ally', 'Allié') : null}
+                    {sacrifice ? ability('sacrifice', 'Sacrifice') : null}
+                  </div>
+                ) : null}
+              </Fragment>
+            )
+          }
         )
       )}
+    </div>
+  )
+}
+
+function icon(src: string, alt?: string): JSX.Element {
+  return (
+    <div css={styles.icon}>
+      <img src={src} alt={alt} />
     </div>
   )
 }
@@ -125,6 +140,42 @@ const styles = {
       height: '100%',
       borderRadius: params.card.borderRadius,
       boxShadow: '0 0 4px black'
+    }
+  }),
+
+  icons: css({
+    position: 'absolute',
+    left: 0,
+    bottom: '-12px',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center'
+  }),
+
+  icon: css({
+    position: 'relative',
+    width: '40px',
+    height: '40px',
+    border: '4px solid crimson',
+    borderRadius: '50%',
+    boxShadow: '0 0 4px black',
+    overflow: 'hidden',
+    margin: '0 0.12em',
+
+    '&::after': {
+      content: `''`,
+      position: 'absolute',
+      left: 0,
+      top: '14px',
+      width: '100%',
+      borderTop: '4px solid crimson',
+      transform: 'rotate(-45deg)'
+    },
+
+    '& > img': {
+      width: '44px',
+      height: '44px',
+      margin: '-5px'
     }
   }),
 
