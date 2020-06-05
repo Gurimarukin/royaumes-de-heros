@@ -1,10 +1,11 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent, useMemo } from 'react'
-import { useTransition, animated as a } from 'react-spring'
+import { animated as a } from 'react-spring'
 
 import { PartialPlayer } from '../PlayerZones'
 import { params } from '../../../params'
+import { useValTransition } from '../../../hooks/useValTransition'
 import { WithId } from '../../../models/WithId'
 import { Game } from '../../../models/game/Game'
 import { Rectangle } from '../../../models/game/geometry/Rectangle'
@@ -34,11 +35,7 @@ export const Hero: FunctionComponent<Props> = ({
     [call, isOther, isCurrent, playerId]
   )
 
-  const transitions = useTransition({ opacity: hp }, null, {
-    from: { opacity: hp },
-    leave: { opacity: hp },
-    update: _ => _
-  })
+  const transitions = useValTransition({ hp })
 
   const [left, top] = pipe(
     playerRef,
@@ -50,7 +47,7 @@ export const Hero: FunctionComponent<Props> = ({
     <div onClick={onClick} css={styles.container} style={{ left, top }}>
       {transitions.map(({ key, props }) => (
         <a.div key={key} css={styles.hp}>
-          {props.opacity?.interpolate(_ => Math.round(_ as number))}
+          {props.hp.interpolate(_ => Math.round(_ as number))}
         </a.div>
       ))}
       <div css={styles.name}>{name}</div>

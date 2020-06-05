@@ -1,10 +1,12 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent } from 'react'
+import { FunctionComponent, Fragment } from 'react'
+import { animated as a } from 'react-spring'
 
 import { PartialPlayer } from '../PlayerZones'
 import { Coin, Swords } from '../../icons'
 import { params } from '../../../params'
+import { useValTransition } from '../../../hooks/useValTransition'
 import { Rectangle } from '../../../models/game/geometry/Rectangle'
 import { Referential } from '../../../models/game/geometry/Referential'
 import { pipe } from '../../../utils/fp'
@@ -14,24 +16,38 @@ interface Props {
   readonly player: PartialPlayer
 }
 
+interface AnimationProps {
+  readonly combat: number
+  readonly gold: number
+}
+
 export const CombatAndGold: FunctionComponent<Props> = ({
   playerRef,
   player: { combat, gold }
 }) => {
+  const transitions = useValTransition({ combat, gold })
+
   const [left, top] = pipe(
     playerRef,
     Referential.combine(Referential.bottomZone),
     Referential.coord(Rectangle.card([params.card.widthPlusMargin, 0]))
   )
+
   return (
-    <div css={styles.container} style={{ left, top }}>
-      <div css={[styles.section, styles.combat]}>
-        <Swords /> <span>{combat}</span>
-      </div>
-      <div css={[styles.section, styles.gold]}>
-        <Coin /> <span>{gold}</span>
-      </div>
-    </div>
+    <Fragment>
+      {transitions.map(({ key, props }) => (
+        <div key={key} css={styles.container} style={{ left, top }}>
+          <div css={[styles.section, styles.combat]}>
+            <Swords />
+            <a.span>{props.combat.interpolate(_ => Math.round(_))}</a.span>
+          </div>
+          <div css={[styles.section, styles.gold]}>
+            <Coin />
+            <a.span>{props.gold.interpolate(_ => Math.round(_))}</a.span>
+          </div>
+        </div>
+      ))}
+    </Fragment>
   )
 }
 
