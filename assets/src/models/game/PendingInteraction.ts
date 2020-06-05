@@ -2,7 +2,7 @@ import * as D from 'io-ts/lib/Decoder'
 
 import { Unknown } from '../Unknown'
 
-export namespace PendingInteractions {
+export namespace PendingInteraction {
   export const codec = D.union(
     D.tuple(D.literal('select_effect'), Unknown.codec),
     D.literal('prepare_champion'),
@@ -20,4 +20,4 @@ export namespace PendingInteractions {
   )
 }
 
-export type PendingInteractions = D.TypeOf<typeof PendingInteractions.codec>
+export type PendingInteraction = D.TypeOf<typeof PendingInteraction.codec>

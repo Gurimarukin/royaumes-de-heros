@@ -6,6 +6,7 @@ import { useSpring, animated as a } from 'react-spring'
 
 import { Cards } from './Cards'
 import { MarketZone } from './MarketZone'
+import { PendingInteractions } from './PendingInteractions'
 import { PlayerZones } from './PlayerZones'
 import { params } from '../../params'
 import { Game } from '../../models/game/Game'
@@ -99,6 +100,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
       >
         Fin du tour
       </button>
+      <PendingInteractions call={call} game={game} />
     </div>
   )
 
