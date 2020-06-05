@@ -79,6 +79,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
       >
         <MarketZone />
         <PlayerZones
+          call={call}
           game={game}
           referentials={referentials}
           zippedOtherPlayers={zippedOtherPlayers}

@@ -45,7 +45,8 @@ const styles = {
     overflow: 'hidden',
     fontSize: '3.5em',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    userSelect: 'none'
   }),
 
   section: css({

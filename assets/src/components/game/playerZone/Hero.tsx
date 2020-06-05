@@ -1,26 +1,44 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent } from 'react'
+import { FunctionComponent, useMemo } from 'react'
 
 import { PartialPlayer } from '../PlayerZones'
 import { params } from '../../../params'
+import { WithId } from '../../../models/WithId'
+import { Game } from '../../../models/game/Game'
 import { Rectangle } from '../../../models/game/geometry/Rectangle'
 import { Referential } from '../../../models/game/geometry/Referential'
-import { pipe } from '../../../utils/fp'
+import { pipe, Future, Either } from '../../../utils/fp'
 
 interface Props {
+  readonly call: (msg: any) => Future<Either<void, void>>
+  readonly game: Game
   readonly playerRef: Referential
-  readonly player: PartialPlayer
+  readonly player: WithId<PartialPlayer>
 }
 
-export const Hero: FunctionComponent<Props> = ({ playerRef, player: { name, hp } }) => {
+export const Hero: FunctionComponent<Props> = ({
+  call,
+  game,
+  playerRef,
+  player: [playerId, { name, hp }]
+}) => {
+  const isOther = game.player[0] !== playerId
+  const isCurrent = Game.isCurrentPlayer(game)
+  const onClick = useMemo(
+    () =>
+      isOther && isCurrent
+        ? () => pipe(call(['attack', playerId, '__player']), Future.runUnsafe)
+        : undefined,
+    [call, isOther, isCurrent, playerId]
+  )
   const [left, top] = pipe(
     playerRef,
     Referential.combine(Referential.fightZone),
     Referential.coord(Rectangle.card([0, params.fightZone.innerHeight - params.card.height]))
   )
   return (
-    <div css={styles.container} style={{ left, top }}>
+    <div onClick={onClick} css={styles.container} style={{ left, top }}>
       <div css={styles.hp}>{hp}</div>
       <div css={styles.name}>{name}</div>
     </div>
@@ -40,7 +58,8 @@ const styles = {
     overflow: 'hidden',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    userSelect: 'none'
   }),
 
   hp: css({

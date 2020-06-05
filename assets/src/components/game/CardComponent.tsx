@@ -1,33 +1,57 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent, ReactNode, useCallback } from 'react'
+import { FunctionComponent, ReactNode, useMemo, useCallback } from 'react'
 import { animated } from 'react-spring'
 
 import { params } from '../../params'
 import { Card } from '../../models/game/Card'
 import { CardData } from '../../utils/CardData'
-import { pipe, Maybe } from '../../utils/fp'
+import { pipe, Maybe, Future, Either } from '../../utils/fp'
+import { Game } from '../../models/game/Game'
+import { WithId } from '../../models/WithId'
 
 interface CommonProps {
   readonly style?: React.CSSProperties
 }
 
 type CardProps = {
-  readonly card: Card
-} & GeneralCardProps &
-  CommonProps
+  readonly call: (msg: any) => Future<Either<void, void>>
+  readonly game: Game
+  readonly card: WithId<Card>
+  readonly zone: Zone
+} & CommonProps
 
-export interface GeneralCardProps {
-  readonly onLeftClick?: React.MouseEventHandler<HTMLDivElement>
-}
+export type Zone = ['market' | 'hand' | 'fightZone' | 'discard', IsOther]
+type IsOther = boolean
 
-export const CardComponent: FunctionComponent<CardProps> = ({ card, onLeftClick, style }) => {
-  const onClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (onLeftClick !== undefined && e.button === 0) onLeftClick(e)
-    },
-    [onLeftClick]
-  )
+type MouseEventHandler<A = HTMLElement> = (e: React.MouseEvent<A>) => void
+
+export const CardComponent: FunctionComponent<CardProps> = ({
+  call,
+  game,
+  card: [cardId, card],
+  zone: [zone, isOther],
+  style
+}) => {
+  const callAndRun = useCallback((msg: any) => pipe(call(msg), Future.runUnsafe), [call])
+  const isCurrent = Game.isCurrentPlayer(game)
+  const onClick = useMemo<MouseEventHandler | undefined>(() => {
+    switch (zone) {
+      case 'market':
+        return isCurrent ? () => callAndRun(['buy_card', cardId]) : undefined
+
+      case 'hand':
+        return !isOther && isCurrent ? () => callAndRun(['play_card', cardId]) : undefined
+
+      case 'fightZone':
+        // TODO: if current: attack if other else ability
+        return undefined
+
+      case 'discard':
+        // TODO: show discard
+        return undefined
+    }
+  }, [callAndRun, isOther, isCurrent, cardId, zone])
 
   return (
     <div onClick={onClick} css={styles.container} style={style}>

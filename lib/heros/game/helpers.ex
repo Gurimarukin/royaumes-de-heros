@@ -62,27 +62,31 @@ defmodule Heros.Game.Helpers do
     Game.play_card(game, player_id, card_id)
   end
 
-  def handle_call({player_id, {:use_expend_ability, card_id}}, _from, game) do
+  def handle_call({player_id, ["use_expend_ability", card_id]}, _from, game) do
     Game.use_expend_ability(game, player_id, card_id)
   end
 
-  def handle_call({player_id, {:use_ally_ability, card_id}}, _from, game) do
+  def handle_call({player_id, ["use_ally_ability", card_id]}, _from, game) do
     Game.use_ally_ability(game, player_id, card_id)
   end
 
-  def handle_call({player_id, {:use_sacrifice_ability, card_id}}, _from, game) do
+  def handle_call({player_id, ["use_sacrifice_ability", card_id]}, _from, game) do
     Game.use_sacrifice_ability(game, player_id, card_id)
   end
 
-  def handle_call({player_id, {:buy_card, card_id}}, _from, game) do
+  def handle_call({player_id, ["buy_card", card_id]}, _from, game) do
     Game.buy_card(game, player_id, card_id)
   end
 
-  def handle_call({attacker_id, {:attack, defender_id, what}}, _from, game) do
-    Game.attack(game, attacker_id, defender_id, what)
+  def handle_call({attacker_id, ["attack", defender_id, "__player"]}, _from, game) do
+    Game.attack(game, attacker_id, defender_id, :player)
   end
 
-  def handle_call({player_id, {:interact, interaction}}, _from, game) do
+  def handle_call({attacker_id, ["attack", defender_id, card_id]}, _from, game) do
+    Game.attack(game, attacker_id, defender_id, card_id)
+  end
+
+  def handle_call({player_id, ["interact", interaction]}, _from, game) do
     Game.interact(game, player_id, interaction)
   end
 

@@ -10,8 +10,10 @@ import { WithId } from '../../models/WithId'
 import { Game } from '../../models/game/Game'
 import { Referentials } from '../../models/game/Referentials'
 import { Referential } from '../../models/game/geometry/Referential'
+import { Future, Either } from '../../utils/fp'
 
 interface Props {
+  readonly call: (msg: any) => Future<Either<void, void>>
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, WithId<PartialPlayer>][]
@@ -26,6 +28,7 @@ export interface PartialPlayer {
 }
 
 export const PlayerZones: FunctionComponent<Props> = ({
+  call,
   game,
   referentials,
   zippedOtherPlayers
@@ -44,7 +47,7 @@ export const PlayerZones: FunctionComponent<Props> = ({
         <FightZone playerRef={ref} current={playerId === game.current_player} />
         <Discard playerRef={ref} />
         <CombatAndGold playerRef={ref} player={player} />
-        <Hero playerRef={ref} player={player} />
+        <Hero call={call} game={game} playerRef={ref} player={[playerId, player]} />
       </div>
     )
   }

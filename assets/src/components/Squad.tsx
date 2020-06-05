@@ -11,7 +11,7 @@ import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadState } from '../models/SquadState'
-import { pipe, flow, Task, Either, Future } from '../utils/fp'
+import { pipe, flow, Either, Future } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 interface Props {
