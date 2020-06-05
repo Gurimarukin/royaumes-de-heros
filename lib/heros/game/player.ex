@@ -227,6 +227,10 @@ defmodule Heros.Game.Player do
     {champions, non_champions} =
       player.fight_zone |> Enum.split_with(fn {_, c} -> Card.champion?(c.key) end)
 
+    discard =
+      (Enum.reverse(player.hand) ++
+         (Enum.reverse(non_champions) |> KeyList.map(&Card.full_reset/1))) ++ player.discard
+
     %{
       player
       | pending_interactions: [],
@@ -235,7 +239,7 @@ defmodule Heros.Game.Player do
         gold: 0,
         combat: 0,
         hand: [],
-        discard: Enum.reverse(player.hand) ++ Enum.reverse(non_champions) ++ player.discard,
+        discard: discard,
         fight_zone: champions |> KeyList.map(&Card.full_reset/1)
     }
   end
