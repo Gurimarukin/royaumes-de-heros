@@ -118,6 +118,7 @@ const styles = {
     position: 'absolute',
     width: params.card.width,
     height: params.card.height,
+    // willChange: 'left, top',
 
     '& > img': {
       width: '100%',

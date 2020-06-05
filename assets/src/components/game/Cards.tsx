@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
-import { FunctionComponent, CSSProperties } from 'react'
+import { FunctionComponent, CSSProperties, useMemo } from 'react'
 import { useTransition } from 'react-spring'
 
 import { AnimatedCard, HiddenCard, Zone } from './CardComponent'
@@ -39,54 +39,67 @@ export const Cards: FunctionComponent<Props> = ({
 }) => {
   const [currentId, current] = game.player
 
-  const init: Cards = [
-    [
-      // market
-      ...game.gems.map(card(referentials.market, _ => [0, 0], currentId, 'market')),
-      ...game.market.map(
-        card(
-          referentials.market,
-          i => [0, (i + 1) * params.card.heightPlusMargin],
-          currentId,
-          'market'
-        )
-      ),
+  const [cards, hiddens]: Cards = useMemo(() => {
+    const init: Cards = [
+      [
+        // market
+        ...game.gems.map(card(referentials.market, _ => [0, 0], currentId, 'market')),
+        ...game.market.map(
+          card(
+            referentials.market,
+            i => [0, (i + 1) * params.card.heightPlusMargin],
+            currentId,
+            'market'
+          )
+        ),
 
-      // player
-      ...discard(referentials.player, current.discard, currentId),
-      ...current.hand.map(
-        card(
-          pipe(referentials.player, Referential.combine(Referential.bottomZone)),
-          i => [(i + 2) * params.card.widthPlusMargin, 0],
-          currentId,
-          'hand'
-        )
-      ),
-      ...fightZone(referentials.player, current.fight_zone, currentId)
-    ],
-    [...deck(referentials.player, current.deck)]
-  ]
-  // others
-  const [cards, hiddens]: Cards = pipe(
-    zippedOtherPlayers,
-    List.reduce(init, ([c, h], [referential, [playerId, player]]) => [
-      [
-        ...c,
-        ...discard(referential, player.discard, playerId),
-        ...fightZone(referential, player.fight_zone, playerId)
+        // player
+        ...discard(referentials.player, current.discard, currentId),
+        ...current.hand.map(
+          card(
+            pipe(referentials.player, Referential.combine(Referential.bottomZone)),
+            i => [(i + 2) * params.card.widthPlusMargin, 0],
+            currentId,
+            'hand'
+          )
+        ),
+        ...fightZone(referentials.player, current.fight_zone, currentId)
       ],
-      [
-        ...h,
-        ...deck(referential, player.deck),
-        ...List.range(2, player.hand + 1).map(
-          hidden(pipe(referential, Referential.combine(Referential.bottomZone)), i => [
-            i * params.card.widthPlusMargin,
-            0
-          ])
-        )
-      ]
-    ])
-  )
+      [...deck(referentials.player, current.deck)]
+    ]
+    // others
+    return pipe(
+      zippedOtherPlayers,
+      List.reduce(init, ([c, h], [referential, [playerId, player]]) => [
+        [
+          ...c,
+          ...discard(referential, player.discard, playerId),
+          ...fightZone(referential, player.fight_zone, playerId)
+        ],
+        [
+          ...h,
+          ...deck(referential, player.deck),
+          ...List.range(2, player.hand + 1).map(
+            hidden(pipe(referential, Referential.combine(Referential.bottomZone)), i => [
+              i * params.card.widthPlusMargin,
+              0
+            ])
+          )
+        ]
+      ])
+    )
+  }, [
+    current.deck,
+    current.discard,
+    current.fight_zone,
+    current.hand,
+    currentId,
+    game.gems,
+    game.market,
+    referentials.market,
+    referentials.player,
+    zippedOtherPlayers
+  ])
 
   const transitions = useTransition<CardWithCoord, Partial<CSSProperties & CardWithCoord>>(
     cards,
