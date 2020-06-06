@@ -121,11 +121,11 @@ defmodule Heros.Game.Helpers do
   end
 
   def handle_call(
-        {player_id, ["interact", ["target_opponent_to_discard", player_id]]},
+        {player_id, ["interact", ["target_opponent_to_discard", who]]},
         _from,
         game
       ) do
-    Game.interact(game, player_id, {:target_opponent_to_discard, player_id})
+    Game.interact(game, player_id, {:target_opponent_to_discard, who})
   end
 
   def handle_call(
