@@ -86,21 +86,61 @@ defmodule Heros.Game.Helpers do
     Game.attack(game, attacker_id, defender_id, card_id)
   end
 
-  def handle_call({player_id, ["interact", ["select_effect", i]]}, _from, game) do
-    Game.interact(game, player_id, {:select_effect, i})
+  # interactions start
+
+  def handle_call({player_id, ["interact", ["discard_card", card_id]]}, _from, game) do
+    Game.interact(game, player_id, {:discard_card, card_id})
+  end
+
+  def handle_call({player_id, ["interact", ["draw_then_discard", discard]]}, _from, game) do
+    Game.interact(game, player_id, {:draw_then_discard, discard})
+  end
+
+  def handle_call({player_id, ["interact", ["prepare_champion", card_id]]}, _from, game) do
+    Game.interact(game, player_id, {:prepare_champion, card_id})
   end
 
   def handle_call(
-        {player_id, ["interact", ["sacrifice_from_hand_or_discard", cards]]},
+        {player_id, ["interact", ["put_card_from_discard_to_deck", card_id]]},
         _from,
         game
       ) do
-    Game.interact(game, player_id, {:sacrifice_from_hand_or_discard, cards})
+    Game.interact(game, player_id, {:put_card_from_discard_to_deck, card_id})
   end
 
-  def handle_call({player_id, ["interact", ["target_opponent_to_discard", who]]}, _from, game) do
-    Game.interact(game, player_id, {:target_opponent_to_discard, who})
+  def handle_call(
+        {player_id, ["interact", ["put_champion_from_discard_to_deck", card_id]]},
+        _from,
+        game
+      ) do
+    Game.interact(game, player_id, {:put_champion_from_discard_to_deck, card_id})
   end
+
+  def handle_call({player_id, ["interact", ["stun_champion", defender_id, card_id]]}, _from, game) do
+    Game.interact(game, player_id, {:stun_champion, defender_id, card_id})
+  end
+
+  def handle_call(
+        {player_id, ["interact", ["target_opponent_to_discard", player_id]]},
+        _from,
+        game
+      ) do
+    Game.interact(game, player_id, {:target_opponent_to_discard, player_id})
+  end
+
+  def handle_call(
+        {player_id, ["interact", ["sacrifice_from_hand_or_discard", card_ids]]},
+        _from,
+        game
+      ) do
+    Game.interact(game, player_id, {:sacrifice_from_hand_or_discard, card_ids})
+  end
+
+  def handle_call({player_id, ["interact", ["select_effect", index]]}, _from, game) do
+    Game.interact(game, player_id, {:select_effect, index})
+  end
+
+  # interactions end
 
   def handle_call({player_id, "discard_phase"}, _from, game) do
     Game.discard_phase(game, player_id)
