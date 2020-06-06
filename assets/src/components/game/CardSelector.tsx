@@ -1,25 +1,27 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent, useState, useCallback, ReactNode } from 'react'
+import { FunctionComponent, useState, useCallback, ReactNode, Fragment } from 'react'
 
 import { SimpleCard } from './card/SimpleCard'
 import { ButtonUnderline } from '../Buttons'
 import { WithId } from '../../models/WithId'
 import { Card } from '../../models/game/Card'
-import { List, pipe } from '../../utils/fp'
+import { List, pipe, Either } from '../../utils/fp'
 import { params } from '../../params'
 
 interface Props {
   readonly amount: number
+  readonly required?: boolean
   readonly onConfirm: (cardIds: string[]) => void
-  readonly cards: [string, WithId<Card>[]][]
+  readonly cards: Either<[string, WithId<Card>[]][], WithId<Card>[]>
   readonly confirmLabel: (cardIds: string[]) => ReactNode
 }
 
 export const CardSelector: FunctionComponent<Props> = ({
   amount,
+  required = false,
   onConfirm,
-  cards: blocks,
+  cards: eitherCards,
   confirmLabel
 }) => {
   const [selected, setSelected] = useState<string[]>([])
@@ -45,35 +47,59 @@ export const CardSelector: FunctionComponent<Props> = ({
 
   return (
     <div onWheel={stopPropagation} css={styles.container}>
-      {blocks.map(([label, cards], i) =>
-        cards.length === 0 ? null : (
-          <div key={i} css={styles.block}>
-            <div css={styles.blockLabel}>• {label}</div>
-            <div css={styles.cards}>
-              {cards.map(([cardId, card], j) => (
-                <SimpleCard
-                  key={j}
-                  card={Card.reset(card)}
-                  onClick={toggleCard(cardId)}
-                  css={styles.card}
-                  className={
-                    pipe(
-                      selected,
-                      List.exists(_ => _ === cardId)
-                    )
-                      ? 'selected'
-                      : undefined
-                  }
-                />
-              ))}
-            </div>
-          </div>
+      {pipe(
+        eitherCards,
+        Either.fold(
+          blocks => (
+            <Fragment>
+              {blocks.map(([label, c], i) =>
+                cards.length === 0 ? null : (
+                  <div key={i} css={styles.block}>
+                    <div css={styles.blockLabel}>• {label}</div>
+                    {cards(selected, toggleCard, c)}
+                  </div>
+                )
+              )}
+            </Fragment>
+          ),
+          _ => cards(selected, toggleCard, _)
         )
       )}
-      <ButtonUnderline onClick={confirm} css={styles.confirm}>
+      <ButtonUnderline
+        disabled={required && selected.length !== amount}
+        onClick={confirm}
+        css={styles.confirm}
+      >
         {confirmLabel(selected)}
       </ButtonUnderline>
       {' '}
+    </div>
+  )
+}
+
+function cards(
+  selected: string[],
+  toggleCard: (cardId: string) => () => void,
+  cards: WithId<Card>[]
+): JSX.Element {
+  return (
+    <div css={styles.cards}>
+      {cards.map(([cardId, card], j) => (
+        <SimpleCard
+          key={j}
+          card={Card.reset(card)}
+          onClick={toggleCard(cardId)}
+          css={styles.card}
+          className={
+            pipe(
+              selected,
+              List.exists(_ => _ === cardId)
+            )
+              ? 'selected'
+              : undefined
+          }
+        />
+      ))}
     </div>
   )
 }
@@ -90,6 +116,8 @@ const styles = {
     alignItems: 'stretch',
     // 1.4: font size of h2, 5px: border width of Dialog
     maxHeight: 'calc(100vh - calc(1.4 * 2.33em) - 5px)',
+    paddingBottom: '0.67em',
+    overflowX: 'hidden',
     overflowY: 'auto'
   }),
 
@@ -102,17 +130,20 @@ const styles = {
   }),
 
   cards: css({
-    display: 'flex',
+    // display: 'flex',
     width: '100%',
-    flexWrap: 'wrap',
+    // flexWrap: 'wrap',
     padding: '0 0.67em'
   }),
 
   card: css({
+    display: 'inline-block',
     position: 'relative',
     width: params.card.width * scaleCard,
     height: params.card.height * scaleCard,
     flexShrink: 0,
+    flexBasis: 0,
+    flexGrow: 1,
     margin: 'px 1em',
     borderRadius: params.card.borderRadius * scaleCard * 1.2,
     border: '5px solid transparent',

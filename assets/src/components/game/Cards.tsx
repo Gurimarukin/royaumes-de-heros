@@ -110,6 +110,7 @@ export const Cards: FunctionComponent<Props> = ({
       // leave: { left: 0, top: 0 },
       enter: ({ coord: [left, top] }) => ({ left, top }),
       update: ({ coord: [left, top] }) => ({ left, top }),
+      leave: ({ coord: [left, top] }) => ({ left, top }),
       config: { precision: 10 }
     }
   )

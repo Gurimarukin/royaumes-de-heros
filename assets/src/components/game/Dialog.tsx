@@ -12,7 +12,7 @@ import { PushSocket } from '../../models/PushSocket'
 import { Game } from '../../models/game/Game'
 import { PendingInteraction } from '../../models/game/PendingInteraction'
 import { Player } from '../../models/game/Player'
-import { pipe, Future, Maybe } from '../../utils/fp'
+import { pipe, Future, Maybe, Either } from '../../utils/fp'
 
 interface Props {
   readonly call: PushSocket
@@ -30,6 +30,9 @@ export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
     (interaction: any) => () => pipe(call(['interact', interaction]), Future.runUnsafe),
     [call]
   )
+  const discardCard = useCallback(([cardId]: string[]) => interact(['discard_card', cardId])(), [
+    interact
+  ])
   const sacrificeCards = useCallback(
     (cardIds: string[]) => interact(['sacrifice_from_hand_or_discard', cardIds])(),
     [interact]
@@ -40,7 +43,7 @@ export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
     Maybe.fold(
       () => props,
       _ => ({
-        ...propsForInteraction(interact, sacrificeCards, player, _),
+        ...propsForInteraction(interact, discardCard, sacrificeCards, player, _),
         shown: true
       })
     )
@@ -50,11 +53,25 @@ export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
 
 function propsForInteraction(
   interact: (msg: any) => () => void,
+  discardCard: (cardIds: string[]) => void,
   sacrificeCards: (cardIds: string[]) => void,
   player: Player,
   interaction: PendingInteraction
 ): WithoutShown {
-  if (interaction === 'discard_card') return unknown(interaction)
+  if (interaction === 'discard_card') {
+    return {
+      title: `Vous devez vous défausser d'une carte de votre main.`,
+      children: (
+        <CardSelector
+          amount={1}
+          required={true}
+          onConfirm={discardCard}
+          cards={Either.right(player.hand)}
+          confirmLabel={discardLabel}
+        />
+      )
+    }
+  }
 
   if (interaction === 'draw_then_discard') return unknown(interaction)
 
@@ -68,7 +85,7 @@ function propsForInteraction(
 
   if (interaction === 'target_opponent_to_discard') {
     return {
-      title: "Cibler un adversaire qui devra se défausser d'une carte.",
+      title: "Choisissez un adversaire qui devra se défausser d'une carte.",
       children: (
         <Group>
           <SecondaryButton onClick={interact(['target_opponent_to_discard', null])}>
@@ -84,17 +101,17 @@ function propsForInteraction(
     const ifNotOne = (orElse: string): string => (amount === 1 ? '' : orElse)
 
     return {
-      title: `Sélectionner ${nToStr(amount, true)} carte${ifNotOne(
+      title: `Choisissez ${nToStr(amount, true)} carte${ifNotOne(
         's'
       )} à sacrifier de votre main ${ifNotOne('et/')}ou votre défausse.`,
       children: (
         <CardSelector
           amount={amount}
           onConfirm={sacrificeCards}
-          cards={[
+          cards={Either.left([
             ['Main :', player.hand],
             ['Défausse :', player.discard]
-          ]}
+          ])}
           confirmLabel={sacrificeLabel}
         />
       )
@@ -106,7 +123,7 @@ function propsForInteraction(
     const championsInFightZone = 0 // TODO
 
     return {
-      title: `Choisir l'un de ces ${nToStr(effects.length)} effets.`,
+      title: `Choisissez l'un de ces ${nToStr(effects.length)} effets.`,
       children: (
         <Group>
           {effects.map((effect, i) => (
@@ -134,6 +151,10 @@ function nToStr(n: number, f = false): string {
   if (n === 2) return 'deux'
   if (n === 3) return 'trois'
   return String(n)
+}
+
+function discardLabel(): string {
+  return 'Défausser'
 }
 
 function sacrificeLabel(cardIds: string[]): string {
