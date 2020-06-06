@@ -37,10 +37,10 @@ const styles = {
     borderTop: 0,
     boxShadow: '0 0 12px black',
     color: 'white',
-    maxWidth: '100%',
+    maxWidth: '98%',
     height: 'auto',
-    maxHeight: '100vh',
-    marginTop: '-100vh',
+    maxHeight: '98vh',
+    marginTop: '-98vh',
 
     '&.shown': {
       marginTop: 0

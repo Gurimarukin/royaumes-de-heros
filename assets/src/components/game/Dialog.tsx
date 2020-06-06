@@ -109,8 +109,8 @@ function propsForInteraction(
           amount={amount}
           onConfirm={sacrificeCards}
           cards={Either.left([
-            ['Main :', player.hand],
-            ['Défausse :', player.discard]
+            ['Main', player.hand],
+            ['Défausse', player.discard]
           ])}
           confirmLabel={sacrificeLabel}
         />

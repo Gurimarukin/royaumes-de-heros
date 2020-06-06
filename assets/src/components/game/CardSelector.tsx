@@ -55,7 +55,7 @@ export const CardSelector: FunctionComponent<Props> = ({
               {blocks.map(([label, c], i) =>
                 cards.length === 0 ? null : (
                   <div key={i} css={styles.block}>
-                    <div css={styles.blockLabel}>• {label}</div>
+                    <div css={styles.blockLabel}>{label}</div>
                     {cards(selected, toggleCard, c)}
                   </div>
                 )
@@ -114,26 +114,28 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
+    width: '98vw',
     // 1.4: font size of h2, 5px: border width of Dialog
-    maxHeight: 'calc(100vh - calc(1.4 * 2.33em) - 5px)',
+    maxHeight: 'calc(98vh - calc(1.4 * 2.33em) - 5px)',
     paddingBottom: '0.67em',
     overflowX: 'hidden',
     overflowY: 'auto'
   }),
 
   block: css({
-    padding: '0.33em 0.67em'
+    padding: '0.33em 1.33em'
   }),
 
   blockLabel: css({
-    fontSize: '1.1em'
+    fontSize: '1.1em',
+    marginBottom: '0.33em'
   }),
 
   cards: css({
     // display: 'flex',
     width: '100%',
     // flexWrap: 'wrap',
-    padding: '0 0.67em'
+    padding: '0 1em'
   }),
 
   card: css({
