@@ -86,8 +86,8 @@ defmodule Heros.Game.Helpers do
     Game.attack(game, attacker_id, defender_id, card_id)
   end
 
-  def handle_call({player_id, ["interact", interaction]}, _from, game) do
-    Game.interact(game, player_id, interaction)
+  def handle_call({player_id, ["interact", ["target_opponent_to_discard", who]]}, _from, game) do
+    Game.interact(game, player_id, {:target_opponent_to_discard, who})
   end
 
   def handle_call({player_id, "discard_phase"}, _from, game) do
