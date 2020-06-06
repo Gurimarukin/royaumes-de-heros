@@ -30,11 +30,12 @@ export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
     (interaction: any) => () => pipe(call(['interact', interaction]), Future.runUnsafe),
     [call]
   )
-  const discardCard = useCallback(([cardId]: string[]) => interact(['discard_card', cardId])(), [
-    interact
-  ])
-  const sacrificeCards = useCallback(
-    (cardIds: string[]) => interact(['sacrifice_from_hand_or_discard', cardIds])(),
+  const interactCard = useCallback(
+    (interaction: any) => ([cardId]: string[]) => interact([interaction, cardId])(),
+    [interact]
+  )
+  const interactCards = useCallback(
+    (interaction: any) => (cardIds: string[]) => interact([interaction, cardIds])(),
     [interact]
   )
   const [, player] = game.player
@@ -43,7 +44,7 @@ export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
     Maybe.fold(
       () => props,
       _ => ({
-        ...propsForInteraction(interact, discardCard, sacrificeCards, player, _),
+        ...propsForInteraction(interact, interactCard, interactCards, player, _),
         shown: true
       })
     )
@@ -53,8 +54,8 @@ export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
 
 function propsForInteraction(
   interact: (msg: any) => () => void,
-  discardCard: (cardIds: string[]) => void,
-  sacrificeCards: (cardIds: string[]) => void,
+  interactCard: (interaction: string) => (cardIds: string[]) => void,
+  interactCards: (interaction: string) => (cardIds: string[]) => void,
   player: Player,
   interaction: PendingInteraction
 ): WithoutShown {
@@ -65,7 +66,7 @@ function propsForInteraction(
         <CardSelector
           amount={1}
           required={true}
-          onConfirm={discardCard}
+          onConfirm={interactCard('discard_card')}
           cards={Either.right(player.hand)}
           confirmLabel={discardLabel}
         />
@@ -77,7 +78,20 @@ function propsForInteraction(
 
   if (interaction === 'prepare_champion') return unknown(interaction)
 
-  if (interaction === 'put_card_from_discard_to_deck') return unknown(interaction)
+  if (interaction === 'put_card_from_discard_to_deck') {
+    return {
+      title: `Mettez une carte de votre défausse au dessus de votre pioche.`,
+      children: (
+        <CardSelector
+          amount={1}
+          required={true}
+          onConfirm={interactCard('put_card_from_discard_to_deck')}
+          cards={Either.right(player.discard)}
+          confirmLabel={chooseLabel}
+        />
+      )
+    }
+  }
 
   if (interaction === 'put_champion_from_discard_to_deck') return unknown(interaction)
 
@@ -85,7 +99,7 @@ function propsForInteraction(
 
   if (interaction === 'target_opponent_to_discard') {
     return {
-      title: "Choisissez un adversaire qui devra se défausser d'une carte.",
+      title: "Ciblez un adversaire qui devra se défausser d'une carte.",
       children: (
         <Group>
           <SecondaryButton onClick={interact(['target_opponent_to_discard', null])}>
@@ -101,13 +115,13 @@ function propsForInteraction(
     const ifNotOne = (orElse: string): string => (amount === 1 ? '' : orElse)
 
     return {
-      title: `Choisissez ${nToStr(amount, true)} carte${ifNotOne(
-        's'
-      )} à sacrifier de votre main ${ifNotOne('et/')}ou votre défausse.`,
+      title: `Sacrifiez ${nToStr(amount, true)} carte${ifNotOne('s')} de votre main ${ifNotOne(
+        'et/'
+      )}ou de votre défausse.`,
       children: (
         <CardSelector
           amount={amount}
-          onConfirm={sacrificeCards}
+          onConfirm={interactCards('sacrifice_from_hand_or_discard')}
           cards={Either.left([
             ['Main', player.hand],
             ['Défausse', player.discard]
@@ -123,7 +137,7 @@ function propsForInteraction(
     const championsInFightZone = 0 // TODO
 
     return {
-      title: `Choisissez l'un de ces ${nToStr(effects.length)} effets.`,
+      title: 'Choisissez un effet.',
       children: (
         <Group>
           {effects.map((effect, i) => (
@@ -157,6 +171,10 @@ function discardLabel(): string {
   return 'Défausser'
 }
 
+function chooseLabel(): string {
+  return 'Choisir'
+}
+
 function sacrificeLabel(cardIds: string[]): string {
   return cardIds.length === 0
     ? 'Ne pas sacrifier de carte'
@@ -166,6 +184,7 @@ function sacrificeLabel(cardIds: string[]): string {
 const Group = styled.div({
   display: 'flex',
   justifyContent: 'center',
+  padding: '0 1.67em',
   marginBottom: '1em'
 })
 

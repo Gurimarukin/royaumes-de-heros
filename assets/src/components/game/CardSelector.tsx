@@ -52,17 +52,17 @@ export const CardSelector: FunctionComponent<Props> = ({
         Either.fold(
           blocks => (
             <Fragment>
-              {blocks.map(([label, c], i) =>
+              {blocks.map(([label, cards], i) =>
                 cards.length === 0 ? null : (
                   <div key={i} css={styles.block}>
                     <div css={styles.blockLabel}>{label}</div>
-                    {cards(selected, toggleCard, c)}
+                    {cardsDiv(selected, toggleCard, cards)}
                   </div>
                 )
               )}
             </Fragment>
           ),
-          _ => cards(selected, toggleCard, _)
+          _ => cardsDiv(selected, toggleCard, _)
         )
       )}
       <ButtonUnderline
@@ -77,7 +77,7 @@ export const CardSelector: FunctionComponent<Props> = ({
   )
 }
 
-function cards(
+function cardsDiv(
   selected: string[],
   toggleCard: (cardId: string) => () => void,
   cards: WithId<Card>[]
