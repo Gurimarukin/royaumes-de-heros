@@ -6,17 +6,18 @@ import { animated } from 'react-spring'
 import { params } from '../../params'
 import { useClickOutside } from '../../hooks/useClickOutside'
 import { WithId } from '../../models/WithId'
+import { PushSocket } from '../../models/PushSocket'
 import { Card } from '../../models/game/Card'
 import { Game } from '../../models/game/Game'
 import { CardData } from '../../utils/CardData'
-import { pipe, Maybe, Future, Either } from '../../utils/fp'
+import { pipe, Maybe, Future } from '../../utils/fp'
 
 interface CommonProps {
   readonly style?: React.CSSProperties
 }
 
 type CardProps = {
-  readonly call: (msg: any) => Future<Either<void, void>>
+  readonly call: PushSocket
   readonly game: Game
   readonly playerId: string
   readonly card: WithId<Card>

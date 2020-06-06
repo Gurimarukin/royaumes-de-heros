@@ -5,19 +5,19 @@ import { FunctionComponent, useRef, useState } from 'react'
 import { useSpring, animated as a } from 'react-spring'
 
 import { Cards } from './Cards'
-import { Dialog, DialogProps } from './Dialog'
+import { Dialog } from './Dialog'
+import { DialogProps } from './DialogStyled'
 import { MarketZone } from './MarketZone'
 import { PlayerZones } from './PlayerZones'
-import { BaseButton } from '../BaseButton'
+import { ButtonUnderline } from '../Buttons'
 import { params } from '../../params'
-import { usePendingInteraction } from '../../hooks/game/usePendingInteraction'
-import { DialogState } from '../../models/game/DialogState'
+import { PushSocket } from '../../models/PushSocket'
 import { Game } from '../../models/game/Game'
 import { Referential } from '../../models/game/geometry/Referential'
 import { List, pipe, Future, Either, Task } from '../../utils/fp'
 
 interface Props {
-  readonly call: (msg: any) => Future<Either<void, void>>
+  readonly call: PushSocket
   readonly game: Game
 }
 
@@ -78,19 +78,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
   const [endTurnSent, setEndTurnSent] = useState(false)
 
   // dialogue
-  const [dialogState, _setDialogState] = useState<DialogState<DialogProps>>(
-    DialogState.empty({ shown: false })
-  )
-  // const setDialogState = useCallback(
-  //   (props: DialogProps) =>
-  //     _setDialogState(prev =>
-  //       // don't update if previous is interaction and it is show
-  //       DialogState.isInteraction(prev) && prev.props.shown ? prev : DialogState.Other(props)
-  //     ),
-  //   []
-  // )
-
-  usePendingInteraction(call, game, _setDialogState)
+  const [dialogProps, _setDialogProps] = useState<DialogProps>({ shown: false })
 
   return (
     <div css={styles.container} onWheel={onWheel} onMouseMove={move} onMouseLeave={resetMove}>
@@ -112,15 +100,15 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
           zippedOtherPlayers={zippedOtherPlayers}
         />
       </a.div>
-      <BaseButton
+      <ButtonUnderline
         disabled={endTurnSent}
         onClick={endTurn}
         css={styles.endTurn}
         className={Game.isCurrentPlayer(game) ? 'current' : undefined}
       >
         Fin du tour
-      </BaseButton>
-      <Dialog {...dialogState.props} />
+      </ButtonUnderline>
+      <Dialog call={call} game={game} props={dialogProps} />
     </div>
   )
 

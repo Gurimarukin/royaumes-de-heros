@@ -22,8 +22,10 @@ export const BaseButton = styled.button({
 
   '&[disabled]': {
     opacity: '0.5'
-  },
+  }
+})
 
+export const ButtonUnderline = styled(BaseButton)({
   '&::after': {
     content: `''`,
     position: 'absolute',

@@ -5,11 +5,12 @@ import { FunctionComponent, useContext } from 'react'
 import { Link } from './Link'
 import { Router } from './Router'
 import { UserContext } from '../contexts/UserContext'
+import { PushSocket } from '../models/PushSocket'
 import { Lobby } from '../models/lobby/Lobby'
-import { Future, Either, pipe } from '../utils/fp'
+import { Future, pipe } from '../utils/fp'
 
 interface Props {
-  readonly call: (msg: any) => Future<Either<void, void>>
+  readonly call: PushSocket
   readonly state: Lobby
 }
 

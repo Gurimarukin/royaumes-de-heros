@@ -6,14 +6,14 @@ import { CombatAndGold } from './playerZone/CombatAndGold'
 import { Discard } from './playerZone/Discard'
 import { FightZone } from './playerZone/FightZone'
 import { Hero } from './playerZone/Hero'
+import { PushSocket } from '../../models/PushSocket'
 import { WithId } from '../../models/WithId'
 import { Game } from '../../models/game/Game'
 import { Referentials } from '../../models/game/Referentials'
 import { Referential } from '../../models/game/geometry/Referential'
-import { Future, Either } from '../../utils/fp'
 
 interface Props {
-  readonly call: (msg: any) => Future<Either<void, void>>
+  readonly call: PushSocket
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, WithId<PartialPlayer>][]

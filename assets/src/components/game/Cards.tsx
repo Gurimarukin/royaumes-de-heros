@@ -5,6 +5,7 @@ import { useTransition } from 'react-spring'
 
 import { AnimatedCard, HiddenCard, Zone } from './CardComponent'
 import { params } from '../../params'
+import { PushSocket } from '../../models/PushSocket'
 import { WithId } from '../../models/WithId'
 import { Card } from '../../models/game/Card'
 import { Game } from '../../models/game/Game'
@@ -13,10 +14,10 @@ import { Referentials } from '../../models/game/Referentials'
 import { Coord } from '../../models/game/geometry/Coord'
 import { Rectangle } from '../../models/game/geometry/Rectangle'
 import { Referential } from '../../models/game/geometry/Referential'
-import { pipe, List, Future, Either } from '../../utils/fp'
+import { pipe, List } from '../../utils/fp'
 
 interface Props {
-  readonly call: (msg: any) => Future<Either<void, void>>
+  readonly call: PushSocket
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, WithId<OtherPlayer>][]
