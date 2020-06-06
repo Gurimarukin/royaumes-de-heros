@@ -308,78 +308,78 @@ const cards: Dict<CardData> = {
   broelyn: d(
     'Broelyn, Tisseuse de Savoirs',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-061-broelyn-loreweaver.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { expend: true, ally: true }
   ),
   cron: d(
     'Cron, le Berserker',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-062-cron-the-berserker.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { expend: true, ally: true }
   ),
   dire_wolf: d(
     'Loup Terrifiant',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-063-dire-wolf.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { expend: true, ally: true }
   ),
   elven_curse: d(
     'Malédiction Elfique',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-064-elven-curse.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { ally: true }
   ),
   elven_gift: d(
     'Don Elfique',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-066-elven-gift.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { ally: true }
   ),
   grak: d(
     'Grak, Géant de la Tempête',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-069-grak-storm-giant.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { expend: true, ally: true }
   ),
   natures_bounty: d(
     'Don de la Nature',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-070-natures-bounty.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { ally: true, sacrifice: true }
   ),
   orc_grunt: d(
     'Grognard Orque',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-071-orc-grunt.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { expend: true, ally: true }
   ),
   rampage: d(
     'Sauvagerie',
-    'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-073-rampage.jpg'
-     Maybe.some('necros'),
+    'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-073-rampage.jpg',
+    Maybe.some('necros')
   ),
   torgen: d(
     'Torgen Brise-Pierre',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-074-torgen-rocksplitter.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { expend: true }
   ),
   spark: d(
     'Étincelle',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-075-spark.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { ally: true }
   ),
   wolf_form: d(
     'Forme de Loup',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-078-wolf-form.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { sacrifice: true }
   ),
   wolf_shaman: d(
     'Shamane des Loups',
     'https://www.herorealms.com/wp-content/uploads/2017/09/BAS-EN-079-wolf-shaman.jpg',
-     Maybe.some('necros'),
+    Maybe.some('necros'),
     { expend: true }
   )
   /* eslint-enable @typescript-eslint/camelcase */
