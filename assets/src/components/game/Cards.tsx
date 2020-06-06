@@ -140,12 +140,21 @@ function fightZone(
   cards: WithId<Card>[],
   playerId: string
 ): CardWithCoord[] {
-  const cardsWidth = cards.length * params.card.widthPlusMargin - params.card.margin
+  const cardsWidth =
+    Math.min(params.fightZone.columns, cards.length) * params.card.widthPlusMargin -
+    params.card.margin
   const left = (params.fightZone.innerWidth - cardsWidth) / 2
   return cards.map(
     card(
       pipe(referential, Referential.combine(Referential.fightZone)),
-      i => [left + i * params.card.widthPlusMargin, 0],
+      i => [
+        i < params.fightZone.columns
+          ? left + i * params.card.widthPlusMargin
+          : params.fightZone.innerWidth -
+            (i + 1 - params.fightZone.columns) * params.card.widthPlusMargin +
+            params.card.margin,
+        i < params.fightZone.columns ? 0 : params.card.heightPlusMargin
+      ],
       playerId,
       'fightZone'
     )
