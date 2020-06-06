@@ -100,14 +100,16 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
           zippedOtherPlayers={zippedOtherPlayers}
         />
       </a.div>
-      <ButtonUnderline
-        disabled={endTurnSent}
-        onClick={endTurn}
-        css={styles.endTurn}
-        className={Game.isCurrentPlayer(game) ? 'current' : undefined}
-      >
-        Fin du tour
-      </ButtonUnderline>
+      <div css={styles.rightBar}>
+        <ButtonUnderline
+          disabled={endTurnSent}
+          onClick={endTurn}
+          css={styles.endTurn}
+          className={Game.isCurrentPlayer(game) ? 'current' : undefined}
+        >
+          Fin du tour
+        </ButtonUnderline>
+      </div>
       <Dialog call={call} game={game} props={dialogProps} />
     </div>
   )
@@ -275,10 +277,21 @@ const styles = {
       backgroundImage: "url('/images/wood.png')"
     }),
 
+  rightBar: css({
+    position: 'absolute',
+    height: '100%',
+    width: 0,
+    top: 0,
+    right: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center'
+  }),
+
   endTurn: css({
     position: 'absolute',
     right: 0,
-    top: 'calc(50vh - 1em)',
+    width: '11ch',
 
     '&:not(.current)': {
       display: 'none'
