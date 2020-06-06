@@ -114,7 +114,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    width: '98vw',
+    width: 'calc(98vw - 10px)',
     // 1.4: font size of h2, 5px: border width of Dialog
     maxHeight: 'calc(98vh - calc(1.4 * 2.33em) - 5px)',
     paddingBottom: '0.67em',
