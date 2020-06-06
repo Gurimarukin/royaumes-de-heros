@@ -309,7 +309,10 @@ defmodule Heros.Game do
     if defense <= attacker.combat do
       game
       |> update_player(attacker_id, &Player.decr_combat(&1, defense))
-      |> update_player(defender_id, &Player.move_from_fight_zone_to_discard(&1, {card_id, card}))
+      |> update_player(
+        defender_id,
+        &Player.move_from_fight_zone_to_discard(&1, {card_id, Card.full_reset(card)})
+      )
       |> Option.some()
     else
       Option.none()
