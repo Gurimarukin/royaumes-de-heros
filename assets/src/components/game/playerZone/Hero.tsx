@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent, useMemo } from 'react'
+import { FunctionComponent, useMemo, useCallback } from 'react'
 import { animated as a } from 'react-spring'
 
 import { PartialPlayer } from '../PlayerZones'
@@ -11,7 +11,7 @@ import { WithId } from '../../../models/WithId'
 import { Game } from '../../../models/game/Game'
 import { Rectangle } from '../../../models/game/geometry/Rectangle'
 import { Referential } from '../../../models/game/geometry/Referential'
-import { pipe, Future } from '../../../utils/fp'
+import { pipe, Future, Maybe } from '../../../utils/fp'
 
 interface Props {
   readonly call: PushSocket
@@ -26,14 +26,24 @@ export const Hero: FunctionComponent<Props> = ({
   playerRef,
   player: [playerId, { name, hp }]
 }) => {
+  const callAndRun = useCallback((msg: any) => () => pipe(call(msg), Future.runUnsafe), [call])
+
   const isOther = game.player[0] !== playerId
   const isCurrent = Game.isCurrentPlayer(game)
-  const onClick = useMemo(
+  const pendingInteraction = Game.pendingInteraction(game)
+  const onClick = useMemo<(() => void) | undefined>(
     () =>
-      isOther && isCurrent
-        ? () => pipe(call(['attack', playerId, '__player']), Future.runUnsafe)
-        : undefined,
-    [call, isOther, isCurrent, playerId]
+      pipe(
+        pendingInteraction,
+        Maybe.fold(
+          () => (isOther && isCurrent ? callAndRun(['attack', playerId, '__player']) : undefined),
+          interaction =>
+            isOther && interaction === 'target_opponent_to_discard'
+              ? callAndRun(['interact', ['target_opponent_to_discard', playerId]])
+              : undefined
+        )
+      ),
+    [callAndRun, isCurrent, isOther, pendingInteraction, playerId]
   )
 
   const transitions = useValTransition({ hp })

@@ -12,7 +12,7 @@ import { PushSocket } from '../../models/PushSocket'
 import { Game } from '../../models/game/Game'
 import { PendingInteraction } from '../../models/game/PendingInteraction'
 import { Player } from '../../models/game/Player'
-import { pipe, Future, List, Maybe } from '../../utils/fp'
+import { pipe, Future, Maybe } from '../../utils/fp'
 
 interface Props {
   readonly call: PushSocket
@@ -36,7 +36,7 @@ export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
   )
   const [, player] = game.player
   const res = pipe(
-    List.head(player.pending_interactions),
+    Game.pendingInteraction(game),
     Maybe.fold(
       () => props,
       _ => ({
