@@ -55,6 +55,7 @@ export const CardComponent: FunctionComponent<CardProps> = ({
 
   const isOther = game.player[0] !== playerId
   const isCurrent = Game.isCurrentPlayer(game)
+  const pendingInteraction = Game.pendingInteraction(game)
   const onClick = useMemo<MouseEventHandler | undefined>(() => {
     switch (zone) {
       case 'market':
@@ -64,22 +65,45 @@ export const CardComponent: FunctionComponent<CardProps> = ({
         return !isOther && isCurrent ? callAndRun(['play_card', cardId]) : undefined
 
       case 'fightZone':
-        return isCurrent
-          ? isOther
-            ? callAndRun(['attack', playerId, cardId])
-            : pipe(
-                data,
-                Maybe.map(({ expend, ally, sacrifice }) =>
-                  expend || ally || sacrifice ? toggleAbilities : undefined
-                ),
-                Maybe.toUndefined
-              )
-          : undefined
+        return pipe(
+          pendingInteraction,
+          Maybe.fold(
+            () => {
+              if (isCurrent) {
+                return isOther
+                  ? callAndRun(['attack', playerId, cardId])
+                  : pipe(
+                      data,
+                      Maybe.map(({ expend, ally, sacrifice }) =>
+                        expend || ally || sacrifice ? toggleAbilities : undefined
+                      ),
+                      Maybe.toUndefined
+                    )
+              }
+              return undefined
+            },
+            interaction =>
+              interaction === 'stun_champion'
+                ? callAndRun(['interact', ['stun_champion', playerId, cardId]])
+                : undefined
+          )
+        )
 
       case 'discard':
         return () => showDiscard(playerId)
     }
-  }, [callAndRun, cardId, data, isCurrent, isOther, playerId, showDiscard, toggleAbilities, zone])
+  }, [
+    callAndRun,
+    cardId,
+    data,
+    pendingInteraction,
+    isCurrent,
+    isOther,
+    playerId,
+    showDiscard,
+    toggleAbilities,
+    zone
+  ])
 
   return (
     <ClickOutside onClickOutside={closeAbilities}>

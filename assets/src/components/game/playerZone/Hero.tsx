@@ -31,14 +31,14 @@ export const Hero: FunctionComponent<Props> = ({
   const isOther = game.player[0] !== playerId
   const isCurrent = Game.isCurrentPlayer(game)
   const pendingInteraction = Game.pendingInteraction(game)
-  const onClick = useMemo<(() => void) | undefined>(
+  const onClick = useMemo<React.MouseEventHandler | undefined>(
     () =>
       pipe(
         pendingInteraction,
         Maybe.fold(
           () => (isOther && isCurrent ? callAndRun(['attack', playerId, '__player']) : undefined),
           interaction =>
-            isOther && interaction === 'target_opponent_to_discard'
+            interaction === 'target_opponent_to_discard'
               ? callAndRun(['interact', ['target_opponent_to_discard', playerId]])
               : undefined
         )

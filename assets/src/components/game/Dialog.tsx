@@ -24,7 +24,7 @@ interface Props {
 
 type Keys = Diff<keyof DialogProps, 'shown'>
 type WithoutShown = {
-  [K in Keys]: DialogProps[K]
+  [K in Keys]?: DialogProps[K]
 }
 
 export const Dialog: FunctionComponent<Props> = ({ call, closeDialog, game, props }) => {
@@ -97,8 +97,21 @@ function propsForInteraction(
     }
   }
 
-  if (interaction === 'draw_then_discard') return unknown(interaction)
+  if (interaction === 'draw_then_discard') {
+    return {
+      title: "Vous pouvez piochez une carte. Si vous faites ainsi, défaussez vous d'une carte",
+      children: (
+        <Group>
+          <ButtonUnderline onClick={interact(['draw_then_discard', true])}>Piocher</ButtonUnderline>
+          <SecondaryButton onClick={interact(['draw_then_discard', false])}>
+            Ne pas piocher
+          </SecondaryButton>
+        </Group>
+      )
+    }
+  }
 
+  // TODO
   if (interaction === 'prepare_champion') return unknown(interaction)
 
   if (interaction === 'put_card_from_discard_to_deck') {
@@ -116,9 +129,27 @@ function propsForInteraction(
     }
   }
 
-  if (interaction === 'put_champion_from_discard_to_deck') return unknown(interaction)
+  if (interaction === 'put_champion_from_discard_to_deck') {
+    const champions = player.discard // TODO: filter only champions
+    return {
+      title: `Mettez un champion de votre défausse au dessus de votre pioche.`,
+      children: (
+        <CardSelector
+          amount={1}
+          required={true}
+          onConfirm={interactCard('put_card_from_discard_to_deck')}
+          cards={Either.right(champions)}
+          confirmLabel={chooseLabel}
+        />
+      )
+    }
+  }
 
-  if (interaction === 'stun_champion') return unknown(interaction)
+  if (interaction === 'stun_champion') {
+    return {
+      title: 'Assommez un champion ennemi.'
+    }
+  }
 
   if (interaction === 'target_opponent_to_discard') {
     return {
@@ -138,9 +169,9 @@ function propsForInteraction(
     const ifNotOne = (orElse: string): string => (amount === 1 ? '' : orElse)
 
     return {
-      title: `Sacrifiez ${nToStr(amount, true)} carte${ifNotOne('s')} de votre main ${ifNotOne(
-        'et/'
-      )}ou de votre défausse.`,
+      title: `Sacrifiez ${ifNotOne("jusqu'à ")}${nToStr(amount, true)} carte${ifNotOne(
+        's'
+      )} de votre main ${ifNotOne('et/')}ou de votre défausse.`,
       children: (
         <CardSelector
           amount={amount}
@@ -214,6 +245,7 @@ const Group = styled.div({
 const SecondaryButton = styled(ButtonUnderline)({
   backgroundColor: 'dimgrey',
   borderColor: 'dimgrey',
+  margin: '0 1em',
 
   color: 'white',
   '&::after': {
