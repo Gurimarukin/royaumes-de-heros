@@ -35,8 +35,8 @@ const playerZone = {
   height: fightZone.height + bottomZone.height + 2 * card.margin
 }
 
-const marketInnerWidth = card.width
-const marketInnerHeight = 6 * card.heightPlusMargin - card.margin
+const marketInnerWidth = 2 * card.widthPlusMargin - card.margin
+const marketInnerHeight = 3 * card.heightPlusMargin - card.margin
 const marketBorderWidth = fightZone.borderWidth
 const market = {
   width: marketInnerWidth + 2 * (marketBorderWidth + card.margin),

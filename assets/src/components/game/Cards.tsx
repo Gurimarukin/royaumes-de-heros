@@ -50,7 +50,12 @@ export const Cards: FunctionComponent<Props> = ({
         ...game.market.map(
           card(
             referentials.market,
-            i => [0, (i + 1) * params.card.heightPlusMargin],
+            i => [
+              i < 2 ? 0 : params.card.widthPlusMargin,
+              i < 2
+                ? (i + 1) * params.card.heightPlusMargin
+                : (i - 2) * params.card.heightPlusMargin
+            ],
             currentId,
             'market'
           )
