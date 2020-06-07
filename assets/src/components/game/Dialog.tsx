@@ -169,7 +169,7 @@ function propsForInteraction(
     const ifNotOne = (orElse: string): string => (amount === 1 ? '' : orElse)
 
     return {
-      title: `Sacrifiez ${ifNotOne("jusqu'à ")}${nToStr(amount, true)} carte${ifNotOne(
+      title: `Vous pouvez sacrifier ${ifNotOne("jusqu'à ")}${nToStr(amount, true)} carte${ifNotOne(
         's'
       )} de votre main ${ifNotOne('et/')}ou de votre défausse.`,
       children: (
