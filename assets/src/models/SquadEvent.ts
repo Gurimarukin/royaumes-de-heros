@@ -1,7 +1,5 @@
 import * as D from 'io-ts/lib/Decoder'
 
-import { List, Maybe, pipe } from '../utils/fp'
-
 interface PartialPlayer {
   readonly name: string
 }

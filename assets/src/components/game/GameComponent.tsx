@@ -6,6 +6,7 @@ import { useSpring, animated as a } from 'react-spring'
 
 import { Cards } from './Cards'
 import { CardsViewer } from './CardsViewer'
+import { Chat } from './Chat'
 import { Dialog } from './Dialog'
 import { DialogProps } from './DialogStyled'
 import { MarketZone } from './MarketZone'
@@ -24,6 +25,7 @@ import { List, pipe, Future, Either, Task, Maybe } from '../../utils/fp'
 interface Props {
   readonly call: PushSocket
   readonly game: Game
+  readonly events: [number, string][]
 }
 
 interface BoardProps {
@@ -49,7 +51,7 @@ const moveDetect = 40
 const moveStepPx = 300
 const moveStepMs = 100
 
-export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
+export const GameComponent: FunctionComponent<Props> = ({ call, game, events }) => {
   // navigation
   const referentials = {
     market: Referential.market,
@@ -122,6 +124,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
           Fin du tour
         </ButtonUnderline>
       </div>
+      <Chat lines={events} />
       <Dialog call={call} closeDialog={closeDialog} game={game} props={dialogProps} />
     </div>
   )

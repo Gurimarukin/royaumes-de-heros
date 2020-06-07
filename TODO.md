@@ -13,3 +13,7 @@
 * button end turn on deck
 * damage and heal animations
 * cursors
+
+* get CardData from server
+* finish chat
+* prepare champion

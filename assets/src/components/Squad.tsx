@@ -11,7 +11,6 @@ import { UserContext } from '../contexts/UserContext'
 import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
-import { Diff } from '../models/Diff'
 import { SquadState } from '../models/SquadState'
 import { SquadEvent } from '../models/SquadEvent'
 import { pipe, Either, Future, List } from '../utils/fp'
@@ -27,12 +26,12 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
   const user = useContext(UserContext)
 
   const [state, setState] = useState<AsyncState<ChannelError, SquadState>>(AsyncState.Loading)
-  const [_events, setEvents] = useState<Diff<SquadEvent, null>[]>([])
+  const [events, setEvents] = useState<[number, string][]>([])
 
   const appendEvent = useCallback((event: SquadEvent) => {
     if (event !== null) {
-      setEvents(_ => List.snoc(_, event))
-      console.log(SquadEvent.pretty()(event))
+      const str = SquadEvent.pretty()(event)
+      setEvents(_ => List.snoc(_, [Date.now(), str]))
     }
   }, [])
 
@@ -82,7 +81,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
         return <LobbyComponent call={call} state={state[1]} />
 
       case 'game':
-        return <GameComponent call={call} game={state[1]} />
+        return <GameComponent call={call} game={state[1]} events={events} />
     }
   }
 
@@ -98,8 +97,4 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
       )
     )
   }
-}
-
-interface PartialPlayer {
-  readonly name: string
 }
