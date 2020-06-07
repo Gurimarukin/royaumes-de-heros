@@ -3,6 +3,7 @@
 * private + public id; don't send private id to client
 * handle reconnect
 * delete empty squad
+* remove name from Lobby
 
 * shortcuts: center players, center market
 * reduce opacity hand when not turn

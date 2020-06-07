@@ -50,6 +50,7 @@ defmodule Heros.Squad do
         if lobby.ready and squad.owner == player_id do
           start_game(lobby)
           |> Option.map(fn game -> %{squad | state: {:game, game}} end)
+          |> Option.map(&{&1, {player_id, :start_game}})
         else
           Option.none()
         end
@@ -73,18 +74,28 @@ defmodule Heros.Squad do
               owner = squad.owner || member_id
               %{squad | owner: owner, members: members, state: {:lobby, lobby}}
             end)
+            |> Option.map(&{&1, {member_id, :joined}})
 
           _member ->
             squad
             |> update_member(member_id, &Member.put_socket(&1, socket))
             |> Option.some()
+            |> Option.map(&{&1, nil})
         end
 
       {:game, _game} ->
-        with_member(squad.members, member_id, fn _member ->
+        with_member(squad.members, member_id, fn member_before ->
           squad
           |> update_member(member_id, &Member.put_socket(&1, socket))
           |> Option.some()
+          |> Option.map(
+            &{&1,
+             if MapSet.size(member_before.sockets) == 0 do
+               {member_id, :reconnected}
+             else
+               nil
+             end}
+          )
         end)
     end
     |> to_reply(squad)
@@ -108,17 +119,20 @@ defmodule Heros.Squad do
               |> delete_member(member_id)
               |> update_owner(member_id)
             end)
+            |> Option.map(&{&1, {member_id, :left}})
 
           state ->
             %{squad | state: state}
             |> update_member(member_id, &%{&1 | sockets: sockets})
             |> update_owner(member_id)
             |> Option.some()
+            |> Option.map(&{&1, {member_id, :disconnected}})
         end
       else
         squad
         |> update_member(member_id, &%{&1 | sockets: sockets})
         |> Option.some()
+        |> Option.map(&{&1, nil})
       end
     end)
     |> to_reply(squad)
@@ -129,11 +143,11 @@ defmodule Heros.Squad do
       case squad.state do
         {:lobby, lobby} ->
           Lobby.Helpers.handle_call(message, from, lobby)
-          |> Option.map(&%{squad | state: {:lobby, &1}})
+          |> Option.map(fn {lobby, event} -> {%{squad | state: {:lobby, lobby}}, event} end)
 
         {:game, game} ->
           Game.Helpers.handle_call(message, from, game)
-          |> Option.map(&%{squad | state: {:game, &1}})
+          |> Option.map(fn {game, event} -> {%{squad | state: {:game, game}}, event} end)
       end
 
     if res == :error do
@@ -175,7 +189,7 @@ defmodule Heros.Squad do
     %{squad | members: squad.members |> KeyList.update(member_id, f)}
   end
 
-  defp to_reply({:ok, squad}, _old_squad), do: {:reply, {:ok, squad}, squad}
+  defp to_reply({:ok, {squad, message}}, _old_squad), do: {:reply, {:ok, {squad, message}}, squad}
   defp to_reply(:error, squad), do: {:reply, :error, squad}
 
   defp with_member(list, key, f) do

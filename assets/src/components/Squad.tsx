@@ -1,4 +1,5 @@
 /** @jsx jsx */
+import * as D from 'io-ts/lib/Decoder'
 import { jsx } from '@emotion/core'
 import { FunctionComponent, useState, useContext, useCallback } from 'react'
 
@@ -11,12 +12,15 @@ import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadState } from '../models/SquadState'
-import { pipe, flow, Either, Future } from '../utils/fp'
+import { Unknown } from '../models/Unknown'
+import { pipe, Either, Future } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 interface Props {
   readonly id: string
 }
+
+const stateWithEvent = D.tuple(SquadState.codec, Unknown.codec)
 
 export const Squad: FunctionComponent<Props> = ({ id }) => {
   const user = useContext(UserContext)
@@ -32,8 +36,11 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
   )
 
   const onUpdate = useCallback(
-    PhoenixUtils.handleResponse(PhoenixUtils.decodeBody(SquadState.codec.decode))(
-      flow(AsyncState.Success, setState)
+    PhoenixUtils.handleResponse(PhoenixUtils.decodeBody(stateWithEvent.decode))(
+      ([state, event]) => {
+        setState(AsyncState.Success(state))
+        console.log('event =', event)
+      }
     ),
     []
   )

@@ -11,8 +11,8 @@ defmodule HerosWeb.SquadChannel do
         socket = assign(socket, :squad_pid, squad_pid)
 
         case Squad.connect(squad_pid, user.id, user.name, self()) do
-          {:ok, squad} ->
-            send(self(), {:update, squad})
+          {:ok, update} ->
+            send(self(), {:update, update})
             {:ok, socket}
 
           :error ->
@@ -26,8 +26,8 @@ defmodule HerosWeb.SquadChannel do
 
   def handle_in("call", message, socket) do
     case GenServer.call(socket.assigns.squad_pid, {socket.assigns.user.id, message}) do
-      {:ok, squad} ->
-        broadcast_update(squad, socket)
+      {:ok, update} ->
+        broadcast_update(update, socket)
         {:reply, :ok, socket}
 
       :error ->
@@ -35,14 +35,14 @@ defmodule HerosWeb.SquadChannel do
     end
   end
 
-  def handle_info({:update, squad}, socket) do
-    broadcast_update(squad, socket)
+  def handle_info({:update, update}, socket) do
+    broadcast_update(update, socket)
     {:noreply, socket}
   end
 
   intercept ["update"]
 
-  def handle_out("update", squad, socket) do
+  def handle_out("update", %{update: {squad, event}}, socket) do
     projection =
       case squad.state do
         {:lobby, lobby} ->
@@ -53,7 +53,7 @@ defmodule HerosWeb.SquadChannel do
           {:game, Heros.Game.Helpers.project(game, socket.assigns.user.id, names)}
       end
 
-    push(socket, "update", %{body: projection})
+    push(socket, "update", %{body: {projection, event}})
     {:noreply, socket}
   end
 
@@ -69,8 +69,8 @@ defmodule HerosWeb.SquadChannel do
     end
   end
 
-  defp broadcast_update(squad, socket) do
+  defp broadcast_update(update, socket) do
     HerosWeb.Endpoint.broadcast!("squads", "update", %{})
-    broadcast!(socket, "update", squad)
+    broadcast!(socket, "update", %{update: update})
   end
 end

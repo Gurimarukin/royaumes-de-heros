@@ -60,44 +60,54 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, ["play_card", card_id]}, _from, game) do
     Game.play_card(game, player_id, card_id)
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({player_id, ["use_expend_ability", card_id]}, _from, game) do
     Game.use_expend_ability(game, player_id, card_id)
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({player_id, ["use_ally_ability", card_id]}, _from, game) do
     Game.use_ally_ability(game, player_id, card_id)
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({player_id, ["use_sacrifice_ability", card_id]}, _from, game) do
     Game.use_sacrifice_ability(game, player_id, card_id)
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({player_id, ["buy_card", card_id]}, _from, game) do
     Game.buy_card(game, player_id, card_id)
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({attacker_id, ["attack", defender_id, "__player"]}, _from, game) do
     Game.attack(game, attacker_id, defender_id, :player)
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({attacker_id, ["attack", defender_id, card_id]}, _from, game) do
     Game.attack(game, attacker_id, defender_id, card_id)
+    |> Option.map(&{&1, nil})
   end
 
   # interactions start
 
   def handle_call({player_id, ["interact", ["discard_card", card_id]]}, _from, game) do
     Game.interact(game, player_id, {:discard_card, card_id})
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({player_id, ["interact", ["draw_then_discard", discard]]}, _from, game) do
     Game.interact(game, player_id, {:draw_then_discard, discard})
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({player_id, ["interact", ["prepare_champion", card_id]]}, _from, game) do
     Game.interact(game, player_id, {:prepare_champion, card_id})
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call(
@@ -106,6 +116,7 @@ defmodule Heros.Game.Helpers do
         game
       ) do
     Game.interact(game, player_id, {:put_card_from_discard_to_deck, card_id})
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call(
@@ -114,10 +125,12 @@ defmodule Heros.Game.Helpers do
         game
       ) do
     Game.interact(game, player_id, {:put_champion_from_discard_to_deck, card_id})
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({player_id, ["interact", ["stun_champion", defender_id, card_id]]}, _from, game) do
     Game.interact(game, player_id, {:stun_champion, defender_id, card_id})
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call(
@@ -126,6 +139,7 @@ defmodule Heros.Game.Helpers do
         game
       ) do
     Game.interact(game, player_id, {:target_opponent_to_discard, who})
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call(
@@ -134,20 +148,24 @@ defmodule Heros.Game.Helpers do
         game
       ) do
     Game.interact(game, player_id, {:sacrifice_from_hand_or_discard, card_ids})
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({player_id, ["interact", ["select_effect", index]]}, _from, game) do
     Game.interact(game, player_id, {:select_effect, index})
+    |> Option.map(&{&1, nil})
   end
 
   # interactions end
 
   def handle_call({player_id, "discard_phase"}, _from, game) do
     Game.discard_phase(game, player_id)
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call({player_id, "draw_phase"}, _from, game) do
     Game.draw_phase(game, player_id)
+    |> Option.map(&{&1, nil})
   end
 
   def handle_call(_message, _from, _lobby), do: Option.none()
