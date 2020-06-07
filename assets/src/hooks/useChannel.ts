@@ -23,20 +23,9 @@ export function useChannel(
 
     const join = channel.join()
 
-    join.receive('ok', r => {
-      console.log('r =', r)
-      if (onJoinSuccess !== undefined) onJoinSuccess(r)
-    })
-
-    join.receive('error', e => {
-      console.log('e =', e)
-      if (onJoinError !== undefined) onJoinError(e)
-    })
-
-    channel.on('update', u => {
-      console.log('u =', u)
-      if (onUpdate !== undefined) onUpdate(u)
-    })
+    if (onJoinSuccess !== undefined) join.receive('ok', onJoinSuccess)
+    if (onJoinError !== undefined) join.receive('error', onJoinError)
+    if (onUpdate !== undefined) channel.on('update', onUpdate)
 
     return () => {
       channel.leave()

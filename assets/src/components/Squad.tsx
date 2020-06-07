@@ -12,20 +12,26 @@ import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadState } from '../models/SquadState'
-import { Unknown } from '../models/Unknown'
-import { pipe, Either, Future } from '../utils/fp'
+import { SquadEvent } from '../models/SquadEvent'
+import { pipe, Either, Future, List } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 interface Props {
   readonly id: string
 }
 
-const stateWithEvent = D.tuple(SquadState.codec, Unknown.codec)
+const stateWithEvent = D.tuple(SquadState.codec, SquadEvent.codec)
 
 export const Squad: FunctionComponent<Props> = ({ id }) => {
   const user = useContext(UserContext)
 
   const [state, setState] = useState<AsyncState<ChannelError, SquadState>>(AsyncState.Loading)
+  const [_events, setEvents] = useState<SquadEvent[]>([])
+
+  const appendEvent = useCallback((event: SquadEvent) => {
+    setEvents(_ => List.snoc(_, event))
+    console.log(SquadEvent.pretty()(event))
+  }, [])
 
   const onJoinError = useCallback(
     PhoenixUtils.handleResponse(ChannelError.codec.decode)(error => {
@@ -39,7 +45,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
     PhoenixUtils.handleResponse(PhoenixUtils.decodeBody(stateWithEvent.decode))(
       ([state, event]) => {
         setState(AsyncState.Success(state))
-        console.log('event =', event)
+        appendEvent(event)
       }
     ),
     []
@@ -78,14 +84,13 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
   }
 
   function call(msg: any): Future<Either<void, void>> {
-    console.log('call:', msg)
     return pipe(
       () => channel.push('call', msg),
       PhoenixUtils.pushToFuture,
       Future.map(
         Either.bimap(
-          _ => console.log('response: error'),
-          _ => console.log('response: ok')
+          _ => appendEvent('error'),
+          _ => {}
         )
       )
     )

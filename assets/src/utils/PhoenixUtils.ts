@@ -26,9 +26,7 @@ export namespace PhoenixUtils {
       pipe(
         resp,
         decode,
-        Either.fold(e => {
-          // console.error("couldn't decode response:", draw(e))
-        }, onRight)
+        Either.fold(e => console.error("couldn't decode response:", draw(e)), onRight)
       )
     }
   }
