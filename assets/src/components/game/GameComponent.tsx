@@ -1,10 +1,11 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
 import { Lazy } from 'fp-ts/lib/function'
-import { FunctionComponent, useRef, useState } from 'react'
+import { FunctionComponent, useRef, useState, useCallback } from 'react'
 import { useSpring, animated as a } from 'react-spring'
 
 import { Cards } from './Cards'
+import { CardsViewer } from './CardsViewer'
 import { Dialog } from './Dialog'
 import { DialogProps } from './DialogStyled'
 import { MarketZone } from './MarketZone'
@@ -12,9 +13,13 @@ import { PlayerZones } from './PlayerZones'
 import { ButtonUnderline } from '../Buttons'
 import { params } from '../../params'
 import { PushSocket } from '../../models/PushSocket'
+import { WithId } from '../../models/WithId'
+import { Card } from '../../models/game/Card'
 import { Game } from '../../models/game/Game'
+import { OtherPlayer } from '../../models/game/OtherPlayer'
+import { Player } from '../../models/game/Player'
 import { Referential } from '../../models/game/geometry/Referential'
-import { List, pipe, Future, Either, Task } from '../../utils/fp'
+import { List, pipe, Future, Either, Task, Maybe } from '../../utils/fp'
 
 interface Props {
   readonly call: PushSocket
@@ -78,7 +83,13 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
   const [endTurnSent, setEndTurnSent] = useState(false)
 
   // dialogue
-  const [dialogProps, _setDialogProps] = useState<DialogProps>({ shown: false })
+  const [dialogProps, setDialogProps] = useState<DialogProps>({ shown: false })
+  const showDiscard = useCallback(
+    (playerId: string) =>
+      setDialogProps(discardDialogProps(game.player, game.other_players, playerId)),
+    [game.other_players, game.player]
+  )
+  const closeDialog = useCallback(() => setDialogProps(_ => ({ ..._, shown: false })), [])
 
   return (
     <div css={styles.container} onWheel={onWheel} onMouseMove={move} onMouseLeave={resetMove}>
@@ -95,6 +106,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
         />
         <Cards
           call={call}
+          showDiscard={showDiscard}
           game={game}
           referentials={referentials}
           zippedOtherPlayers={zippedOtherPlayers}
@@ -110,7 +122,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game }) => {
           Fin du tour
         </ButtonUnderline>
       </div>
-      <Dialog call={call} game={game} props={dialogProps} />
+      <Dialog call={call} closeDialog={closeDialog} game={game} props={dialogProps} />
     </div>
   )
 
@@ -256,6 +268,38 @@ function bounded(min: number, max: number): (x: number) => number {
 
 function trans(s: number): string {
   return `scale(${s})`
+}
+
+interface PartialPlayer {
+  readonly name: string
+  readonly discard: WithId<Card>[]
+}
+
+function discardDialogProps(
+  player: WithId<Player>,
+  others: WithId<OtherPlayer>[],
+  playerId: string
+): DialogProps {
+  return pipe(
+    player[0] === playerId
+      ? {
+          shown: true,
+          title: 'Votre défausse',
+          children: <CardsViewer cards={player[1].discard} />
+        }
+      : pipe(
+          others,
+          List.findFirstMap(other => (other[0] === playerId ? Maybe.some(other[1]) : Maybe.none)),
+          Maybe.fold<PartialPlayer, DialogProps>(
+            () => ({ shown: false }),
+            p => ({
+              shown: true,
+              title: `Défausse de ${p.name}`,
+              children: <CardsViewer cards={p.discard} />
+            })
+          )
+        )
+  )
 }
 
 const styles = {

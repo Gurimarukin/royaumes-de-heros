@@ -1,12 +1,13 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 import styled from '@emotion/styled'
-import { FunctionComponent, useCallback } from 'react'
+import { FunctionComponent, useCallback, useMemo } from 'react'
 
 import { CardSelector } from './CardSelector'
 import { DialogStyled, DialogProps } from './DialogStyled'
 import { Effect } from './Effect'
 import { ButtonUnderline, BaseButton } from '../Buttons'
+import { ClickOutside } from '../ClickOutside'
 import { Diff } from '../../models/Diff'
 import { PushSocket } from '../../models/PushSocket'
 import { Game } from '../../models/game/Game'
@@ -16,6 +17,7 @@ import { pipe, Future, Maybe, Either } from '../../utils/fp'
 
 interface Props {
   readonly call: PushSocket
+  readonly closeDialog: () => void
   readonly game: Game
   readonly props: DialogProps
 }
@@ -25,7 +27,7 @@ type WithoutShown = {
   [K in Keys]: DialogProps[K]
 }
 
-export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
+export const Dialog: FunctionComponent<Props> = ({ call, closeDialog, game, props }) => {
   const interact = useCallback(
     (interaction: any) => () => pipe(call(['interact', interaction]), Future.runUnsafe),
     [call]
@@ -39,8 +41,24 @@ export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
     [interact]
   )
   const [, player] = game.player
+
+  const pendingInteraction = Game.pendingInteraction(game)
+
+  const onClickOutside = useMemo(
+    () => () => {
+      pipe(
+        pendingInteraction,
+        Maybe.fold(
+          () => closeDialog(),
+          _ => {}
+        )
+      )
+    },
+    [closeDialog, pendingInteraction]
+  )
+
   const res = pipe(
-    Game.pendingInteraction(game),
+    pendingInteraction,
     Maybe.fold(
       () => props,
       _ => ({
@@ -49,7 +67,12 @@ export const Dialog: FunctionComponent<Props> = ({ call, game, props }) => {
       })
     )
   )
-  return <DialogStyled {...res} />
+
+  return (
+    <ClickOutside onClickOutside={onClickOutside}>
+      <DialogStyled {...res} />
+    </ClickOutside>
+  )
 }
 
 function propsForInteraction(

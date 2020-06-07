@@ -2,12 +2,11 @@
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent, useState, useCallback, ReactNode, Fragment } from 'react'
 
-import { SimpleCard } from './card/SimpleCard'
+import { CardsViewer } from './CardsViewer'
 import { ButtonUnderline } from '../Buttons'
 import { WithId } from '../../models/WithId'
 import { Card } from '../../models/game/Card'
 import { List, pipe, Either } from '../../utils/fp'
-import { params } from '../../params'
 
 interface Props {
   readonly amount: number
@@ -56,13 +55,13 @@ export const CardSelector: FunctionComponent<Props> = ({
                 cards.length === 0 ? null : (
                   <div key={i} css={styles.block}>
                     <div css={styles.blockLabel}>{label}</div>
-                    {cardsDiv(selected, toggleCard, cards)}
+                    <CardsViewer selected={selected} toggleCard={toggleCard} cards={cards} />
                   </div>
                 )
               )}
             </Fragment>
           ),
-          _ => cardsDiv(selected, toggleCard, _)
+          _ => <CardsViewer selected={selected} toggleCard={toggleCard} cards={_} />
         )
       )}
       <ButtonUnderline
@@ -77,44 +76,15 @@ export const CardSelector: FunctionComponent<Props> = ({
   )
 }
 
-function cardsDiv(
-  selected: string[],
-  toggleCard: (cardId: string) => () => void,
-  cards: WithId<Card>[]
-): JSX.Element {
-  return (
-    <div css={styles.cards}>
-      {cards.map(([cardId, card], j) => (
-        <SimpleCard
-          key={j}
-          card={Card.reset(card)}
-          onClick={toggleCard(cardId)}
-          css={styles.card}
-          className={
-            pipe(
-              selected,
-              List.exists(_ => _ === cardId)
-            )
-              ? 'selected'
-              : undefined
-          }
-        />
-      ))}
-    </div>
-  )
-}
-
 function stopPropagation(e: React.SyntheticEvent) {
   e.stopPropagation()
 }
 
-const scaleCard = 0.7
 const styles = {
   container: css({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    width: 'calc(98vw - 10px)',
     // 1.4: font size of h2, 5px: border width of Dialog
     maxHeight: 'calc(98vh - calc(1.4 * 2.33em) - 5px)',
     paddingBottom: '0.67em',
@@ -129,36 +99,6 @@ const styles = {
   blockLabel: css({
     fontSize: '1.1em',
     marginBottom: '0.33em'
-  }),
-
-  cards: css({
-    // display: 'flex',
-    width: '100%',
-    // flexWrap: 'wrap',
-    padding: '0 1em'
-  }),
-
-  card: css({
-    display: 'inline-block',
-    position: 'relative',
-    width: params.card.width * scaleCard,
-    height: params.card.height * scaleCard,
-    flexShrink: 0,
-    flexBasis: 0,
-    flexGrow: 1,
-    margin: 'px 1em',
-    borderRadius: params.card.borderRadius * scaleCard * 1.2,
-    border: '5px solid transparent',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-
-    '&.selected': {
-      borderColor: 'crimson'
-    },
-
-    '& > img': {
-      borderRadius: params.card.borderRadius * scaleCard
-    }
   }),
 
   confirm: css({

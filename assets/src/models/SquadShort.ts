@@ -6,7 +6,7 @@ export namespace SquadShort {
     id: D.string,
     stage: D.union(D.literal('lobby'), D.literal('game')),
     n_players: D.number
-    /* eslint-disable @typescript-eslint/camelcase */
+    /* eslint-enable @typescript-eslint/camelcase */
   })
 }
 

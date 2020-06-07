@@ -3,8 +3,8 @@ import { jsx, css } from '@emotion/core'
 import { FunctionComponent, ReactNode, useMemo, useCallback, useState, Fragment } from 'react'
 import { animated } from 'react-spring'
 
+import { ClickOutside } from '../ClickOutside'
 import { params } from '../../params'
-import { useClickOutside } from '../../hooks/useClickOutside'
 import { WithId } from '../../models/WithId'
 import { PushSocket } from '../../models/PushSocket'
 import { Card } from '../../models/game/Card'
@@ -18,6 +18,7 @@ interface CommonProps {
 
 type CardProps = {
   readonly call: PushSocket
+  readonly showDiscard: (playerId: string) => void
   readonly game: Game
   readonly playerId: string
   readonly card: WithId<Card>
@@ -30,6 +31,7 @@ type MouseEventHandler<A = HTMLElement> = (e: React.MouseEvent<A>) => void
 
 export const CardComponent: FunctionComponent<CardProps> = ({
   call,
+  showDiscard,
   game,
   playerId,
   card: [cardId, card],
@@ -41,8 +43,6 @@ export const CardComponent: FunctionComponent<CardProps> = ({
   const [abilitiesOpened, setAbilitiesOpened] = useState(false)
   const closeAbilities = useCallback(() => setAbilitiesOpened(false), [])
   const toggleAbilities = useCallback(() => setAbilitiesOpened(_ => !_), [])
-
-  const clickOutSideRef = useClickOutside<HTMLDivElement>(closeAbilities)
 
   const ability = useCallback(
     (key: string, label: string): JSX.Element => (
@@ -77,39 +77,40 @@ export const CardComponent: FunctionComponent<CardProps> = ({
           : undefined
 
       case 'discard':
-        // TODO: show discard
-        return undefined
+        return () => showDiscard(playerId)
     }
-  }, [callAndRun, cardId, data, isCurrent, isOther, toggleAbilities, playerId, zone])
+  }, [callAndRun, cardId, data, isCurrent, isOther, playerId, showDiscard, toggleAbilities, zone])
 
   return (
-    <div ref={clickOutSideRef} onClick={onClick} css={styles.container} style={style}>
-      {pipe(
-        data,
-        Maybe.fold<CardData, ReactNode>(
-          () => `carte inconnue: ${card.key}`,
-          ({ image, faction, expend, ally, sacrifice }) => {
-            const f = Maybe.toUndefined(faction)
-            return (
-              <Fragment>
-                <img src={image} alt={card.key} />
-                <div css={styles.icons}>
-                  {card.expend_ability_used ? icon('/images/expend.png', f) : null}
-                  {card.ally_ability_used ? icon(`/images/factions/${f}.png`, f) : null}
-                </div>
-                {abilitiesOpened ? (
-                  <div css={styles.abilities}>
-                    {expend && !card.expend_ability_used ? ability('expend', 'Activer') : null}
-                    {ally && !card.ally_ability_used ? ability('ally', 'Allié') : null}
-                    {sacrifice ? ability('sacrifice', 'Sacrifice') : null}
+    <ClickOutside onClickOutside={closeAbilities}>
+      <div onClick={onClick} css={styles.container} style={style}>
+        {pipe(
+          data,
+          Maybe.fold<CardData, ReactNode>(
+            () => `carte inconnue: ${card.key}`,
+            ({ image, faction, expend, ally, sacrifice }) => {
+              const f = Maybe.toUndefined(faction)
+              return (
+                <Fragment>
+                  <img src={image} alt={card.key} />
+                  <div css={styles.icons}>
+                    {card.expend_ability_used ? icon('/images/expend.png', f) : null}
+                    {card.ally_ability_used ? icon(`/images/factions/${f}.png`, f) : null}
                   </div>
-                ) : null}
-              </Fragment>
-            )
-          }
-        )
-      )}
-    </div>
+                  {abilitiesOpened ? (
+                    <div css={styles.abilities}>
+                      {expend && !card.expend_ability_used ? ability('expend', 'Activer') : null}
+                      {ally && !card.ally_ability_used ? ability('ally', 'Allié') : null}
+                      {sacrifice ? ability('sacrifice', 'Sacrifice') : null}
+                    </div>
+                  ) : null}
+                </Fragment>
+              )
+            }
+          )
+        )}
+      </div>
+    </ClickOutside>
   )
 }
 

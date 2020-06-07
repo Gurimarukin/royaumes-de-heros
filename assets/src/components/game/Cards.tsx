@@ -18,6 +18,7 @@ import { pipe, List } from '../../utils/fp'
 
 interface Props {
   readonly call: PushSocket
+  readonly showDiscard: (playerId: string) => void
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, WithId<OtherPlayer>][]
@@ -34,6 +35,7 @@ type Cards = [CardWithCoord[], Coord[]]
 
 export const Cards: FunctionComponent<Props> = ({
   call,
+  showDiscard,
   game,
   referentials,
   zippedOtherPlayers
@@ -124,6 +126,7 @@ export const Cards: FunctionComponent<Props> = ({
         <AnimatedCard
           key={key}
           call={call}
+          showDiscard={showDiscard}
           game={game}
           playerId={item.playerId}
           zone={item.zone}
