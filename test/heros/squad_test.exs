@@ -17,7 +17,8 @@ defmodule Heros.SquadTest do
 
     # p1 joins
 
-    assert {:ok, {squad, {"p1", :joined}}} = Squad.connect(pid, "p1", "Player 1", :p1_1)
+    assert {:ok, {squad, {"Player 1", :lobby_joined}}} =
+             Squad.connect(pid, "p1", "Player 1", :p1_1)
 
     lobby = %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}
 
@@ -50,7 +51,7 @@ defmodule Heros.SquadTest do
 
     # p2 joins
 
-    assert {:ok, {_, {"p2", :joined}}} = Squad.connect(pid, "p2", "Player 2", :p2_1)
+    assert {:ok, {_, {"Player 2", :lobby_joined}}} = Squad.connect(pid, "p2", "Player 2", :p2_1)
 
     lobby = %Lobby{
       players: [
@@ -71,7 +72,7 @@ defmodule Heros.SquadTest do
 
     # p3 joins
 
-    assert {:ok, {_, {"p3", :joined}}} = Squad.connect(pid, "p3", "Player 3", :p3)
+    assert {:ok, {_, {"Player 3", :lobby_joined}}} = Squad.connect(pid, "p3", "Player 3", :p3)
 
     lobby = %Lobby{
       players: [
@@ -107,7 +108,7 @@ defmodule Heros.SquadTest do
              state: {:lobby, lobby}
            }
 
-    assert {:ok, {_, {"p1", :left}}} = Squad.disconnect(pid, "p1", :p1_2)
+    assert {:ok, {_, {"Player 1", :lobby_left}}} = Squad.disconnect(pid, "p1", :p1_2)
 
     lobby = %Lobby{
       players: [
@@ -130,7 +131,7 @@ defmodule Heros.SquadTest do
 
     assert :error = GenServer.call(pid, {"p3", "start_game"})
 
-    assert {:ok, {_, {"p2", :start_game}}} = GenServer.call(pid, {"p2", "start_game"})
+    assert {:ok, {_, {"Player 2", :start_game}}} = GenServer.call(pid, {"p2", "start_game"})
 
     %{state: {:game, game}} = Squad.get(pid)
 
@@ -154,7 +155,7 @@ defmodule Heros.SquadTest do
 
     # when p3 leaves, doesn't change game
 
-    assert {:ok, {_, {"p3", :disconnected}}} = Squad.disconnect(pid, "p3", :p3)
+    assert {:ok, {_, {"Player 3", :game_disconnected}}} = Squad.disconnect(pid, "p3", :p3)
 
     assert Squad.get(pid) == %Squad{
              owner: "p2",

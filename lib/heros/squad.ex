@@ -50,7 +50,7 @@ defmodule Heros.Squad do
         if lobby.ready and squad.owner == player_id do
           start_game(lobby)
           |> Option.map(fn game -> %{squad | state: {:game, game}} end)
-          |> Option.map(&{&1, {player_id, :start_game}})
+          |> Option.map(&{&1, {KeyList.find(names(&1), player_id), :start_game}})
         else
           Option.none()
         end
@@ -74,7 +74,7 @@ defmodule Heros.Squad do
               owner = squad.owner || member_id
               %{squad | owner: owner, members: members, state: {:lobby, lobby}}
             end)
-            |> Option.map(&{&1, {member_id, :joined}})
+            |> Option.map(&{&1, {KeyList.find(names(&1), member_id), :lobby_joined}})
 
           _member ->
             squad
@@ -91,7 +91,7 @@ defmodule Heros.Squad do
           |> Option.map(
             &{&1,
              if MapSet.size(member_before.sockets) == 0 do
-               {member_id, :reconnected}
+               {KeyList.find(names(&1), member_id), :game_reconnected}
              else
                nil
              end}
@@ -119,14 +119,14 @@ defmodule Heros.Squad do
               |> delete_member(member_id)
               |> update_owner(member_id)
             end)
-            |> Option.map(&{&1, {member_id, :left}})
+            |> Option.map(&{&1, {KeyList.find(names(squad), member_id), :lobby_left}})
 
           state ->
             %{squad | state: state}
             |> update_member(member_id, &%{&1 | sockets: sockets})
             |> update_owner(member_id)
             |> Option.some()
-            |> Option.map(&{&1, {member_id, :disconnected}})
+            |> Option.map(&{&1, {KeyList.find(names(squad), member_id), :game_disconnected}})
         end
       else
         squad
@@ -146,7 +146,9 @@ defmodule Heros.Squad do
           |> Option.map(fn {lobby, event} -> {%{squad | state: {:lobby, lobby}}, event} end)
 
         {:game, game} ->
-          Game.Helpers.handle_call(message, from, game)
+          names = squad.members |> KeyList.map(& &1.name)
+
+          Game.Helpers.handle_call(message, from, game, names)
           |> Option.map(fn {game, event} -> {%{squad | state: {:game, game}}, event} end)
       end
 
@@ -197,4 +199,6 @@ defmodule Heros.Squad do
     |> Option.from_nilable()
     |> Option.chain(f)
   end
+
+  defp names(squad), do: squad.members |> KeyList.map(& &1.name)
 end

@@ -11,6 +11,7 @@ import { UserContext } from '../contexts/UserContext'
 import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
+import { Diff } from '../models/Diff'
 import { SquadState } from '../models/SquadState'
 import { SquadEvent } from '../models/SquadEvent'
 import { pipe, Either, Future, List } from '../utils/fp'
@@ -26,11 +27,13 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
   const user = useContext(UserContext)
 
   const [state, setState] = useState<AsyncState<ChannelError, SquadState>>(AsyncState.Loading)
-  const [_events, setEvents] = useState<SquadEvent[]>([])
+  const [_events, setEvents] = useState<Diff<SquadEvent, null>[]>([])
 
   const appendEvent = useCallback((event: SquadEvent) => {
-    setEvents(_ => List.snoc(_, event))
-    console.log(SquadEvent.pretty()(event))
+    if (event !== null) {
+      setEvents(_ => List.snoc(_, event))
+      console.log(SquadEvent.pretty()(event))
+    }
   }, [])
 
   const onJoinError = useCallback(
@@ -95,4 +98,8 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
       )
     )
   }
+}
+
+interface PartialPlayer {
+  readonly name: string
 }
