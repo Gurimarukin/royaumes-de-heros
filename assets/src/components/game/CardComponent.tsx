@@ -83,8 +83,10 @@ export const CardComponent: FunctionComponent<CardProps> = ({
               return undefined
             },
             interaction =>
-              interaction === 'stun_champion'
+              interaction === 'stun_champion' && isOther
                 ? callAndRun(['interact', ['stun_champion', playerId, cardId]])
+                : interaction === 'prepare_champion' && !isOther
+                ? callAndRun(['interact', ['prepare_champion', cardId]])
                 : undefined
           )
         )

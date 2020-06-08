@@ -111,8 +111,11 @@ function propsForInteraction(
     }
   }
 
-  // TODO
-  if (interaction === 'prepare_champion') return unknown(interaction)
+  if (interaction === 'prepare_champion') {
+    return {
+      title: 'Mobilisez un champion.'
+    }
+  }
 
   if (interaction === 'put_card_from_discard_to_deck') {
     return {

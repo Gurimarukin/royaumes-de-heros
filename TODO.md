@@ -9,12 +9,16 @@
 
 * shortcuts: center players, center market
 * reduce opacity hand when not turn
-* count cards in discard (if no cards)
-* discard detail
+* count cards in discard (if some cards)
 * count cards in deck
-* button end turn on deck
 * damage and heal animations
 * cursors
-
 * get CardData from server
-* prepare champion
+* typesafe ids
+* typesafe messages
+* move with arrows (and not mouse)
+* animate dialog
+* animate entering cards
+
+* chat on side with card detail (toggleable, with click and shortcut)
+* button for abilities

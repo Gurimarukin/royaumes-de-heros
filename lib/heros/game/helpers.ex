@@ -99,10 +99,11 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, player_id),
-        {:buy_card, case KeyList.find(game.gems ++ game.market, card_id) do
-          nil -> nil
-          c -> c.key
-        end}}}
+        {:buy_card,
+         case KeyList.find(game.gems ++ game.market, card_id) do
+           nil -> nil
+           c -> c.key
+         end}}}
     )
   end
 
@@ -131,13 +132,15 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, player_id),
-        {:discard_card, with_card(game, player_id, fn p -> p.hand end, card_id)}}}
+        {:interact, {:discard_card, with_card(game, player_id, fn p -> p.hand end, card_id)}}}}
     )
   end
 
   def handle_call({player_id, ["interact", ["draw_then_discard", discard]]}, _from, game, names) do
     Game.interact(game, player_id, {:draw_then_discard, discard})
-    |> Option.map(&{&1, {player_id, {:draw_then_discard, discard}}})
+    |> Option.map(
+      &{&1, {KeyList.find(names, player_id), {:interact, {:draw_then_discard, discard}}}}
+    )
   end
 
   def handle_call({player_id, ["interact", ["prepare_champion", card_id]]}, _from, game, names) do
@@ -145,7 +148,8 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, player_id),
-        {:prepare_champion, with_card(game, player_id, fn p -> p.fight_zone end, card_id)}}}
+        {:interact,
+         {:prepare_champion, with_card(game, player_id, fn p -> p.fight_zone end, card_id)}}}}
     )
   end
 
@@ -159,8 +163,9 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, player_id),
-        {:put_card_from_discard_to_deck,
-         with_card(game, player_id, fn p -> p.discard end, card_id)}}}
+        {:interact,
+         {:put_card_from_discard_to_deck,
+          with_card(game, player_id, fn p -> p.discard end, card_id)}}}}
     )
   end
 
@@ -174,8 +179,9 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, player_id),
-        {:put_champion_from_discard_to_deck,
-         with_card(game, player_id, fn p -> p.discard end, card_id)}}}
+        {:interact,
+         {:put_champion_from_discard_to_deck,
+          with_card(game, player_id, fn p -> p.discard end, card_id)}}}}
     )
   end
 
@@ -189,8 +195,9 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, attacker_id),
-        {:stun_champion, KeyList.find(names, defender_id),
-         with_card(game, defender_id, fn p -> p.fight_zone end, card_id)}}}
+        {:interact,
+         {:stun_champion, KeyList.find(names, defender_id),
+          with_card(game, defender_id, fn p -> p.fight_zone end, card_id)}}}}
     )
   end
 
@@ -203,7 +210,8 @@ defmodule Heros.Game.Helpers do
     Game.interact(game, player_id, {:target_opponent_to_discard, who})
     |> Option.map(
       &{&1,
-       {KeyList.find(names, player_id), {:target_opponent_to_discard, KeyList.find(names, who)}}}
+       {KeyList.find(names, player_id),
+        {:interact, {:target_opponent_to_discard, KeyList.find(names, who)}}}}
     )
   end
 
@@ -217,11 +225,12 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, player_id),
-        {:sacrifice_from_hand_or_discard,
-         card_ids
-         |> Enum.map(fn card_id ->
-           with_card(game, player_id, fn p -> p.hand ++ p.discard end, card_id)
-         end)}}}
+        {:interact,
+         {:sacrifice_from_hand_or_discard,
+          card_ids
+          |> Enum.map(fn card_id ->
+            with_card(game, player_id, fn p -> p.hand ++ p.discard end, card_id)
+          end)}}}}
     )
   end
 
@@ -229,7 +238,8 @@ defmodule Heros.Game.Helpers do
     Game.interact(game, player_id, {:select_effect, index})
     |> Option.map(
       &{&1,
-       {KeyList.find(names, player_id), {:select_effect, with_effect(game, player_id, index)}}}
+       {KeyList.find(names, player_id),
+        {:interact, {:select_effect, with_effect(game, player_id, index)}}}}
     )
   end
 

@@ -1,20 +1,23 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent } from 'react'
+import { FunctionComponent, useCallback } from 'react'
 
 interface Props {
   readonly lines: [number, string][]
 }
 
-export const Chat: FunctionComponent<Props> = ({ lines }) => (
-  <div css={styles.container}>
-    {lines.map(([key, line]) => (
-      <div key={key} css={styles.line}>
-        {line}
-      </div>
-    ))}
-  </div>
-)
+export const Chat: FunctionComponent<Props> = ({ lines }) => {
+  const onWheel = useCallback((e: React.WheelEvent) => e.stopPropagation(), [])
+  return (
+    <div onWheel={onWheel} css={styles.container}>
+      {lines.map(([key, line]) => (
+        <div key={key} css={styles.line}>
+          {line}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 const styles = {
   container: css({
