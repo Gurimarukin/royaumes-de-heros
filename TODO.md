@@ -3,7 +3,9 @@
 * private + public id; don't send private id to client
 * handle reconnect
 * delete empty squad
-* remove name from Lobby
+* remove player name from Lobby
+* ass lobby name
+* persist 
 
 * shortcuts: center players, center market
 * reduce opacity hand when not turn
@@ -15,5 +17,4 @@
 * cursors
 
 * get CardData from server
-* finish chat
 * prepare champion

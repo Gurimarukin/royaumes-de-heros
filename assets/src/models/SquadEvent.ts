@@ -90,8 +90,8 @@ export namespace SquadEvent {
       }
 
       if (event[0] === 'attack') {
-        if (event[2] === 'player') return Maybe.some(`${playerName} attaque ${cardName(event[1])}`)
-        return Maybe.some(`${playerName} assome ${cardName(event[2])} (${cardName(event[1])})`)
+        if (event[2] === 'player') return Maybe.some(`${playerName} attaque ${event[1]}`)
+        return Maybe.some(`${playerName} assome ${cardName(event[2])} (${event[1]})`)
       }
 
       if (event[0] === 'interact') {

@@ -99,7 +99,10 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, player_id),
-        {:buy_card, KeyList.find(game.gems ++ game.market, card_id)}}}
+        {:buy_card, case KeyList.find(game.gems ++ game.market, card_id) do
+          nil -> nil
+          c -> c.key
+        end}}}
     )
   end
 
