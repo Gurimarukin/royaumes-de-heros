@@ -13,8 +13,9 @@ import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { SquadState } from '../models/SquadState'
 import { SquadEvent } from '../models/SquadEvent'
-import { pipe, Either, Future, List } from '../utils/fp'
+import { pipe, Either, Future, List, Maybe } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
+import { CardData } from '../utils/CardData'
 
 interface Props {
   readonly id: string
@@ -29,10 +30,10 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
   const [events, setEvents] = useState<[number, string][]>([])
 
   const appendEvent = useCallback((event: SquadEvent) => {
-    if (event !== null) {
-      const str = SquadEvent.pretty()(event)
-      setEvents(_ => List.snoc(_, [Date.now(), str]))
-    }
+    pipe(
+      SquadEvent.pretty(CardData.cards)(event),
+      Maybe.map(e => setEvents(_ => List.snoc(_, [Date.now(), e])))
+    )
   }, [])
 
   const onJoinError = useCallback(

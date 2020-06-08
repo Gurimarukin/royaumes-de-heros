@@ -105,7 +105,10 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({attacker_id, ["attack", defender_id, "__player"]}, _from, game, names) do
     Game.attack(game, attacker_id, defender_id, :player)
-    |> Option.map(&{&1, {KeyList.find(names, attacker_id), {:attack, defender_id, :player}}})
+    |> Option.map(
+      &{&1,
+       {KeyList.find(names, attacker_id), {:attack, KeyList.find(names, defender_id), :player}}}
+    )
   end
 
   def handle_call({attacker_id, ["attack", defender_id, card_id]}, _from, game, names) do
@@ -113,7 +116,8 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, attacker_id),
-        {:attack, defender_id, with_card(game, defender_id, fn p -> p.fight_zone end, card_id)}}}
+        {:attack, KeyList.find(names, defender_id),
+         with_card(game, defender_id, fn p -> p.fight_zone end, card_id)}}}
     )
   end
 
@@ -182,7 +186,7 @@ defmodule Heros.Game.Helpers do
     |> Option.map(
       &{&1,
        {KeyList.find(names, attacker_id),
-        {:stun_champion, defender_id,
+        {:stun_champion, KeyList.find(names, defender_id),
          with_card(game, defender_id, fn p -> p.fight_zone end, card_id)}}}
     )
   end
@@ -194,7 +198,10 @@ defmodule Heros.Game.Helpers do
         names
       ) do
     Game.interact(game, player_id, {:target_opponent_to_discard, who})
-    |> Option.map(&{&1, {KeyList.find(names, player_id), {:target_opponent_to_discard, who}}})
+    |> Option.map(
+      &{&1,
+       {KeyList.find(names, player_id), {:target_opponent_to_discard, KeyList.find(names, who)}}}
+    )
   end
 
   def handle_call(
