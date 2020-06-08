@@ -2,7 +2,7 @@ import * as D from 'io-ts/lib/Decoder'
 
 import { Effect } from './game/Effect'
 import { CardData } from '../utils/CardData'
-import { Dict, Maybe } from '../utils/fp'
+import { Dict, Maybe, pipe } from '../utils/fp'
 
 export namespace SquadEvent {
   const interaction = D.union(
@@ -70,35 +70,35 @@ export namespace SquadEvent {
       }
 
       if (event[0] === 'play_card') {
-        return Maybe.some(`${playerName} joue ${cardData[event[1]]}`)
+        return Maybe.some(`${playerName} joue ${cardName(event[1])}`)
       }
 
       if (event[0] === 'use_expend_ability') {
-        return Maybe.some(`${playerName} utilise la capacité Activer de ${cardData[event[1]]}`)
+        return Maybe.some(`${playerName} utilise la capacité Activer de ${cardName(event[1])}`)
       }
 
       if (event[0] === 'use_ally_ability') {
-        return Maybe.some(`${playerName} utilise la capacité Allié de ${cardData[event[1]]}`)
+        return Maybe.some(`${playerName} utilise la capacité Allié de ${cardName(event[1])}`)
       }
 
       if (event[0] === 'use_sacrifice_ability') {
-        return Maybe.some(`${playerName} utilise la capacité Sacrifier de ${cardData[event[1]]}`)
+        return Maybe.some(`${playerName} utilise la capacité Sacrifier de ${cardName(event[1])}`)
       }
 
       if (event[0] === 'buy_card') {
-        return Maybe.some(`${playerName} achète ${cardData[event[1]]}`)
+        return Maybe.some(`${playerName} achète ${cardName(event[1])}`)
       }
 
       if (event[0] === 'attack') {
-        if (event[2] === 'player') return Maybe.some(`${playerName} attaque ${event[1]}`)
-        return Maybe.some(`${playerName} assome ${cardData[event[2]]} (${event[1]})`)
+        if (event[2] === 'player') return Maybe.some(`${playerName} attaque ${cardName(event[1])}`)
+        return Maybe.some(`${playerName} assome ${cardName(event[2])} (${cardName(event[1])})`)
       }
 
       if (event[0] === 'interact') {
         const interaction = event[1]
 
         if (interaction[0] === 'discard_card') {
-          return Maybe.some(`${playerName} défausse ${cardData[interaction[1]]}`)
+          return Maybe.some(`${playerName} défausse ${cardName(interaction[1])}`)
         }
 
         if (interaction[0] === 'draw_then_discard') {
@@ -106,19 +106,19 @@ export namespace SquadEvent {
         }
 
         if (interaction[0] === 'prepare_champion') {
-          return Maybe.some(`${playerName} mobilise ${cardData[interaction[1]]}`)
+          return Maybe.some(`${playerName} mobilise ${cardName(interaction[1])}`)
         }
 
         if (
           interaction[0] === 'put_card_from_discard_to_deck' ||
           interaction[0] === 'put_champion_from_discard_to_deck'
         ) {
-          return Maybe.some(`${playerName} met ${cardData[interaction[1]]} sur sa pioche`)
+          return Maybe.some(`${playerName} met ${cardName(interaction[1])} sur sa pioche`)
         }
 
         if (interaction[0] === 'stun_champion') {
           return Maybe.some(
-            `${playerName} assome ${cardData[interaction[2]]} (${cardData[interaction[1]]})`
+            `${playerName} assome ${cardName(interaction[2])} (${cardName(interaction[1])})`
           )
         }
 
@@ -129,9 +129,7 @@ export namespace SquadEvent {
 
         if (interaction[0] === 'sacrifice_from_hand_or_discard') {
           if (interaction[1].length === 0) return Maybe.none
-          return Maybe.some(
-            `${playerName} sacrifie ${interaction[1].map(_ => cardData[_]).join(', ')}`
-          )
+          return Maybe.some(`${playerName} sacrifie ${interaction[1].map(cardName).join(', ')}`)
         }
 
         if (interaction[0] === 'select_effect') {
@@ -140,6 +138,14 @@ export namespace SquadEvent {
       }
 
       return Maybe.some(JSON.stringify(event))
+
+      function cardName(key: string): string | null {
+        return pipe(
+          Dict.lookup(key, cardData),
+          Maybe.map(_ => _.name),
+          Maybe.toNullable
+        )
+      }
     }
   }
 }
