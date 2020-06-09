@@ -13,8 +13,8 @@ import { MarketZone } from './MarketZone'
 import { PlayerZones } from './PlayerZones'
 import { ButtonUnderline } from '../Buttons'
 import { params } from '../../params'
+import { CallChannel, CallMessage } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
-import { PushSocket } from '../../models/PushSocket'
 import { Card } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
@@ -24,7 +24,7 @@ import { Referential } from '../../models/game/geometry/Referential'
 import { List, pipe, Future, Either, Task, Maybe } from '../../utils/fp'
 
 interface Props {
-  readonly call: PushSocket
+  readonly call: CallChannel
   readonly game: Game
   readonly events: [number, string][]
 }
@@ -132,13 +132,13 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game, events }) 
   function endTurn() {
     setEndTurnSent(true)
     pipe(
-      call('discard_phase'),
+      call(CallMessage.DiscardPhase),
       Future.chain(
         Either.fold(
           _ => Future.right(setEndTurnSent(false)),
           _ =>
             pipe(
-              call('draw_phase'),
+              call(CallMessage.DrawPhase),
               Task.delay(1000),
               Future.map(_ => setEndTurnSent(false))
             )

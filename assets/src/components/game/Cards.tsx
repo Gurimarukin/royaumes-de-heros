@@ -6,7 +6,7 @@ import { useTransition } from 'react-spring'
 import { AnimatedCard, HiddenCard, Zone } from './CardComponent'
 import { params } from '../../params'
 import { PlayerId } from '../../models/PlayerId'
-import { PushSocket } from '../../models/PushSocket'
+import { CallChannel } from '../../models/CallMessage'
 import { Card } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
@@ -18,7 +18,7 @@ import { Referential } from '../../models/game/geometry/Referential'
 import { pipe, List } from '../../utils/fp'
 
 interface Props {
-  readonly call: PushSocket
+  readonly call: CallChannel
   readonly showDiscard: (playerId: PlayerId) => void
   readonly game: Game
   readonly referentials: Referentials

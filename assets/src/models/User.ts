@@ -5,9 +5,5 @@ export interface User {
 }
 
 export namespace User {
-  export const empty: User = {
-    id: '',
-    token: '',
-    name: ''
-  }
+  export const empty: User = { id: '', token: '', name: '' }
 }

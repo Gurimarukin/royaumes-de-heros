@@ -6,14 +6,14 @@ import { CombatAndGold } from './playerZone/CombatAndGold'
 import { Discard } from './playerZone/Discard'
 import { FightZone } from './playerZone/FightZone'
 import { Hero } from './playerZone/Hero'
-import { PushSocket } from '../../models/PushSocket'
+import { CallChannel, CallMessage } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
 import { Game } from '../../models/game/Game'
 import { Referentials } from '../../models/game/Referentials'
 import { Referential } from '../../models/game/geometry/Referential'
 
 interface Props {
-  readonly call: PushSocket
+  readonly call: CallChannel
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, [PlayerId, PartialPlayer]][]

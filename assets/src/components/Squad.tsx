@@ -16,6 +16,7 @@ import { SquadEvent } from '../models/SquadEvent'
 import { pipe, Either, Future, List, Maybe } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 import { CardData } from '../utils/CardData'
+import { CallMessage } from '../models/CallMessage'
 
 interface Props {
   readonly id: string
@@ -86,14 +87,17 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
     }
   }
 
-  function call(msg: any): Future<Either<void, void>> {
+  function call(msg: CallMessage): Future<Either<unknown, unknown>> {
     return pipe(
-      () => channel.push('call', msg),
+      () => channel.push('call', (msg as unknown) as object),
       PhoenixUtils.pushToFuture,
       Future.map(
         Either.bimap(
-          _ => appendEvent('error'),
-          _ => {}
+          _ => {
+            appendEvent('error')
+            return _
+          },
+          _ => _
         )
       )
     )

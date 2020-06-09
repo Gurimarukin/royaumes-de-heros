@@ -7,14 +7,15 @@ import { PartialPlayer } from '../PlayerZones'
 import { params } from '../../../params'
 import { useValTransition } from '../../../hooks/useValTransition'
 import { PlayerId } from '../../../models/PlayerId'
-import { PushSocket } from '../../../models/PushSocket'
+import { CallChannel, CallMessage } from '../../../models/CallMessage'
 import { Game } from '../../../models/game/Game'
+import { Interaction } from '../../../models/game/Interaction'
 import { Rectangle } from '../../../models/game/geometry/Rectangle'
 import { Referential } from '../../../models/game/geometry/Referential'
 import { pipe, Future, Maybe } from '../../../utils/fp'
 
 interface Props {
-  readonly call: PushSocket
+  readonly call: CallChannel
   readonly game: Game
   readonly playerRef: Referential
   readonly player: [PlayerId, PartialPlayer]
@@ -26,7 +27,9 @@ export const Hero: FunctionComponent<Props> = ({
   playerRef,
   player: [playerId, { name, hp }]
 }) => {
-  const callAndRun = useCallback((msg: any) => () => pipe(call(msg), Future.runUnsafe), [call])
+  const callAndRun = useCallback((msg: CallMessage) => () => pipe(call(msg), Future.runUnsafe), [
+    call
+  ])
 
   const isOther = game.player[0] !== playerId
   const isCurrent = Game.isCurrentPlayer(game)
@@ -36,10 +39,11 @@ export const Hero: FunctionComponent<Props> = ({
       pipe(
         pendingInteraction,
         Maybe.fold(
-          () => (isOther && isCurrent ? callAndRun(['attack', playerId, '__player']) : undefined),
+          () =>
+            isOther && isCurrent ? callAndRun(CallMessage.Attack(playerId, '__player')) : undefined,
           interaction =>
             interaction === 'target_opponent_to_discard'
-              ? callAndRun(['interact', ['target_opponent_to_discard', playerId]])
+              ? callAndRun(CallMessage.Interact(Interaction.TargetOpponentToDiscard(playerId)))
               : undefined
         )
       ),

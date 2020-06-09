@@ -5,10 +5,12 @@ import { animated } from 'react-spring'
 
 import { ClickOutside } from '../ClickOutside'
 import { params } from '../../params'
-import { PushSocket } from '../../models/PushSocket'
+import { CallChannel, CallMessage } from '../../models/CallMessage'
+import { Ability } from '../../models/game/Ability'
 import { Card } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
+import { Interaction } from '../../models/game/Interaction'
 import { PlayerId } from '../../models/PlayerId'
 import { CardData } from '../../utils/CardData'
 import { pipe, Maybe, Future } from '../../utils/fp'
@@ -18,7 +20,7 @@ interface CommonProps {
 }
 
 type CardProps = {
-  readonly call: PushSocket
+  readonly call: CallChannel
   readonly showDiscard: (playerId: PlayerId) => void
   readonly game: Game
   readonly playerId: PlayerId
@@ -39,15 +41,17 @@ export const CardComponent: FunctionComponent<CardProps> = ({
   zone: zone,
   style
 }) => {
-  const callAndRun = useCallback((msg: any) => () => pipe(call(msg), Future.runUnsafe), [call])
+  const callAndRun = useCallback((msg: CallMessage) => () => pipe(call(msg), Future.runUnsafe), [
+    call
+  ])
 
   const [abilitiesOpened, setAbilitiesOpened] = useState(false)
   const closeAbilities = useCallback(() => setAbilitiesOpened(false), [])
   const toggleAbilities = useCallback(() => setAbilitiesOpened(_ => !_), [])
 
   const ability = useCallback(
-    (key: string, label: string): JSX.Element => (
-      <button onClick={callAndRun([`use_${key}_ability`, cardId])}>Capacité {label}</button>
+    (key: Ability, label: string): JSX.Element => (
+      <button onClick={callAndRun(CallMessage.UseAbility(key, cardId))}>Capacité {label}</button>
     ),
     [callAndRun, cardId]
   )
@@ -60,10 +64,10 @@ export const CardComponent: FunctionComponent<CardProps> = ({
   const onClick = useMemo<MouseEventHandler | undefined>(() => {
     switch (zone) {
       case 'market':
-        return isCurrent ? callAndRun(['buy_card', cardId]) : undefined
+        return isCurrent ? callAndRun(CallMessage.BuyCard(cardId)) : undefined
 
       case 'hand':
-        return !isOther && isCurrent ? callAndRun(['play_card', cardId]) : undefined
+        return !isOther && isCurrent ? callAndRun(CallMessage.PlayCard(cardId)) : undefined
 
       case 'fightZone':
         return pipe(
@@ -72,7 +76,7 @@ export const CardComponent: FunctionComponent<CardProps> = ({
             () => {
               if (isCurrent) {
                 return isOther
-                  ? callAndRun(['attack', playerId, cardId])
+                  ? callAndRun(CallMessage.Attack(playerId, cardId))
                   : pipe(
                       data,
                       Maybe.map(({ expend, ally, sacrifice }) =>
@@ -85,9 +89,9 @@ export const CardComponent: FunctionComponent<CardProps> = ({
             },
             interaction =>
               interaction === 'stun_champion' && isOther
-                ? callAndRun(['interact', ['stun_champion', playerId, cardId]])
+                ? callAndRun(CallMessage.Interact(Interaction.StunChampion(playerId, cardId)))
                 : interaction === 'prepare_champion' && !isOther
-                ? callAndRun(['interact', ['prepare_champion', cardId]])
+                ? callAndRun(CallMessage.Interact(Interaction.PrepareChampion(cardId)))
                 : undefined
           )
         )

@@ -9,15 +9,16 @@ import { Effect } from './Effect'
 import { ButtonUnderline, BaseButton } from '../Buttons'
 import { ClickOutside } from '../ClickOutside'
 import { Diff } from '../../models/Diff'
-import { PushSocket } from '../../models/PushSocket'
+import { CallChannel, CallMessage } from '../../models/CallMessage'
 import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
+import { Interaction } from '../../models/game/Interaction'
 import { PendingInteraction } from '../../models/game/PendingInteraction'
 import { Player } from '../../models/game/Player'
 import { pipe, Future, Maybe, Either } from '../../utils/fp'
 
 interface Props {
-  readonly call: PushSocket
+  readonly call: CallChannel
   readonly closeDialog: () => void
   readonly game: Game
   readonly props: DialogProps
@@ -30,15 +31,17 @@ type WithoutShown = {
 
 export const Dialog: FunctionComponent<Props> = ({ call, closeDialog, game, props }) => {
   const interact = useCallback(
-    (interaction: any) => () => pipe(call(['interact', interaction]), Future.runUnsafe),
+    (interaction: Interaction) => () =>
+      pipe(call(CallMessage.Interact(interaction)), Future.runUnsafe),
     [call]
   )
   const interactCard = useCallback(
-    (interaction: any) => ([id]: CardId[]) => interact([interaction, id])(),
+    (interaction: (id: CardId) => Interaction) => ([id]: CardId[]) => interact(interaction(id))(),
     [interact]
   )
   const interactCards = useCallback(
-    (interaction: any) => (ids: CardId[]) => interact([interaction, ids])(),
+    (interaction: (ids: CardId[]) => Interaction) => (ids: CardId[]) =>
+      interact(interaction(ids))(),
     [interact]
   )
   const [, player] = game.player
@@ -77,9 +80,9 @@ export const Dialog: FunctionComponent<Props> = ({ call, closeDialog, game, prop
 }
 
 function propsForInteraction(
-  interact: (msg: any) => () => void,
-  interactCard: (interaction: string) => (ids: CardId[]) => void,
-  interactCards: (interaction: string) => (ids: CardId[]) => void,
+  interact: (msg: Interaction) => () => void,
+  interactCard: (interaction: (id: CardId) => Interaction) => (ids: CardId[]) => void,
+  interactCards: (interaction: (ids: CardId[]) => Interaction) => (ids: CardId[]) => void,
   player: Player,
   interaction: PendingInteraction
 ): WithoutShown {
@@ -90,7 +93,7 @@ function propsForInteraction(
         <CardSelector
           amount={1}
           required={true}
-          onConfirm={interactCard('discard_card')}
+          onConfirm={interactCard(Interaction.DiscardCard)}
           cards={Either.right(player.hand)}
           confirmLabel={discardLabel}
         />
@@ -103,8 +106,10 @@ function propsForInteraction(
       title: "Vous pouvez piochez une carte. Si vous faites ainsi, défaussez vous d'une carte",
       children: (
         <Group>
-          <ButtonUnderline onClick={interact(['draw_then_discard', true])}>Piocher</ButtonUnderline>
-          <SecondaryButton onClick={interact(['draw_then_discard', false])}>
+          <ButtonUnderline onClick={interact(Interaction.DrawThenDiscard(true))}>
+            Piocher
+          </ButtonUnderline>
+          <SecondaryButton onClick={interact(Interaction.DrawThenDiscard(false))}>
             Ne pas piocher
           </SecondaryButton>
         </Group>
@@ -125,7 +130,7 @@ function propsForInteraction(
         <CardSelector
           amount={1}
           required={true}
-          onConfirm={interactCard('put_card_from_discard_to_deck')}
+          onConfirm={interactCard(Interaction.PutCardFromDiscardToDeck)}
           cards={Either.right(player.discard)}
           confirmLabel={chooseLabel}
         />
@@ -141,7 +146,7 @@ function propsForInteraction(
         <CardSelector
           amount={1}
           required={true}
-          onConfirm={interactCard('put_card_from_discard_to_deck')}
+          onConfirm={interactCard(Interaction.PutChampionFromDiscardToDeck)}
           cards={Either.right(champions)}
           confirmLabel={chooseLabel}
         />
@@ -160,7 +165,7 @@ function propsForInteraction(
       title: "Ciblez un adversaire qui devra se défausser d'une carte.",
       children: (
         <Group>
-          <SecondaryButton onClick={interact(['target_opponent_to_discard', null])}>
+          <SecondaryButton onClick={interact(Interaction.TargetOpponentToDiscard(null))}>
             Ne cibler aucun adversaire
           </SecondaryButton>
         </Group>
@@ -179,7 +184,7 @@ function propsForInteraction(
       children: (
         <CardSelector
           amount={amount}
-          onConfirm={interactCards('sacrifice_from_hand_or_discard')}
+          onConfirm={interactCards(Interaction.SacrificeFromHandOrDiscard)}
           cards={Either.left([
             ['Main', player.hand],
             ['Défausse', player.discard]
@@ -199,7 +204,7 @@ function propsForInteraction(
       children: (
         <Group>
           {effects.map((effect, i) => (
-            <EffectButton key={i} onClick={interact(['select_effect', i])}>
+            <EffectButton key={i} onClick={interact(Interaction.SelectEffect(i))}>
               <Effect effect={effect} championsInFightZone={championsInFightZone} />
             </EffectButton>
           ))}

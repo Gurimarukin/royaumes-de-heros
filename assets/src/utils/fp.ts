@@ -21,7 +21,7 @@ import { Do as _Do } from 'fp-ts-contrib/lib/Do'
 export const unknownToError = (e: unknown): Error =>
   e instanceof Error ? e : new Error('unknown error')
 
-export const inspect = (...label: any[]) => <A>(a: A): A => {
+export const inspect = (...label: unknown[]) => <A>(a: A): A => {
   console.log(...label, a)
   return a
 }
@@ -29,7 +29,7 @@ export const inspect = (...label: any[]) => <A>(a: A): A => {
 /**
  * ???
  */
-export const todo = (..._: any): never => {
+export const todo = (..._: unknown[]): never => {
   throw Error('missing implementation')
 }
 

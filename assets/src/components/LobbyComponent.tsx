@@ -5,12 +5,12 @@ import { FunctionComponent, useContext } from 'react'
 import { Link } from './Link'
 import { Router } from './Router'
 import { UserContext } from '../contexts/UserContext'
-import { PushSocket } from '../models/PushSocket'
+import { CallChannel, CallMessage } from '../models/CallMessage'
 import { Lobby } from '../models/lobby/Lobby'
 import { Future, pipe } from '../utils/fp'
 
 interface Props {
-  readonly call: PushSocket
+  readonly call: CallChannel
   readonly state: Lobby
 }
 
@@ -27,6 +27,6 @@ export const LobbyComponent: FunctionComponent<Props> = ({ call, state }) => {
   )
 
   function play() {
-    pipe(call('start_game'), Future.runUnsafe)
+    pipe(call(CallMessage.startGame), Future.runUnsafe)
   }
 }

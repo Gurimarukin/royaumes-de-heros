@@ -15,8 +15,6 @@
 * damage and heal animations
 * cursors
 * get CardData from server
-* typesafe ids
-* typesafe messages
 * move with arrows (and not mouse)
 * animate dialog
 * animate entering cards
