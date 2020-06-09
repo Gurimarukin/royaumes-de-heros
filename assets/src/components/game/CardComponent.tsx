@@ -5,9 +5,9 @@ import { animated } from 'react-spring'
 
 import { ClickOutside } from '../ClickOutside'
 import { params } from '../../params'
-import { WithId } from '../../models/WithId'
 import { PushSocket } from '../../models/PushSocket'
 import { Card } from '../../models/game/Card'
+import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
 import { PlayerId } from '../../models/PlayerId'
 import { CardData } from '../../utils/CardData'
@@ -22,7 +22,7 @@ type CardProps = {
   readonly showDiscard: (playerId: PlayerId) => void
   readonly game: Game
   readonly playerId: PlayerId
-  readonly card: WithId<Card>
+  readonly card: [CardId, Card]
   readonly zone: Zone
 } & CommonProps
 

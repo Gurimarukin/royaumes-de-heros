@@ -1,11 +1,11 @@
 import * as D from 'io-ts/lib/Decoder'
 
 import { Card } from './Card'
+import { CardId } from './CardId'
 import { OtherPlayer } from './OtherPlayer'
 import { PendingInteraction } from './PendingInteraction'
 import { Player } from './Player'
 import { PlayerId } from '../PlayerId'
-import { WithId } from '../WithId'
 import { Maybe, List } from '../../utils/fp'
 
 export namespace Game {
@@ -14,10 +14,10 @@ export namespace Game {
     player: D.tuple(PlayerId.codec, Player.codec),
     other_players: D.array(D.tuple(PlayerId.codec, OtherPlayer.codec)),
     current_player: PlayerId.codec,
-    gems: D.array(WithId.codec(Card.codec)),
-    market: D.array(WithId.codec(Card.codec)),
+    gems: D.array(D.tuple(CardId.codec, Card.codec)),
+    market: D.array(D.tuple(CardId.codec, Card.codec)),
     market_deck: D.number,
-    cemetery: D.array(WithId.codec(Card.codec))
+    cemetery: D.array(D.tuple(CardId.codec, Card.codec))
     /* eslint-enable @typescript-eslint/camelcase */
   })
 

@@ -4,28 +4,28 @@ import { FunctionComponent } from 'react'
 
 import { SimpleCard } from './card/SimpleCard'
 import { params } from '../../params'
-import { WithId } from '../../models/WithId'
 import { Card } from '../../models/game/Card'
+import { CardId } from '../../models/game/CardId'
 import { pipe, List } from '../../utils/fp'
 
 interface Props {
-  readonly cards: WithId<Card>[]
-  readonly selected?: string[]
-  readonly toggleCard?: (cardId: string) => () => void
+  readonly cards: [CardId, Card][]
+  readonly selected?: CardId[]
+  readonly toggleCard?: (id: CardId) => () => void
 }
 
 export const CardsViewer: FunctionComponent<Props> = ({ selected = [], toggleCard, cards }) => (
   <div css={styles.cards}>
-    {cards.map(([cardId, card], j) => (
+    {cards.map(([id, card], j) => (
       <SimpleCard
         key={j}
         card={Card.reset(card)}
-        onClick={toggleCard === undefined ? undefined : toggleCard(cardId)}
+        onClick={toggleCard === undefined ? undefined : toggleCard(id)}
         css={styles.card}
         className={
           pipe(
             selected,
-            List.exists(_ => _ === cardId)
+            List.exists(_ => _ === id)
           )
             ? 'selected'
             : undefined

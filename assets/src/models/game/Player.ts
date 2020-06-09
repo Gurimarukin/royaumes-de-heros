@@ -1,9 +1,9 @@
 import * as D from 'io-ts/lib/Decoder'
 
 import { Card } from './Card'
+import { CardId } from './CardId'
 import { PendingInteraction } from './PendingInteraction'
 import { Unknown } from '../Unknown'
-import { WithId } from '../WithId'
 
 export namespace Player {
   export const codec = D.type({
@@ -16,10 +16,10 @@ export namespace Player {
     max_hp: D.number,
     gold: D.number,
     combat: D.number,
-    hand: D.array(WithId.codec(Card.codec)),
+    hand: D.array(D.tuple(CardId.codec, Card.codec)),
     deck: D.number,
-    discard: D.array(WithId.codec(Card.codec)),
-    fight_zone: D.array(WithId.codec(Card.codec))
+    discard: D.array(D.tuple(CardId.codec, Card.codec)),
+    fight_zone: D.array(D.tuple(CardId.codec, Card.codec))
     /* eslint-enable @typescript-eslint/camelcase */
   })
 }

@@ -7,8 +7,8 @@ import { AnimatedCard, HiddenCard, Zone } from './CardComponent'
 import { params } from '../../params'
 import { PlayerId } from '../../models/PlayerId'
 import { PushSocket } from '../../models/PushSocket'
-import { WithId } from '../../models/WithId'
 import { Card } from '../../models/game/Card'
+import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
 import { OtherPlayer } from '../../models/game/OtherPlayer'
 import { Referentials } from '../../models/game/Referentials'
@@ -26,7 +26,7 @@ interface Props {
 }
 
 interface CardWithCoord {
-  readonly card: WithId<Card>
+  readonly card: [CardId, Card]
   readonly playerId: PlayerId
   readonly zone: Zone
   readonly coord: Coord
@@ -112,7 +112,7 @@ export const Cards: FunctionComponent<Props> = ({
 
   const transitions = useTransition<CardWithCoord, Partial<CSSProperties & CardWithCoord>>(
     cards,
-    ({ card: [cardId] }) => cardId,
+    ({ card: [cardId] }) => CardId.unwrap(cardId),
     {
       // from: { left: 0, top: 0 },
       // leave: { left: 0, top: 0 },
@@ -146,7 +146,7 @@ export const Cards: FunctionComponent<Props> = ({
 
 function fightZone(
   referential: Referential,
-  cards: WithId<Card>[],
+  cards: [CardId, Card][],
   playerId: PlayerId
 ): CardWithCoord[] {
   const cardsWidth =
@@ -172,7 +172,7 @@ function fightZone(
 
 function discard(
   referential: Referential,
-  cards: WithId<Card>[],
+  cards: [CardId, Card][],
   playerId: PlayerId
 ): CardWithCoord[] {
   return pipe(cards, List.reverse).map(
@@ -190,7 +190,7 @@ function card(
   coord: (i: number) => Coord,
   playerId: PlayerId,
   zone: Zone
-): (card: WithId<Card>, i: number) => CardWithCoord {
+): (card: [CardId, Card], i: number) => CardWithCoord {
   return (card, i) => ({
     card,
     playerId,

@@ -15,8 +15,8 @@ import { ButtonUnderline } from '../Buttons'
 import { params } from '../../params'
 import { PlayerId } from '../../models/PlayerId'
 import { PushSocket } from '../../models/PushSocket'
-import { WithId } from '../../models/WithId'
 import { Card } from '../../models/game/Card'
+import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
 import { OtherPlayer } from '../../models/game/OtherPlayer'
 import { Player } from '../../models/game/Player'
@@ -275,7 +275,7 @@ function trans(s: number): string {
 
 interface PartialPlayer {
   readonly name: string
-  readonly discard: WithId<Card>[]
+  readonly discard: [CardId, Card][]
 }
 
 function discardDialogProps(

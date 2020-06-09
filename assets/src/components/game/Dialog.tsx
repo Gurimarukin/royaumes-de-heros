@@ -10,6 +10,7 @@ import { ButtonUnderline, BaseButton } from '../Buttons'
 import { ClickOutside } from '../ClickOutside'
 import { Diff } from '../../models/Diff'
 import { PushSocket } from '../../models/PushSocket'
+import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
 import { PendingInteraction } from '../../models/game/PendingInteraction'
 import { Player } from '../../models/game/Player'
@@ -33,11 +34,11 @@ export const Dialog: FunctionComponent<Props> = ({ call, closeDialog, game, prop
     [call]
   )
   const interactCard = useCallback(
-    (interaction: any) => ([cardId]: string[]) => interact([interaction, cardId])(),
+    (interaction: any) => ([id]: CardId[]) => interact([interaction, id])(),
     [interact]
   )
   const interactCards = useCallback(
-    (interaction: any) => (cardIds: string[]) => interact([interaction, cardIds])(),
+    (interaction: any) => (ids: CardId[]) => interact([interaction, ids])(),
     [interact]
   )
   const [, player] = game.player
@@ -77,8 +78,8 @@ export const Dialog: FunctionComponent<Props> = ({ call, closeDialog, game, prop
 
 function propsForInteraction(
   interact: (msg: any) => () => void,
-  interactCard: (interaction: string) => (cardIds: string[]) => void,
-  interactCards: (interaction: string) => (cardIds: string[]) => void,
+  interactCard: (interaction: string) => (ids: CardId[]) => void,
+  interactCards: (interaction: string) => (ids: CardId[]) => void,
   player: Player,
   interaction: PendingInteraction
 ): WithoutShown {
@@ -232,10 +233,10 @@ function chooseLabel(): string {
   return 'Choisir'
 }
 
-function sacrificeLabel(cardIds: string[]): string {
-  return cardIds.length === 0
+function sacrificeLabel(ids: CardId[]): string {
+  return ids.length === 0
     ? 'Ne pas sacrifier de carte'
-    : `Sacrifier ${nToStr(cardIds.length, true)} carte${cardIds.length === 1 ? '' : 's'}`
+    : `Sacrifier ${nToStr(ids.length, true)} carte${ids.length === 1 ? '' : 's'}`
 }
 
 const Group = styled.div({

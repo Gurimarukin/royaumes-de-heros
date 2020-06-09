@@ -4,17 +4,19 @@ import { FunctionComponent, useState, useCallback, ReactNode, Fragment } from 'r
 
 import { CardsViewer } from './CardsViewer'
 import { ButtonUnderline } from '../Buttons'
-import { WithId } from '../../models/WithId'
 import { Card } from '../../models/game/Card'
+import { CardId } from '../../models/game/CardId'
 import { List, pipe, Either } from '../../utils/fp'
 
 interface Props {
   readonly amount: number
   readonly required?: boolean
-  readonly onConfirm: (cardIds: string[]) => void
-  readonly cards: Either<[string, WithId<Card>[]][], WithId<Card>[]>
-  readonly confirmLabel: (cardIds: string[]) => ReactNode
+  readonly onConfirm: (ids: CardId[]) => void
+  readonly cards: Either<[Label, [CardId, Card][]][], [CardId, Card][]>
+  readonly confirmLabel: (ids: CardId[]) => ReactNode
 }
+
+type Label = string
 
 export const CardSelector: FunctionComponent<Props> = ({
   amount,
@@ -23,22 +25,22 @@ export const CardSelector: FunctionComponent<Props> = ({
   cards: eitherCards,
   confirmLabel
 }) => {
-  const [selected, setSelected] = useState<string[]>([])
+  const [selected, setSelected] = useState<CardId[]>([])
 
   const toggleCard = useCallback(
-    (cardId: string) => () =>
+    (id: CardId) => () =>
       setSelected(prev =>
         pipe(
           prev,
-          List.exists(_ => _ === cardId)
+          List.exists(_ => _ === id)
         )
           ? pipe(
               prev,
-              List.filter(_ => _ !== cardId)
+              List.filter(_ => _ !== id)
             )
           : prev.length === amount
-          ? pipe(prev, ([, ...tail]) => List.snoc(tail, cardId))
-          : List.snoc(prev, cardId)
+          ? pipe(prev, ([, ...tail]) => List.snoc(tail, id))
+          : List.snoc(prev, id)
       ),
     [amount]
   )
@@ -71,7 +73,7 @@ export const CardSelector: FunctionComponent<Props> = ({
       >
         {confirmLabel(selected)}
       </ButtonUnderline>
-      {' '}
+      {/* {' '} */}
     </div>
   )
 }

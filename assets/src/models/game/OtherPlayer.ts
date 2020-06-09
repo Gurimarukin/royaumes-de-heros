@@ -1,8 +1,8 @@
 import * as D from 'io-ts/lib/Decoder'
 
 import { Card } from './Card'
+import { CardId } from './CardId'
 import { Unknown } from '../Unknown'
-import { WithId } from '../WithId'
 
 export namespace OtherPlayer {
   export const codec = D.type({
@@ -15,8 +15,8 @@ export namespace OtherPlayer {
     combat: D.number,
     hand: D.number,
     deck: D.number,
-    discard: D.array(WithId.codec(Card.codec)),
-    fight_zone: D.array(WithId.codec(Card.codec))
+    discard: D.array(D.tuple(CardId.codec, Card.codec)),
+    fight_zone: D.array(D.tuple(CardId.codec, Card.codec))
     /* eslint-enable @typescript-eslint/camelcase */
   })
 }
