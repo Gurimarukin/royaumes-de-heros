@@ -7,7 +7,7 @@ import { Discard } from './playerZone/Discard'
 import { FightZone } from './playerZone/FightZone'
 import { Hero } from './playerZone/Hero'
 import { PushSocket } from '../../models/PushSocket'
-import { WithId } from '../../models/WithId'
+import { PlayerId } from '../../models/PlayerId'
 import { Game } from '../../models/game/Game'
 import { Referentials } from '../../models/game/Referentials'
 import { Referential } from '../../models/game/geometry/Referential'
@@ -16,7 +16,7 @@ interface Props {
   readonly call: PushSocket
   readonly game: Game
   readonly referentials: Referentials
-  readonly zippedOtherPlayers: [Referential, WithId<PartialPlayer>][]
+  readonly zippedOtherPlayers: [Referential, [PlayerId, PartialPlayer]][]
 }
 
 export interface PartialPlayer {
@@ -41,13 +41,13 @@ export const PlayerZones: FunctionComponent<Props> = ({
     </div>
   )
 
-  function playerZone(ref: Referential, playerId: string, player: PartialPlayer): JSX.Element {
+  function playerZone(ref: Referential, id: PlayerId, player: PartialPlayer): JSX.Element {
     return (
-      <div key={playerId}>
-        <FightZone playerRef={ref} current={playerId === game.current_player} />
+      <div key={PlayerId.unwrap(id)}>
+        <FightZone playerRef={ref} current={id === game.current_player} />
         <Discard playerRef={ref} />
         <CombatAndGold playerRef={ref} player={player} />
-        <Hero call={call} game={game} playerRef={ref} player={[playerId, player]} />
+        <Hero call={call} game={game} playerRef={ref} player={[id, player]} />
       </div>
     )
   }

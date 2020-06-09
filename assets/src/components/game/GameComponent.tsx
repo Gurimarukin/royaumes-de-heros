@@ -13,6 +13,7 @@ import { MarketZone } from './MarketZone'
 import { PlayerZones } from './PlayerZones'
 import { ButtonUnderline } from '../Buttons'
 import { params } from '../../params'
+import { PlayerId } from '../../models/PlayerId'
 import { PushSocket } from '../../models/PushSocket'
 import { WithId } from '../../models/WithId'
 import { Card } from '../../models/game/Card'
@@ -87,8 +88,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game, events }) 
   // dialogue
   const [dialogProps, setDialogProps] = useState<DialogProps>({ shown: false })
   const showDiscard = useCallback(
-    (playerId: string) =>
-      setDialogProps(discardDialogProps(game.player, game.other_players, playerId)),
+    (id: PlayerId) => setDialogProps(discardDialogProps(game.player, game.other_players, id)),
     [game.other_players, game.player]
   )
   const closeDialog = useCallback(() => setDialogProps(_ => ({ ..._, shown: false })), [])
@@ -279,12 +279,12 @@ interface PartialPlayer {
 }
 
 function discardDialogProps(
-  player: WithId<Player>,
-  others: WithId<OtherPlayer>[],
-  playerId: string
+  player: [PlayerId, Player],
+  others: [PlayerId, OtherPlayer][],
+  id: PlayerId
 ): DialogProps {
   return pipe(
-    player[0] === playerId
+    player[0] === id
       ? {
           shown: true,
           title: 'Votre défausse',
@@ -292,7 +292,7 @@ function discardDialogProps(
         }
       : pipe(
           others,
-          List.findFirstMap(other => (other[0] === playerId ? Maybe.some(other[1]) : Maybe.none)),
+          List.findFirstMap(other => (other[0] === id ? Maybe.some(other[1]) : Maybe.none)),
           Maybe.fold<PartialPlayer, DialogProps>(
             () => ({ shown: false }),
             p => ({

@@ -9,6 +9,7 @@ import { WithId } from '../../models/WithId'
 import { PushSocket } from '../../models/PushSocket'
 import { Card } from '../../models/game/Card'
 import { Game } from '../../models/game/Game'
+import { PlayerId } from '../../models/PlayerId'
 import { CardData } from '../../utils/CardData'
 import { pipe, Maybe, Future } from '../../utils/fp'
 
@@ -18,9 +19,9 @@ interface CommonProps {
 
 type CardProps = {
   readonly call: PushSocket
-  readonly showDiscard: (playerId: string) => void
+  readonly showDiscard: (playerId: PlayerId) => void
   readonly game: Game
-  readonly playerId: string
+  readonly playerId: PlayerId
   readonly card: WithId<Card>
   readonly zone: Zone
 } & CommonProps

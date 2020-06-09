@@ -6,8 +6,8 @@ import { animated as a } from 'react-spring'
 import { PartialPlayer } from '../PlayerZones'
 import { params } from '../../../params'
 import { useValTransition } from '../../../hooks/useValTransition'
+import { PlayerId } from '../../../models/PlayerId'
 import { PushSocket } from '../../../models/PushSocket'
-import { WithId } from '../../../models/WithId'
 import { Game } from '../../../models/game/Game'
 import { Rectangle } from '../../../models/game/geometry/Rectangle'
 import { Referential } from '../../../models/game/geometry/Referential'
@@ -17,7 +17,7 @@ interface Props {
   readonly call: PushSocket
   readonly game: Game
   readonly playerRef: Referential
-  readonly player: WithId<PartialPlayer>
+  readonly player: [PlayerId, PartialPlayer]
 }
 
 export const Hero: FunctionComponent<Props> = ({

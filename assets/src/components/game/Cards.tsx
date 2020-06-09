@@ -5,6 +5,7 @@ import { useTransition } from 'react-spring'
 
 import { AnimatedCard, HiddenCard, Zone } from './CardComponent'
 import { params } from '../../params'
+import { PlayerId } from '../../models/PlayerId'
 import { PushSocket } from '../../models/PushSocket'
 import { WithId } from '../../models/WithId'
 import { Card } from '../../models/game/Card'
@@ -18,15 +19,15 @@ import { pipe, List } from '../../utils/fp'
 
 interface Props {
   readonly call: PushSocket
-  readonly showDiscard: (playerId: string) => void
+  readonly showDiscard: (playerId: PlayerId) => void
   readonly game: Game
   readonly referentials: Referentials
-  readonly zippedOtherPlayers: [Referential, WithId<OtherPlayer>][]
+  readonly zippedOtherPlayers: [Referential, [PlayerId, OtherPlayer]][]
 }
 
 interface CardWithCoord {
   readonly card: WithId<Card>
-  readonly playerId: string
+  readonly playerId: PlayerId
   readonly zone: Zone
   readonly coord: Coord
 }
@@ -146,7 +147,7 @@ export const Cards: FunctionComponent<Props> = ({
 function fightZone(
   referential: Referential,
   cards: WithId<Card>[],
-  playerId: string
+  playerId: PlayerId
 ): CardWithCoord[] {
   const cardsWidth =
     Math.min(params.fightZone.columns, cards.length) * params.card.widthPlusMargin -
@@ -172,7 +173,7 @@ function fightZone(
 function discard(
   referential: Referential,
   cards: WithId<Card>[],
-  playerId: string
+  playerId: PlayerId
 ): CardWithCoord[] {
   return pipe(cards, List.reverse).map(
     card(
@@ -187,7 +188,7 @@ function discard(
 function card(
   referential: Referential,
   coord: (i: number) => Coord,
-  playerId: string,
+  playerId: PlayerId,
   zone: Zone
 ): (card: WithId<Card>, i: number) => CardWithCoord {
   return (card, i) => ({

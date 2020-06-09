@@ -3,6 +3,8 @@
   "description": "Hero Realms Online with Phoenix.",
   "license": "MIT",
   "scripts": {
+    "compile": "tsc --noEmit",
+    "~compile": "tsc --noEmit -w",
     "deploy": "webpack --mode production",
     "watch": "webpack --mode development --watch",
     "lint": "eslint --cache --fix --max-warnings 0 --ext .ts,.tsx src"
@@ -29,7 +31,10 @@
     "fp-ts-contrib": "^0.1.16",
     "history": "^4.10.1",
     "io-ts": "^2.2.4",
+    "io-ts-types": "^0.5.7",
     "mini-css-extract-plugin": "^0.4.5",
+    "monocle-ts": "^2.2.0",
+    "newtype-ts": "^0.3.4",
     "optimize-css-assets-webpack-plugin": "^4.0.3",
     "parser-ts": "^0.6.3",
     "phoenix": "file:../deps/phoenix",
