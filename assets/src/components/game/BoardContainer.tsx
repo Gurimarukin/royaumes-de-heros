@@ -13,6 +13,8 @@ import { Game } from '../../models/game/Game'
 import { OtherPlayer } from '../../models/game/OtherPlayer'
 import { Referentials } from '../../models/game/Referentials'
 import { Referential } from '../../models/game/geometry/Referential'
+import { useWindowEvent } from '../../hooks/useWindowEvent'
+import { Maybe, pipe, flow } from '../../utils/fp'
 
 interface Props {
   readonly call: CallChannel
@@ -64,7 +66,10 @@ export const BoardContainer: FunctionComponent<Props> = ({
   )
 
   const boardPropsRef = useRef<BoardProps>(BoardProps.empty)
-  const [props, set] = useSpring<BoardProps>(() => BoardProps.empty)
+  const [props, set] = useSpring<BoardProps>(() => ({
+    ...BoardProps.empty,
+    config: { clamp: true }
+  }))
 
   const setBoardProps = useCallback(
     (props: Partial<BoardProps>) => {
@@ -75,11 +80,20 @@ export const BoardContainer: FunctionComponent<Props> = ({
   )
 
   const updateProps = useCallback(
-    (elt: HTMLDivElement | null) => {
-      if (elt !== null) setBoardProps(propsFromElt(board, elt))
-    },
+    () => pipe(containerRef.current, Maybe.map(flow(propsFromElt(board), setBoardProps))),
     [board, setBoardProps]
   )
+
+  const containerRef = useRef<Maybe<HTMLDivElement>>(Maybe.none)
+  const setContainerRef = useCallback(
+    (elt: HTMLDivElement | null) => {
+      const res = Maybe.fromNullable(elt)
+      containerRef.current = res
+      updateProps()
+    },
+    [updateProps]
+  )
+  useWindowEvent('resize', updateProps)
 
   const onWheel = useCallback(
     (e: React.WheelEvent) => setBoardProps(propsOnWheel(boardPropsRef.current, board, e)),
@@ -87,7 +101,7 @@ export const BoardContainer: FunctionComponent<Props> = ({
   )
 
   return (
-    <BoardContainerStyled ref={updateProps} onWheel={onWheel}>
+    <BoardContainerStyled ref={setContainerRef} onWheel={onWheel}>
       <a.div
         css={stylesBoard(board.width, board.height)}
         style={{ transform: props.s.interpolate(trans), left: props.x, top: props.y }}
@@ -104,15 +118,17 @@ export const BoardContainer: FunctionComponent<Props> = ({
   )
 }
 
-function propsFromElt(board: BoardSize, elt: HTMLElement): Partial<BoardProps> {
-  const clientWidth = elt.clientWidth
-  const clientHeight = elt.clientHeight
-  const minScaleW = minScale(clientWidth, board.width)
-  const minScaleH = minScale(clientHeight, board.height)
-  const s = Math.min(minScaleW, minScaleH)
-  const x = coord(minScaleW, clientWidth, board.width, s, () => 0)
-  const y = coord(minScaleH, clientHeight, board.height, s, () => clientHeight - board.height * s)
-  return { s, x, y, clientWidth, clientHeight, minScaleW, minScaleH }
+function propsFromElt(board: BoardSize): (elt: HTMLElement) => Partial<BoardProps> {
+  return elt => {
+    const clientWidth = elt.clientWidth
+    const clientHeight = elt.clientHeight
+    const minScaleW = minScale(clientWidth, board.width)
+    const minScaleH = minScale(clientHeight, board.height)
+    const s = Math.min(minScaleW, minScaleH)
+    const x = coord(minScaleW, clientWidth, board.width, s, () => 0)
+    const y = coord(minScaleH, clientHeight, board.height, s, () => clientHeight - board.height * s)
+    return { s, x, y, clientWidth, clientHeight, minScaleW, minScaleH }
+  }
 }
 
 function propsOnWheel(

@@ -73,7 +73,12 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
         zippedOtherPlayers={zippedOtherPlayers}
         showDiscard={showDiscard}
       />
-      <RightBar game={game} endTurnSent={endTurnSent} endTurn={endTurn} events={events} />
+      <RightBar
+        isCurrentPlayer={TGame.isCurrentPlayer(game)}
+        endTurnSent={endTurnSent}
+        endTurn={endTurn}
+        events={events}
+      />
       <Dialog call={call} closeDialog={closeDialog} game={game} props={dialogProps} />
     </GameStyled>
   )

@@ -4,12 +4,13 @@ import { FunctionComponent, useCallback } from 'react'
 
 interface Props {
   readonly lines: [number, string][]
+  readonly className?: string
 }
 
-export const Chat: FunctionComponent<Props> = ({ lines }) => {
+export const Chat: FunctionComponent<Props> = ({ lines, className }) => {
   const onWheel = useCallback((e: React.WheelEvent) => e.stopPropagation(), [])
   return (
-    <div onWheel={onWheel} css={styles.container}>
+    <div onWheel={onWheel} css={styles.container} className={className}>
       {lines.map(([key, line]) => (
         <div key={key} css={styles.line}>
           {line}
@@ -21,15 +22,10 @@ export const Chat: FunctionComponent<Props> = ({ lines }) => {
 
 const styles = {
   container: css({
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    height: '40vh',
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     color: 'bisque',
     overflowY: 'auto',
-    padding: '0.33em',
-    width: '200px'
+    padding: '0.33em'
   }),
 
   line: css({})
