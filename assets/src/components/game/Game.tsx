@@ -36,19 +36,17 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
   const zippedOtherPlayers = List.zip(referentials.others, game.other_players)
 
   // end turn
-  const [endTurnSent, setEndTurnSent] = useState(false)
   const endTurn = useCallback(() => {
-    setEndTurnSent(true)
     pipe(
       call(CallMessage.DiscardPhase),
       Future.chain(
         Either.fold(
-          _ => Future.right(setEndTurnSent(false)),
+          _ => Future.right(undefined),
           _ =>
             pipe(
               call(CallMessage.DrawPhase),
               Task.delay(1000),
-              Future.map(_ => setEndTurnSent(false))
+              Future.map(_ => {})
             )
         )
       ),
@@ -73,12 +71,7 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
         zippedOtherPlayers={zippedOtherPlayers}
         showDiscard={showDiscard}
       />
-      <RightBar
-        isCurrentPlayer={TGame.isCurrentPlayer(game)}
-        endTurnSent={endTurnSent}
-        endTurn={endTurn}
-        events={events}
-      />
+      <RightBar isCurrentPlayer={TGame.isCurrentPlayer(game)} endTurn={endTurn} events={events} />
       <Dialog call={call} closeDialog={closeDialog} game={game} props={dialogProps} />
     </GameStyled>
   )
