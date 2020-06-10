@@ -6,7 +6,7 @@ import { FunctionComponent, useState, useContext, useCallback } from 'react'
 import { Link } from './Link'
 import { Router } from './Router'
 import { LobbyComponent } from './LobbyComponent'
-import { GameComponent } from './game/GameComponent'
+import { Game } from './game/Game'
 import { UserContext } from '../contexts/UserContext'
 import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
@@ -84,7 +84,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
         return <LobbyComponent call={call} state={state[1]} />
 
       case 'game':
-        return <GameComponent call={call} game={state[1]} events={events} />
+        return <Game call={call} game={state[1]} events={events} />
     }
   }
 

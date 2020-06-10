@@ -3,7 +3,7 @@ import { jsx } from '@emotion/core'
 import { FunctionComponent, CSSProperties, useMemo } from 'react'
 import { useTransition } from 'react-spring'
 
-import { AnimatedCard, HiddenCard, Zone } from './CardComponent'
+import { AnimatedCard, HiddenCard, Zone } from './Card'
 import { params } from '../../params'
 import { PlayerId } from '../../models/PlayerId'
 import { CallChannel } from '../../models/CallMessage'

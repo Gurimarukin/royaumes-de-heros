@@ -17,7 +17,7 @@ import { CallChannel, CallMessage } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
 import { Card } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
-import { Game } from '../../models/game/Game'
+import { Game as TGame } from '../../models/game/Game'
 import { OtherPlayer } from '../../models/game/OtherPlayer'
 import { Player } from '../../models/game/Player'
 import { Referential } from '../../models/game/geometry/Referential'
@@ -25,7 +25,7 @@ import { List, pipe, Future, Either, Task, Maybe } from '../../utils/fp'
 
 interface Props {
   readonly call: CallChannel
-  readonly game: Game
+  readonly game: TGame
   readonly events: [number, string][]
 }
 
@@ -52,7 +52,7 @@ const moveDetect = 40
 const moveStepPx = 300
 const moveStepMs = 100
 
-export const GameComponent: FunctionComponent<Props> = ({ call, game, events }) => {
+export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
   // navigation
   const referentials = {
     market: Referential.market,
@@ -119,7 +119,7 @@ export const GameComponent: FunctionComponent<Props> = ({ call, game, events }) 
           disabled={endTurnSent}
           onClick={endTurn}
           css={styles.endTurn}
-          className={Game.isCurrentPlayer(game) ? 'current' : undefined}
+          className={TGame.isCurrentPlayer(game) ? 'current' : undefined}
         >
           Fin du tour
         </ButtonUnderline>

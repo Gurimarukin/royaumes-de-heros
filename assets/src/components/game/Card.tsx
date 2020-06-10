@@ -7,7 +7,7 @@ import { ClickOutside } from '../ClickOutside'
 import { params } from '../../params'
 import { CallChannel, CallMessage } from '../../models/CallMessage'
 import { Ability } from '../../models/game/Ability'
-import { Card } from '../../models/game/Card'
+import { Card as TCard } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
 import { Interaction } from '../../models/game/Interaction'
@@ -24,7 +24,7 @@ type CardProps = {
   readonly showDiscard: (playerId: PlayerId) => void
   readonly game: Game
   readonly playerId: PlayerId
-  readonly card: [CardId, Card]
+  readonly card: [CardId, TCard]
   readonly zone: Zone
 } & CommonProps
 
@@ -32,7 +32,7 @@ export type Zone = 'market' | 'hand' | 'fightZone' | 'discard'
 
 type MouseEventHandler<A = HTMLElement> = (e: React.MouseEvent<A>) => void
 
-export const CardComponent: FunctionComponent<CardProps> = ({
+export const Card: FunctionComponent<CardProps> = ({
   call,
   showDiscard,
   game,
@@ -153,7 +153,7 @@ function icon(src: string, alt?: string): JSX.Element {
   )
 }
 
-export const AnimatedCard = animated(CardComponent)
+export const AnimatedCard = animated(Card)
 
 export const HiddenCard: FunctionComponent<CommonProps> = ({ style }) => (
   <div css={styles.container} style={style}>
