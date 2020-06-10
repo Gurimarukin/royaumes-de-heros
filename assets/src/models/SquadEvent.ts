@@ -66,7 +66,7 @@ export namespace SquadEvent {
       }
 
       if (event === 'new_turn') {
-        return Maybe.some(`${playerName} joue`)
+        return Maybe.some(`${playerName} : début du tour`)
       }
 
       if (event[0] === 'play_card') {
