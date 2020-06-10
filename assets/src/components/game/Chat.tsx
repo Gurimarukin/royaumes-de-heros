@@ -1,6 +1,7 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent, useCallback, useRef, useEffect } from 'react'
+
 import { Maybe, pipe } from '../../utils/fp'
 
 interface Props {
@@ -46,7 +47,7 @@ const styles = {
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     color: 'bisque',
     overflowY: 'auto',
-    padding: '0 0.33em'
+    padding: '0 0.1em'
   }),
 
   line: css({
