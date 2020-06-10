@@ -1,9 +1,10 @@
 import * as D from 'io-ts/lib/Decoder'
+import { SquadId } from './SquadId'
 
 export namespace SquadShort {
   export const codec = D.type({
     /* eslint-disable @typescript-eslint/camelcase */
-    id: D.string,
+    id: SquadId.codec as D.Decoder<SquadId>,
     stage: D.union(D.literal('lobby'), D.literal('game')),
     n_players: D.number
     /* eslint-enable @typescript-eslint/camelcase */

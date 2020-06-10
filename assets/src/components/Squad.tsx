@@ -10,16 +10,17 @@ import { GameComponent } from './game/GameComponent'
 import { UserContext } from '../contexts/UserContext'
 import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
+import { CallMessage } from '../models/CallMessage'
 import { ChannelError } from '../models/ChannelError'
+import { SquadId } from '../models/SquadId'
 import { SquadState } from '../models/SquadState'
 import { SquadEvent } from '../models/SquadEvent'
 import { pipe, Either, Future, List, Maybe } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 import { CardData } from '../utils/CardData'
-import { CallMessage } from '../models/CallMessage'
 
 interface Props {
-  readonly id: string
+  readonly id: SquadId
 }
 
 const stateWithEvent = D.tuple(SquadState.codec, SquadEvent.codec)
