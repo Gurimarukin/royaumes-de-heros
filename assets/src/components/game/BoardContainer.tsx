@@ -5,7 +5,7 @@ import { FunctionComponent, useRef, useMemo, useCallback } from 'react'
 import { useSpring, animated as a } from 'react-spring'
 
 import { Board } from './Board'
-import { GameStyled } from './GameStyled'
+import { BoardContainerStyled } from './BoardContainerStyled'
 import { params } from '../../params'
 import { CallChannel } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
@@ -22,42 +22,49 @@ interface Props {
   readonly showDiscard: (playerId: PlayerId) => void
 }
 
+interface BoardSize {
+  readonly width: number
+  readonly height: number
+}
+
 interface BoardProps {
   readonly s: number
   readonly x: number
   readonly y: number
+  readonly clientWidth: number
+  readonly clientHeight: number
+  readonly minScaleW: number
+  readonly minScaleH: number
+}
+
+namespace BoardProps {
+  export const empty: BoardProps = {
+    s: 0,
+    x: 0,
+    y: 0,
+    clientWidth: 0,
+    clientHeight: 0,
+    minScaleW: 0,
+    minScaleH: 0
+  }
 }
 
 const maxScale = 1
 
-export const BoardNavigation: FunctionComponent<Props> = ({
+export const BoardContainer: FunctionComponent<Props> = ({
   call,
   game,
   referentials,
   zippedOtherPlayers,
-  showDiscard,
-  children
+  showDiscard
 }) => {
-  const board = useMemo(
+  const board = useMemo<BoardSize>(
     () => ({ width: params.board.width(referentials), height: params.board.height }),
     [referentials]
   )
 
-  const minScaleW = minScale(window.innerWidth, board.width)
-  const minScaleH = minScale(window.innerHeight, board.height)
-  const s = Math.min(minScaleW, minScaleH)
-  const boardPropsRef = useRef<BoardProps>({
-    s,
-    x: coord(minScaleW, window.innerWidth, board.width, s, () => 0),
-    y: coord(
-      minScaleH,
-      window.innerHeight,
-      board.height,
-      s,
-      () => window.innerHeight - board.height * s
-    )
-  })
-  const [props, set] = useSpring(() => boardPropsRef.current)
+  const boardPropsRef = useRef<BoardProps>(BoardProps.empty)
+  const [props, set] = useSpring<BoardProps>(() => BoardProps.empty)
 
   const setBoardProps = useCallback(
     (props: Partial<BoardProps>) => {
@@ -67,28 +74,20 @@ export const BoardNavigation: FunctionComponent<Props> = ({
     [set]
   )
 
-  const onWheel = useCallback(
-    ({ deltaY, clientX, clientY }: React.WheelEvent) => {
-      // const zoomIn = deltaY < 0
-
-      const { s, x, y } = boardPropsRef.current
-
-      const minScaleW = minScale(window.innerWidth, board.width)
-      const minScaleH = minScale(window.innerHeight, board.height)
-
-      const newS = getS(s, deltaY, minScaleW, minScaleH)
-
-      setBoardProps({
-        s: newS,
-        x: coordOnZoom(s, minScaleW, window.innerWidth, board.width, x, clientX, newS),
-        y: coordOnZoom(s, minScaleH, window.innerHeight, board.height, y, clientY, newS)
-      })
+  const updateProps = useCallback(
+    (elt: HTMLDivElement | null) => {
+      if (elt !== null) setBoardProps(propsFromElt(board, elt))
     },
-    [board.height, board.width, setBoardProps]
+    [board, setBoardProps]
+  )
+
+  const onWheel = useCallback(
+    (e: React.WheelEvent) => setBoardProps(propsOnWheel(boardPropsRef.current, board, e)),
+    [board, setBoardProps]
   )
 
   return (
-    <GameStyled onWheel={onWheel}>
+    <BoardContainerStyled ref={updateProps} onWheel={onWheel}>
       <a.div
         css={stylesBoard(board.width, board.height)}
         style={{ transform: props.s.interpolate(trans), left: props.x, top: props.y }}
@@ -101,15 +100,37 @@ export const BoardNavigation: FunctionComponent<Props> = ({
           showDiscard={showDiscard}
         />
       </a.div>
-      {children}
-    </GameStyled>
+    </BoardContainerStyled>
   )
 }
 
-function getS(oldS: number, deltaY: number, minScaleW: number, minScaleH: number) {
+function propsFromElt(board: BoardSize, elt: HTMLElement): Partial<BoardProps> {
+  const clientWidth = elt.clientWidth
+  const clientHeight = elt.clientHeight
+  const minScaleW = minScale(clientWidth, board.width)
+  const minScaleH = minScale(clientHeight, board.height)
+  const s = Math.min(minScaleW, minScaleH)
+  const x = coord(minScaleW, clientWidth, board.width, s, () => 0)
+  const y = coord(minScaleH, clientHeight, board.height, s, () => clientHeight - board.height * s)
+  return { s, x, y, clientWidth, clientHeight, minScaleW, minScaleH }
+}
+
+function propsOnWheel(
+  previous: BoardProps,
+  board: BoardSize,
+  { deltaY, clientX, clientY }: React.WheelEvent
+): Partial<BoardProps> {
+  const { s, x, y, clientWidth, clientHeight, minScaleW, minScaleH } = previous
+
   const minScale = Math.min(minScaleW, minScaleH)
-  const scale = oldS + deltaY * -0.03
-  return scale < minScale ? minScale : maxScale < scale ? maxScale : scale
+  const scale = s + deltaY * -0.03
+  const newS = scale < minScale ? minScale : maxScale < scale ? maxScale : scale
+
+  return {
+    s: newS,
+    x: coordOnZoom(s, minScaleW, clientWidth, board.width, x, clientX, newS),
+    y: coordOnZoom(s, minScaleH, clientHeight, board.height, y, clientY, newS)
+  }
 }
 
 function coordOnZoom(

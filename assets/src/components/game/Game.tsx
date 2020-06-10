@@ -2,7 +2,7 @@
 import { jsx } from '@emotion/core'
 import { FunctionComponent, useState, useCallback, useMemo } from 'react'
 
-import { BoardNavigation } from './BoardNavigation'
+import { BoardContainer } from './BoardContainer'
 import { CardsViewer } from './CardsViewer'
 import { Dialog } from './Dialog'
 import { DialogProps } from './DialogStyled'
@@ -16,6 +16,7 @@ import { OtherPlayer } from '../../models/game/OtherPlayer'
 import { Player } from '../../models/game/Player'
 import { Referential } from '../../models/game/geometry/Referential'
 import { pipe, List, Maybe, Future, Either, Task } from '../../utils/fp'
+import { GameStyled } from './GameStyled'
 
 interface Props {
   readonly call: CallChannel
@@ -64,16 +65,17 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
   const closeDialog = useCallback(() => setDialogProps(_ => ({ ..._, shown: false })), [])
 
   return (
-    <BoardNavigation
-      call={call}
-      game={game}
-      referentials={referentials}
-      zippedOtherPlayers={zippedOtherPlayers}
-      showDiscard={showDiscard}
-    >
+    <GameStyled>
+      <BoardContainer
+        call={call}
+        game={game}
+        referentials={referentials}
+        zippedOtherPlayers={zippedOtherPlayers}
+        showDiscard={showDiscard}
+      />
       <RightBar game={game} endTurnSent={endTurnSent} endTurn={endTurn} events={events} />
       <Dialog call={call} closeDialog={closeDialog} game={game} props={dialogProps} />
-    </BoardNavigation>
+    </GameStyled>
   )
 }
 
