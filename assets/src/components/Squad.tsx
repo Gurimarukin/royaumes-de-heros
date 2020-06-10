@@ -15,7 +15,7 @@ import { ChannelError } from '../models/ChannelError'
 import { SquadId } from '../models/SquadId'
 import { SquadState } from '../models/SquadState'
 import { SquadEvent } from '../models/SquadEvent'
-import { pipe, Either, Future, List, Maybe } from '../utils/fp'
+import { pipe, Either, Future, List, Maybe, flow } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 import { CardData } from '../utils/CardData'
 
@@ -34,7 +34,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
   const appendEvent = useCallback((event: SquadEvent) => {
     pipe(
       SquadEvent.pretty(CardData.cards)(event),
-      Maybe.map(e => setEvents(_ => List.snoc(_, [Date.now(), e])))
+      Maybe.map(e => setEvents(flow(List.takeRight(99), _ => List.snoc(_, [Date.now(), e]))))
     )
   }, [])
 
