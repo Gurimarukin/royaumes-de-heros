@@ -24,7 +24,7 @@ export namespace SquadEvent {
     D.literal('game_disconnected'),
     D.literal('game_reconnected'),
     D.literal('discard_phase'),
-    D.literal('draw_phase'),
+    D.literal('new_turn'),
     D.tuple(D.literal('play_card'), D.string),
     D.tuple(D.literal('use_expend_ability'), D.string),
     D.tuple(D.literal('use_ally_ability'), D.string),
@@ -62,11 +62,11 @@ export namespace SquadEvent {
       }
 
       if (event === 'discard_phase') {
-        return Maybe.none
+        return Maybe.some(`${playerName} : fin du tour`)
       }
 
-      if (event === 'draw_phase') {
-        return Maybe.some(`${playerName} : fin du tour`)
+      if (event === 'new_turn') {
+        return Maybe.some(`${playerName} joue`)
       }
 
       if (event[0] === 'play_card') {

@@ -252,7 +252,7 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, "draw_phase"}, _from, game, names) do
     Game.draw_phase(game, player_id)
-    |> Option.map(&{&1, {KeyList.find(names, player_id), :draw_phase}})
+    |> Option.map(&{&1, {KeyList.find(names, &1.current_player), :new_turn}})
   end
 
   def handle_call(_message, _from, _lobby, _names), do: Option.none()
