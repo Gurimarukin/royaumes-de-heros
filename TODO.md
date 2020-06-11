@@ -15,7 +15,6 @@
 * damage and heal animations
 * cursors
 * get CardData from server
-* move with arrows (and not mouse)
 * animate dialog
 * animate entering cards
 

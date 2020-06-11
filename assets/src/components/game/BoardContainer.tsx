@@ -14,7 +14,7 @@ import { OtherPlayer } from '../../models/game/OtherPlayer'
 import { Referentials } from '../../models/game/Referentials'
 import { Referential } from '../../models/game/geometry/Referential'
 import { useWindowEvent } from '../../hooks/useWindowEvent'
-import { Maybe, pipe, flow } from '../../utils/fp'
+import { Maybe, pipe, flow, List } from '../../utils/fp'
 
 interface Props {
   readonly call: CallChannel
@@ -52,7 +52,47 @@ namespace BoardProps {
   }
 }
 
+type Arrow = 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown'
+
+namespace Arrow {
+  export const values: Arrow[] = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
+
+  export function isArrow(key: string): key is Arrow {
+    return pipe(
+      values,
+      List.exists(_ => _ === key)
+    )
+  }
+}
+
+type Moving = Readonly<Record<Arrow, boolean>>
+
+namespace Moving {
+  export const empty: Moving = {
+    ArrowLeft: false,
+    ArrowRight: false,
+    ArrowUp: false,
+    ArrowDown: false
+  }
+
+  export function update(key: Arrow, value: boolean): (prev: Moving) => Moving {
+    return prev => ({ ...prev, [key]: value })
+  }
+
+  export function toDirection(moving: Moving): Readonly<{ h: -1 | 0 | 1; v: -1 | 0 | 1 }> {
+    return {
+      h: dir(moving.ArrowLeft, moving.ArrowRight),
+      v: dir(moving.ArrowUp, moving.ArrowDown)
+    }
+  }
+
+  function dir(a: boolean, b: boolean): -1 | 0 | 1 {
+    return a !== b ? (a ? -1 : 1) : 0
+  }
+}
+
 const maxScale = 1
+const moveStepPx = 100
 
 export const BoardContainer: FunctionComponent<Props> = ({
   call,
@@ -101,6 +141,26 @@ export const BoardContainer: FunctionComponent<Props> = ({
     (e: React.WheelEvent) => setBoardProps(propsOnWheel(boardPropsRef.current, board, e)),
     [board, setBoardProps]
   )
+
+  const movingRef = useRef<Moving>(Moving.empty)
+  useWindowEvent('keydown', (e: KeyboardEvent) => {
+    if (Arrow.isArrow(e.key)) {
+      movingRef.current = pipe(movingRef.current, Moving.update(e.key, true))
+
+      const { s, x, y, clientWidth, clientHeight, minScaleW, minScaleH } = boardPropsRef.current
+      const { h, v } = Moving.toDirection(movingRef.current)
+
+      setBoardProps({
+        x: coordOnArrow(minScaleW, clientWidth, board.width, x, h, s),
+        y: coordOnArrow(minScaleH, clientHeight, board.height, y, v, s)
+      })
+    }
+  })
+  useWindowEvent('keyup', (e: KeyboardEvent) => {
+    if (Arrow.isArrow(e.key)) {
+      movingRef.current = pipe(movingRef.current, Moving.update(e.key, false))
+    }
+  })
 
   return (
     <BoardContainerStyled ref={setContainerRef} onWheel={onWheel}>
@@ -168,6 +228,19 @@ function coordOnZoom(
       0
     )((1 - ratio) * clientPos + ratio * prevCoord)
   })
+}
+
+function coordOnArrow(
+  minScale: number,
+  windowSize: number,
+  boardSize: number,
+  prevCoord: number,
+  direction: number,
+  s: number
+): number {
+  return coord(minScale, windowSize, boardSize, s, () =>
+    bounded(minCoord(windowSize, boardSize, s), 0)(prevCoord - (direction * moveStepPx) / s)
+  )
 }
 
 function coord(
