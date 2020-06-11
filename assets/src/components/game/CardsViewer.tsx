@@ -2,7 +2,7 @@
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent } from 'react'
 
-import { SimpleCard } from './card/SimpleCard'
+import { CardSimple } from './CardSimple'
 import { params } from '../../params'
 import { Card } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
@@ -17,7 +17,7 @@ interface Props {
 export const CardsViewer: FunctionComponent<Props> = ({ selected = [], toggleCard, cards }) => (
   <div css={styles.cards}>
     {cards.map(([id, card], j) => (
-      <SimpleCard
+      <CardSimple
         key={j}
         card={Card.reset(card)}
         onClick={toggleCard === undefined ? undefined : toggleCard(id)}

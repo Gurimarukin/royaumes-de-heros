@@ -10,8 +10,12 @@ export namespace Card {
   })
 
   export function reset(card: Card): Card {
+    return fromKey(card.key)
+  }
+
+  export function fromKey(key: string): Card {
     // eslint-disable-next-line @typescript-eslint/camelcase
-    return { key: card.key, expend_ability_used: false, ally_ability_used: false }
+    return { key, expend_ability_used: false, ally_ability_used: false }
   }
 }
 

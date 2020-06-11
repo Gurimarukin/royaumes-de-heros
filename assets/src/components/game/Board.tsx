@@ -18,6 +18,7 @@ interface Props {
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, [PlayerId, OtherPlayer]][]
   readonly showDiscard: (playerId: PlayerId) => void
+  readonly showCardDetail: (key: string) => void
 }
 
 export const Board: FunctionComponent<Props> = ({
@@ -25,7 +26,8 @@ export const Board: FunctionComponent<Props> = ({
   game,
   referentials,
   zippedOtherPlayers,
-  showDiscard
+  showDiscard,
+  showCardDetail
 }) => (
   <Fragment>
     <MarketZone />
@@ -38,6 +40,7 @@ export const Board: FunctionComponent<Props> = ({
     <Cards
       call={call}
       showDiscard={showDiscard}
+      showCardDetail={showCardDetail}
       game={game}
       referentials={referentials}
       zippedOtherPlayers={zippedOtherPlayers}

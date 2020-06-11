@@ -2,19 +2,29 @@
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent } from 'react'
 
+import { CardDetail } from './CardDetail'
 import { Chat } from './Chat'
 import { ButtonUnderline } from '../Buttons'
 import { params } from '../../params'
+import { Maybe } from '../../utils/fp'
 
 interface Props {
+  readonly cardDetail: Maybe<string>
+  readonly hideCardDetail: () => void
   readonly isCurrentPlayer: boolean
   readonly endTurn: React.MouseEventHandler<HTMLButtonElement>
   readonly events: [number, string][]
 }
 
-export const RightBar: FunctionComponent<Props> = ({ isCurrentPlayer, endTurn, events }) => (
+export const RightBar: FunctionComponent<Props> = ({
+  cardDetail,
+  hideCardDetail,
+  isCurrentPlayer,
+  endTurn,
+  events
+}) => (
   <div css={styles.container}>
-    <div css={styles.cardDetail} />
+    <CardDetail card={cardDetail} hideCard={hideCardDetail} css={styles.cardDetail} />
     <div css={styles.buttons}>
       <ButtonUnderline
         onClick={endTurn}
@@ -46,7 +56,6 @@ const styles = {
     flexBasis: 0,
     border: '1px solid darkgoldenrod',
     borderWidth: '0 0 1px 1px',
-    color: 'white',
     overflow: 'hidden'
   }),
 

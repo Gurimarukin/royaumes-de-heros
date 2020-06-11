@@ -54,6 +54,11 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
     )
   }, [call])
 
+  // card detail
+  const [cardDetail, setCardDetail] = useState<Maybe<string>>(Maybe.none)
+  const showCardDetail = useCallback((key: string) => setCardDetail(Maybe.some(key)), [])
+  const hideCardDetail = useCallback(() => setCardDetail(Maybe.none), [])
+
   // dialog
   const [dialogProps, setDialogProps] = useState<DialogProps>({ shown: false })
   const showDiscard = useCallback(
@@ -70,8 +75,15 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
         referentials={referentials}
         zippedOtherPlayers={zippedOtherPlayers}
         showDiscard={showDiscard}
+        showCardDetail={showCardDetail}
       />
-      <RightBar isCurrentPlayer={TGame.isCurrentPlayer(game)} endTurn={endTurn} events={events} />
+      <RightBar
+        cardDetail={cardDetail}
+        hideCardDetail={hideCardDetail}
+        isCurrentPlayer={TGame.isCurrentPlayer(game)}
+        endTurn={endTurn}
+        events={events}
+      />
       <Dialog call={call} closeDialog={closeDialog} game={game} props={dialogProps} />
     </GameStyled>
   )

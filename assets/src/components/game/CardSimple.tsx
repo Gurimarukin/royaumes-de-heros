@@ -3,19 +3,20 @@ import { jsx, css } from '@emotion/core'
 import { ReactNode, Fragment, forwardRef } from 'react'
 import { animated } from 'react-spring'
 
-import { Card } from '../../../models/game/Card'
-import { CardData } from '../../../utils/CardData'
-import { pipe, Maybe } from '../../../utils/fp'
-import { params } from '../../../params'
+import { Card } from '../../models/game/Card'
+import { CardData } from '../../utils/CardData'
+import { pipe, Maybe } from '../../utils/fp'
+import { params } from '../../params'
 
 interface Props {
   readonly card: Card
   readonly onClick?: React.MouseEventHandler<HTMLDivElement>
   readonly className?: string
   readonly style?: React.CSSProperties
+  readonly children?: ReactNode
 }
 
-export const SimpleCard = forwardRef<HTMLDivElement, Props>(
+export const CardSimple = forwardRef<HTMLDivElement, Props>(
   ({ card, onClick, className, style, children }, ref) => {
     const data = CardData.get(card.key)
     return (
@@ -44,7 +45,7 @@ export const SimpleCard = forwardRef<HTMLDivElement, Props>(
   }
 )
 
-export const AnimatedSimpleCard = animated(SimpleCard)
+export const AnimatedSimpleCard = animated(CardSimple)
 
 function icon(src: string, alt?: string): JSX.Element {
   return (
@@ -56,10 +57,8 @@ function icon(src: string, alt?: string): JSX.Element {
 
 const styles = {
   container: css({
-    position: 'absolute',
     width: params.card.width,
     height: params.card.height,
-    // willChange: 'left, top',
 
     '& > img': {
       width: '100%',

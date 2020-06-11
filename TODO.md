@@ -19,5 +19,4 @@
 * animate dialog
 * animate entering cards
 
-* chat on side with card detail (toggleable, with click and shortcut)
 * button for abilities

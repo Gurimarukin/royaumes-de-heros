@@ -1,8 +1,9 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent, ReactNode, useMemo, useCallback, useState, Fragment } from 'react'
+import { FunctionComponent, ReactNode, useMemo, useCallback, useState } from 'react'
 import { animated } from 'react-spring'
 
+import { CardSimple } from './CardSimple'
 import { ClickOutside } from '../ClickOutside'
 import { params } from '../../params'
 import { CallChannel, CallMessage } from '../../models/CallMessage'
@@ -22,6 +23,7 @@ interface CommonProps {
 type CardProps = {
   readonly call: CallChannel
   readonly showDiscard: (playerId: PlayerId) => void
+  readonly showCardDetail: (key: string) => void
   readonly game: Game
   readonly playerId: PlayerId
   readonly card: [CardId, TCard]
@@ -35,6 +37,7 @@ type MouseEventHandler<A = HTMLElement> = (e: React.MouseEvent<A>) => void
 export const Card: FunctionComponent<CardProps> = ({
   call,
   showDiscard,
+  showCardDetail,
   game,
   playerId,
   card: [cardId, card],
@@ -112,44 +115,36 @@ export const Card: FunctionComponent<CardProps> = ({
     zone
   ])
 
+  const onContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      showCardDetail(card.key)
+    },
+    [card.key, showCardDetail]
+  )
+
   return (
     <ClickOutside onClickOutside={closeAbilities}>
-      <div onClick={onClick} css={styles.container} style={style}>
+      <div onClick={onClick} onContextMenu={onContextMenu} css={styles.container} style={style}>
         {pipe(
           data,
           Maybe.fold<CardData, ReactNode>(
-            () => `carte inconnue: ${card.key}`,
-            ({ image, faction, expend, ally, sacrifice }) => {
-              const f = Maybe.toUndefined(faction)
-              return (
-                <Fragment>
-                  <img src={image} alt={card.key} />
-                  <div css={styles.icons}>
-                    {card.expend_ability_used ? icon('/images/expend.png', f) : null}
-                    {card.ally_ability_used ? icon(`/images/factions/${f}.png`, f) : null}
+            () => <CardSimple card={card} />,
+            ({ expend, ally, sacrifice }) => (
+              <CardSimple card={card}>
+                {abilitiesOpened ? (
+                  <div css={styles.abilities}>
+                    {expend && !card.expend_ability_used ? ability('expend', 'Activer') : null}
+                    {ally && !card.ally_ability_used ? ability('ally', 'Allié') : null}
+                    {sacrifice ? ability('sacrifice', 'Sacrifice') : null}
                   </div>
-                  {abilitiesOpened ? (
-                    <div css={styles.abilities}>
-                      {expend && !card.expend_ability_used ? ability('expend', 'Activer') : null}
-                      {ally && !card.ally_ability_used ? ability('ally', 'Allié') : null}
-                      {sacrifice ? ability('sacrifice', 'Sacrifice') : null}
-                    </div>
-                  ) : null}
-                </Fragment>
-              )
-            }
+                ) : null}
+              </CardSimple>
+            )
           )
         )}
       </div>
     </ClickOutside>
-  )
-}
-
-function icon(src: string, alt?: string): JSX.Element {
-  return (
-    <div css={styles.icon}>
-      <img src={src} alt={alt} />
-    </div>
   )
 }
 
@@ -164,8 +159,6 @@ export const HiddenCard: FunctionComponent<CommonProps> = ({ style }) => (
 const styles = {
   container: css({
     position: 'absolute',
-    width: params.card.width,
-    height: params.card.height,
     // willChange: 'left, top',
 
     '& > img': {
@@ -173,42 +166,6 @@ const styles = {
       height: '100%',
       borderRadius: params.card.borderRadius,
       boxShadow: '0 0 4px black'
-    }
-  }),
-
-  icons: css({
-    position: 'absolute',
-    left: 0,
-    bottom: '-12px',
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'center'
-  }),
-
-  icon: css({
-    position: 'relative',
-    width: '40px',
-    height: '40px',
-    border: '4px solid crimson',
-    borderRadius: '50%',
-    boxShadow: '0 0 4px black',
-    overflow: 'hidden',
-    margin: '0 0.12em',
-
-    '&::after': {
-      content: `''`,
-      position: 'absolute',
-      left: 0,
-      top: '14px',
-      width: '100%',
-      borderTop: '4px solid crimson',
-      transform: 'rotate(-45deg)'
-    },
-
-    '& > img': {
-      width: '44px',
-      height: '44px',
-      margin: '-5px'
     }
   }),
 

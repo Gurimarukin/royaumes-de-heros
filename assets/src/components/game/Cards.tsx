@@ -20,6 +20,7 @@ import { pipe, List } from '../../utils/fp'
 interface Props {
   readonly call: CallChannel
   readonly showDiscard: (playerId: PlayerId) => void
+  readonly showCardDetail: (key: string) => void
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, [PlayerId, OtherPlayer]][]
@@ -37,6 +38,7 @@ type Cards = [CardWithCoord[], Coord[]]
 export const Cards: FunctionComponent<Props> = ({
   call,
   showDiscard,
+  showCardDetail,
   game,
   referentials,
   zippedOtherPlayers
@@ -133,6 +135,7 @@ export const Cards: FunctionComponent<Props> = ({
           key={key}
           call={call}
           showDiscard={showDiscard}
+          showCardDetail={showCardDetail}
           game={game}
           playerId={item.playerId}
           zone={item.zone}
