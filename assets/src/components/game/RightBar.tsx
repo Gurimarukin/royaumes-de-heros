@@ -27,6 +27,7 @@ export const RightBar: FunctionComponent<Props> = ({
     <CardDetail card={cardDetail} hideCard={hideCardDetail} css={styles.cardDetail} />
     <div css={styles.buttons}>
       <ButtonUnderline
+        disabled={!isCurrentPlayer}
         onClick={endTurn}
         css={styles.endTurnBtn}
         className={isCurrentPlayer ? 'current' : undefined}
