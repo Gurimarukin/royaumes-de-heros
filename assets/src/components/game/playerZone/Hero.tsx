@@ -59,7 +59,12 @@ export const Hero: FunctionComponent<Props> = ({
   )
 
   return (
-    <div onClick={onClick} css={styles.container} style={{ left, top }}>
+    <div
+      onClick={onClick}
+      css={styles.container}
+      className={isOther ? 'attack' : undefined}
+      style={{ left, top }}
+    >
       {transitions.map(({ key, props }) => (
         <a.div key={key} css={styles.hp}>
           {props.hp.interpolate(_ => Math.round(_ as number))}
@@ -84,7 +89,11 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    userSelect: 'none'
+    userSelect: 'none',
+
+    '&.attack': {
+      cursor: "url('/images/cursors/sword.svg'), auto"
+    }
   }),
 
   hp: css({
