@@ -92,7 +92,7 @@ const styles = {
     userSelect: 'none',
 
     '&.attack': {
-      cursor: "url('/images/cursors/sword.svg'), auto"
+      cursor: "url('/images/cursors/swords.svg'), auto"
     }
   }),
 

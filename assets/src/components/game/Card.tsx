@@ -34,9 +34,14 @@ type CardProps = {
 
 export type Zone = 'market' | 'hand' | 'fightZone' | 'discard'
 
-type MouseEventHandler<A = HTMLElement> = (e: React.MouseEvent<A>) => void
+type OnClickAndCursor = [React.MouseEventHandler, Maybe<string>]
+function OnClickAndCursor(onClick: React.MouseEventHandler, cursor?: string): OnClickAndCursor {
+  return [onClick, Maybe.fromNullable(cursor)]
+}
 
 const OPENED = 'opened'
+const ATTACK = 'attack'
+const BUY = 'buy'
 
 export const Card: FunctionComponent<CardProps> = ({
   call,
@@ -70,13 +75,17 @@ export const Card: FunctionComponent<CardProps> = ({
   const isOther = game.player[0] !== playerId
   const isCurrent = Game.isCurrentPlayer(game)
   const pendingInteraction = Game.pendingInteraction(game)
-  const onClick = useMemo<MouseEventHandler | undefined>(() => {
+  const onClickAndCursor = useMemo<Maybe<OnClickAndCursor>>(() => {
     switch (zone) {
       case 'market':
-        return isCurrent ? callAndRun(CallMessage.BuyCard(cardId)) : undefined
+        return isCurrent
+          ? Maybe.some(OnClickAndCursor(callAndRun(CallMessage.BuyCard(cardId)), BUY))
+          : Maybe.none
 
       case 'hand':
-        return !isOther && isCurrent ? callAndRun(CallMessage.PlayCard(cardId)) : undefined
+        return !isOther && isCurrent
+          ? Maybe.some(OnClickAndCursor(callAndRun(CallMessage.PlayCard(cardId))))
+          : Maybe.none
 
       case 'fightZone':
         return pipe(
@@ -85,28 +94,34 @@ export const Card: FunctionComponent<CardProps> = ({
             () => {
               if (isCurrent) {
                 return isOther
-                  ? callAndRun(CallMessage.Attack(playerId, cardId))
+                  ? Maybe.some(OnClickAndCursor(callAndRun(CallMessage.Attack(playerId, cardId))))
                   : pipe(
                       data,
-                      Maybe.map(({ expend, ally, sacrifice }) =>
-                        expend || ally || sacrifice ? toggleAbilities : undefined
-                      ),
-                      Maybe.toUndefined
+                      Maybe.filter(({ expend, ally, sacrifice }) => expend || ally || sacrifice),
+                      Maybe.map(_ => OnClickAndCursor(toggleAbilities))
                     )
               }
-              return undefined
+              return Maybe.none
             },
             interaction =>
               interaction === 'stun_champion' && isOther
-                ? callAndRun(CallMessage.Interact(Interaction.StunChampion(playerId, cardId)))
+                ? Maybe.some(
+                    OnClickAndCursor(
+                      callAndRun(CallMessage.Interact(Interaction.StunChampion(playerId, cardId)))
+                    )
+                  )
                 : interaction === 'prepare_champion' && !isOther
-                ? callAndRun(CallMessage.Interact(Interaction.PrepareChampion(cardId)))
-                : undefined
+                ? Maybe.some(
+                    OnClickAndCursor(
+                      callAndRun(CallMessage.Interact(Interaction.PrepareChampion(cardId)))
+                    )
+                  )
+                : Maybe.none
           )
         )
 
       case 'discard':
-        return () => showDiscard(playerId)
+        return Maybe.some(OnClickAndCursor(() => showDiscard(playerId)))
     }
   }, [
     callAndRun,
@@ -120,6 +135,16 @@ export const Card: FunctionComponent<CardProps> = ({
     toggleAbilities,
     zone
   ])
+  const onClick = pipe(
+    onClickAndCursor,
+    Maybe.map(([_]) => _),
+    Maybe.toUndefined
+  )
+  const cursor = pipe(
+    onClickAndCursor,
+    Maybe.chain(([, _]) => _),
+    Maybe.toUndefined
+  )
 
   const onContextMenu = useCallback(
     (e: React.MouseEvent) => {
@@ -131,7 +156,13 @@ export const Card: FunctionComponent<CardProps> = ({
 
   return (
     <ClickOutside onClickOutside={closeAbilities}>
-      <div onClick={onClick} onContextMenu={onContextMenu} css={styles.container} style={style}>
+      <div
+        onClick={onClick}
+        onContextMenu={onContextMenu}
+        css={styles.container}
+        className={cursor}
+        style={style}
+      >
         {pipe(
           data,
           Maybe.fold<CardData, ReactNode>(
@@ -170,6 +201,14 @@ const styles = {
     position: 'absolute',
     // willChange: 'left, top',
 
+    [`&.${ATTACK}`]: {
+      cursor: "url('/images/cursors/swords.svg'), auto"
+    },
+
+    [`&.${BUY}`]: {
+      cursor: "url('/images/cursors/coin.svg'), auto"
+    },
+
     '& > img': {
       width: '100%',
       height: '100%',
@@ -184,6 +223,7 @@ const styles = {
     top: abilityPadding,
     width: params.card.width - 2 * abilityPadding,
     opacity: 0,
+    visibility: 'hidden',
     borderRadius: '4px',
     overflow: 'hidden',
     display: 'flex',
@@ -193,6 +233,7 @@ const styles = {
     boxShadow: '0 0 6px black',
 
     [`&.${OPENED}`]: {
+      visibility: 'visible',
       opacity: 1
     }
   }),
