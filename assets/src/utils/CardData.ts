@@ -177,47 +177,45 @@ export namespace CardData {
 
     // Wild
 
-    broelyn: d('Broelyn, Tisseuse de Savoirs', '/images/cards/broelyn.jpg', Maybe.some('necros'), {
+    broelyn: d('Broelyn, Tisseuse de Savoirs', '/images/cards/broelyn.jpg', Maybe.some('wild'), {
       expend: true,
       ally: true
     }),
-    cron: d('Cron, le Berserker', '/images/cards/cron.jpg', Maybe.some('necros'), {
+    cron: d('Cron, le Berserker', '/images/cards/cron.jpg', Maybe.some('wild'), {
       expend: true,
       ally: true
     }),
-    dire_wolf: d('Loup Terrifiant', '/images/cards/dire_wolf.jpg', Maybe.some('necros'), {
+    dire_wolf: d('Loup Terrifiant', '/images/cards/dire_wolf.jpg', Maybe.some('wild'), {
       expend: true,
       ally: true
     }),
-    elven_curse: d('Malédiction Elfique', '/images/cards/elven_curse.jpg', Maybe.some('necros'), {
+    elven_curse: d('Malédiction Elfique', '/images/cards/elven_curse.jpg', Maybe.some('wild'), {
       ally: true
     }),
-    elven_gift: d('Don Elfique', '/images/cards/elven_gift.jpg', Maybe.some('necros'), {
+    elven_gift: d('Don Elfique', '/images/cards/elven_gift.jpg', Maybe.some('wild'), {
       ally: true
     }),
-    grak: d('Grak, Géant de la Tempête', '/images/cards/grak.jpg', Maybe.some('necros'), {
+    grak: d('Grak, Géant de la Tempête', '/images/cards/grak.jpg', Maybe.some('wild'), {
       expend: true,
       ally: true
     }),
-    natures_bounty: d(
-      'Don de la Nature',
-      '/images/cards/natures_bounty.jpg',
-      Maybe.some('necros'),
-      { ally: true, sacrifice: true }
-    ),
-    orc_grunt: d('Grognard Orque', '/images/cards/orc_grunt.jpg', Maybe.some('necros'), {
-      expend: true,
-      ally: true
-    }),
-    rampage: d('Sauvagerie', '/images/cards/rampage.jpg', Maybe.some('necros')),
-    torgen: d('Torgen Brise-Pierre', '/images/cards/torgen.jpg', Maybe.some('necros'), {
-      expend: true
-    }),
-    spark: d('Étincelle', '/images/cards/spark.jpg', Maybe.some('necros'), { ally: true }),
-    wolf_form: d('Forme de Loup', '/images/cards/wolf_form.jpg', Maybe.some('necros'), {
+    natures_bounty: d('Don de la Nature', '/images/cards/natures_bounty.jpg', Maybe.some('wild'), {
+      ally: true,
       sacrifice: true
     }),
-    wolf_shaman: d('Shamane des Loups', '/images/cards/wolf_shaman.jpg', Maybe.some('necros'), {
+    orc_grunt: d('Grognard Orque', '/images/cards/orc_grunt.jpg', Maybe.some('wild'), {
+      expend: true,
+      ally: true
+    }),
+    rampage: d('Sauvagerie', '/images/cards/rampage.jpg', Maybe.some('wild')),
+    torgen: d('Torgen Brise-Pierre', '/images/cards/torgen.jpg', Maybe.some('wild'), {
+      expend: true
+    }),
+    spark: d('Étincelle', '/images/cards/spark.jpg', Maybe.some('wild'), { ally: true }),
+    wolf_form: d('Forme de Loup', '/images/cards/wolf_form.jpg', Maybe.some('wild'), {
+      sacrifice: true
+    }),
+    wolf_shaman: d('Shamane des Loups', '/images/cards/wolf_shaman.jpg', Maybe.some('wild'), {
       expend: true
     })
     /* eslint-enable @typescript-eslint/camelcase */
