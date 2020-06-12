@@ -4,6 +4,7 @@ import { FunctionComponent, ReactNode, useMemo, useCallback, useState } from 're
 import { animated } from 'react-spring'
 
 import { CardSimple } from './CardSimple'
+import { BaseButton } from '../Buttons'
 import { ClickOutside } from '../ClickOutside'
 import { params } from '../../params'
 import { CallChannel, CallMessage } from '../../models/CallMessage'
@@ -15,6 +16,7 @@ import { Interaction } from '../../models/game/Interaction'
 import { PlayerId } from '../../models/PlayerId'
 import { CardData } from '../../utils/CardData'
 import { pipe, Maybe, Future } from '../../utils/fp'
+import { AbilityIcon } from './AbilityIcon'
 
 interface CommonProps {
   readonly style?: React.CSSProperties
@@ -33,6 +35,8 @@ type CardProps = {
 export type Zone = 'market' | 'hand' | 'fightZone' | 'discard'
 
 type MouseEventHandler<A = HTMLElement> = (e: React.MouseEvent<A>) => void
+
+const OPENED = 'opened'
 
 export const Card: FunctionComponent<CardProps> = ({
   call,
@@ -53,8 +57,10 @@ export const Card: FunctionComponent<CardProps> = ({
   const toggleAbilities = useCallback(() => setAbilitiesOpened(_ => !_), [])
 
   const ability = useCallback(
-    (key: Ability, label: string): JSX.Element => (
-      <button onClick={callAndRun(CallMessage.UseAbility(key, cardId))}>Capacité {label}</button>
+    (key: Ability, label: string, icon: AbilityIcon): JSX.Element => (
+      <BaseButton onClick={callAndRun(CallMessage.UseAbility(key, cardId))} css={styles.ability}>
+        <AbilityIcon icon={icon} css={styles.icon} /> <span>{label}</span>
+      </BaseButton>
     ),
     [callAndRun, cardId]
   )
@@ -130,15 +136,17 @@ export const Card: FunctionComponent<CardProps> = ({
           data,
           Maybe.fold<CardData, ReactNode>(
             () => <CardSimple card={card} />,
-            ({ expend, ally, sacrifice }) => (
+            ({ faction, expend, ally, sacrifice }) => (
               <CardSimple card={card}>
-                {abilitiesOpened ? (
-                  <div css={styles.abilities}>
-                    {expend && !card.expend_ability_used ? ability('expend', 'Activer') : null}
-                    {ally && !card.ally_ability_used ? ability('ally', 'Allié') : null}
-                    {sacrifice ? ability('sacrifice', 'Sacrifice') : null}
-                  </div>
-                ) : null}
+                <div css={styles.abilities} className={abilitiesOpened ? OPENED : undefined}>
+                  {expend && !card.expend_ability_used
+                    ? ability('expend', 'Activer', 'expend')
+                    : null}
+                  {ally && !card.ally_ability_used && Maybe.isSome(faction)
+                    ? ability('ally', 'Allié', faction.value)
+                    : null}
+                  {sacrifice ? ability('sacrifice', 'Sacrifice', 'sacrifice') : null}
+                </div>
               </CardSimple>
             )
           )
@@ -156,6 +164,7 @@ export const HiddenCard: FunctionComponent<CommonProps> = ({ style }) => (
   </div>
 )
 
+const abilityPadding = 0.05 * params.card.width
 const styles = {
   container: css({
     position: 'absolute',
@@ -171,15 +180,40 @@ const styles = {
 
   abilities: css({
     position: 'absolute',
-    left: 0,
-    top: 0,
-    width: params.card.width,
+    left: abilityPadding,
+    top: abilityPadding,
+    width: params.card.width - 2 * abilityPadding,
+    opacity: 0,
+    borderRadius: '4px',
+    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    transition: 'all 0.2s',
+    boxShadow: '0 0 6px black',
 
-    '& > button': {
-      fontSize: '3em'
+    [`&.${OPENED}`]: {
+      opacity: 1
     }
+  }),
+
+  ability: css({
+    width: '100%',
+    border: 'none',
+    fontSize: '1.9em',
+    padding: '0.2em 0.4em 0.2em 0.2em',
+    transition: 'all 0.2s',
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+
+    '&:hover': {
+      backgroundColor: '#c1bda1'
+    }
+  }),
+
+  icon: css({
+    boxShadow: 'none'
   })
 }

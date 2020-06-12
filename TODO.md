@@ -13,9 +13,13 @@
 * count cards in discard (if some cards)
 * count cards in deck
 * damage and heal animations
-* cursors
+* cursors:
+    * buy
+    * attack card
+    * lookup discard card
+    * play card from hand
+    * card ability
+    * forbidden action
 * get CardData from server
 * animate dialog
 * animate entering cards
-
-* button for abilities
