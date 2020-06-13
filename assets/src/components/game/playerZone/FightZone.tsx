@@ -12,10 +12,12 @@ interface Props {
   readonly current: boolean
 }
 
+const CURRENT = 'current'
+
 export const FightZone: FunctionComponent<Props> = ({ playerRef, current }) => {
   const [left, top] = pipe(playerRef, Referential.coord(Rectangle.fightZone([0, 0])))
   return (
-    <div css={styles.container} className={current ? 'current' : undefined} style={{ left, top }} />
+    <div css={styles.container} className={current ? CURRENT : undefined} style={{ left, top }} />
   )
 }
 
@@ -29,7 +31,7 @@ const styles = {
     boxShadow: '0 0 6px black',
     backgroundImage: "url('/images/hardened_clay_stained_blue.png')",
 
-    '&.current': {
+    [`&.${CURRENT}`]: {
       backgroundImage: "url('/images/hardened_clay_stained_purple.png')"
     }
   })
