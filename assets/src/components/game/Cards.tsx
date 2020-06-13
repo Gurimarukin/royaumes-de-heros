@@ -1,13 +1,13 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
-import { FunctionComponent, CSSProperties, useMemo } from 'react'
-import { useTransition } from 'react-spring'
+import { ord, ordString } from 'fp-ts/lib/Ord'
+import { FunctionComponent, useMemo } from 'react'
 
-import { AnimatedCard, HiddenCard, Zone } from './Card'
+import { Card, HiddenCard, Zone } from './Card'
 import { params } from '../../params'
 import { PlayerId } from '../../models/PlayerId'
 import { CallChannel } from '../../models/CallMessage'
-import { Card } from '../../models/game/Card'
+import { Card as TCard } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
 import { OtherPlayer } from '../../models/game/OtherPlayer'
@@ -27,10 +27,14 @@ interface Props {
 }
 
 interface CardWithCoord {
-  readonly card: [CardId, Card]
+  readonly card: [CardId, TCard]
   readonly playerId: PlayerId
   readonly zone: Zone
   readonly coord: Coord
+}
+
+namespace CardWithCoord {
+  export const byId = ord.contramap(ordString, (c: CardWithCoord) => CardId.unwrap(c.card[0]))
 }
 
 type Cards = [CardWithCoord[], Coord[]]
@@ -79,7 +83,7 @@ export const Cards: FunctionComponent<Props> = ({
       [...deck(referentials.player, current.deck)]
     ]
     // others
-    return pipe(
+    const res: Cards = pipe(
       zippedOtherPlayers,
       List.reduce(init, ([c, h], [referential, [playerId, player]]) => [
         [
@@ -99,6 +103,7 @@ export const Cards: FunctionComponent<Props> = ({
         ]
       ])
     )
+    return [pipe(res[0], List.sortBy([CardWithCoord.byId])), res[1]]
   }, [
     current.deck,
     current.discard,
@@ -112,34 +117,21 @@ export const Cards: FunctionComponent<Props> = ({
     zippedOtherPlayers
   ])
 
-  const transitions = useTransition<CardWithCoord, Partial<CSSProperties & CardWithCoord>>(
-    cards,
-    ({ card: [cardId] }) => CardId.unwrap(cardId),
-    {
-      // from: { left: 0, top: 0 },
-      // leave: { left: 0, top: 0 },
-      enter: ({ coord: [left, top] }) => ({ left, top }),
-      update: ({ coord: [left, top] }) => ({ left, top }),
-      leave: ({ coord: [left, top] }) => ({ left, top }),
-      config: { precision: 10 }
-    }
-  )
-
   return (
     <div>
       {hiddens.map(([left, top], i) => (
         <HiddenCard key={i} style={{ left, top }} />
       ))}
-      {transitions.map(({ item, key, props: { left, top } }) => (
-        <AnimatedCard
-          key={key}
+      {cards.map(({ card: [cardId, card], playerId, zone, coord: [left, top] }) => (
+        <Card
+          key={CardId.unwrap(cardId)}
           call={call}
           showDiscard={showDiscard}
           showCardDetail={showCardDetail}
           game={game}
-          playerId={item.playerId}
-          zone={item.zone}
-          card={item.card}
+          playerId={playerId}
+          zone={zone}
+          card={[cardId, card]}
           style={{ left, top }}
         />
       ))}
@@ -149,7 +141,7 @@ export const Cards: FunctionComponent<Props> = ({
 
 function fightZone(
   referential: Referential,
-  cards: [CardId, Card][],
+  cards: [CardId, TCard][],
   playerId: PlayerId
 ): CardWithCoord[] {
   const cardsWidth =
@@ -175,7 +167,7 @@ function fightZone(
 
 function discard(
   referential: Referential,
-  cards: [CardId, Card][],
+  cards: [CardId, TCard][],
   playerId: PlayerId
 ): CardWithCoord[] {
   return pipe(cards, List.reverse).map(
@@ -193,7 +185,7 @@ function card(
   coord: (i: number) => Coord,
   playerId: PlayerId,
   zone: Zone
-): (card: [CardId, Card], i: number) => CardWithCoord {
+): (card: [CardId, TCard], i: number) => CardWithCoord {
   return (card, i) => ({
     card,
     playerId,

@@ -159,7 +159,7 @@ export const Card: FunctionComponent<CardProps> = ({
       <div
         onClick={onClick}
         onContextMenu={onContextMenu}
-        css={styles.container}
+        css={[styles.container, styles.transitionAll]}
         className={cursor}
         style={style}
       >
@@ -215,6 +215,10 @@ const styles = {
       borderRadius: params.card.borderRadius,
       boxShadow: '0 0 4px black'
     }
+  }),
+
+  transitionAll: css({
+    transition: 'all 1s'
   }),
 
   abilities: css({
