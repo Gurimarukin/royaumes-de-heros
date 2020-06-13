@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
-import { FunctionComponent } from 'react'
+import { FunctionComponent, useCallback } from 'react'
 
 import { CombatAndGold } from './playerZone/CombatAndGold'
 import { Discard } from './playerZone/Discard'
@@ -34,21 +34,23 @@ export const PlayerZones: FunctionComponent<Props> = ({
   zippedOtherPlayers
 }) => {
   const [playerId, player] = game.player
-  return (
-    <div>
-      {playerZone(referentials.player, playerId, player)}
-      {zippedOtherPlayers.map(([ref, [id, player]]) => playerZone(ref, id, player))}
-    </div>
-  )
 
-  function playerZone(ref: Referential, id: PlayerId, player: PartialPlayer): JSX.Element {
-    return (
+  const playerZone = useCallback(
+    (ref: Referential, id: PlayerId, player: PartialPlayer): JSX.Element => (
       <div key={PlayerId.unwrap(id)}>
         <FightZone playerRef={ref} current={id === game.current_player} />
         <Discard playerRef={ref} />
         <CombatAndGold playerRef={ref} player={player} />
         <Hero call={call} game={game} playerRef={ref} player={[id, player]} />
       </div>
-    )
-  }
+    ),
+    [call, game]
+  )
+
+  return (
+    <div>
+      {playerZone(referentials.player, playerId, player)}
+      {zippedOtherPlayers.map(([ref, [id, player]]) => playerZone(ref, id, player))}
+    </div>
+  )
 }
