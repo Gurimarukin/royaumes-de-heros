@@ -4,6 +4,7 @@ import { FunctionComponent, Fragment } from 'react'
 
 import { Cards } from './Cards'
 import { MarketZone } from './MarketZone'
+import { Overlay } from './Overlay'
 import { PlayerZones } from './PlayerZones'
 import { CallChannel } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
@@ -45,5 +46,6 @@ export const Board: FunctionComponent<Props> = ({
       referentials={referentials}
       zippedOtherPlayers={zippedOtherPlayers}
     />
+    <Overlay game={game} referentials={referentials} zippedOtherPlayers={zippedOtherPlayers} />
   </Fragment>
 )

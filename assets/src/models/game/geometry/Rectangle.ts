@@ -7,6 +7,10 @@ export interface Rectangle {
   readonly height: number
 }
 
+export function Rectangle(position: Coord, width: number, height: number): Rectangle {
+  return { position, width, height }
+}
+
 export namespace Rectangle {
   export function market(position: Coord): Rectangle {
     return { position, width: params.market.width, height: params.market.height }

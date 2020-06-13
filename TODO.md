@@ -11,8 +11,6 @@
 
 * shortcuts: center players, center market
 * reduce opacity hand when not turn
-* count cards in discard (if some cards)
-* count cards in deck
 * damage and heal animations
 * get CardData from server
 * animate dialog
