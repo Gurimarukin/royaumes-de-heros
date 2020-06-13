@@ -118,7 +118,7 @@ export namespace CardData {
       'Percepteur de Dîme',
       '/images/cards/tithe_priest.jpg',
       Maybe.some('imperial'),
-      { ally: true }
+      { expend: true }
     ),
     taxation: d('Taxation', '/images/cards/taxation.jpg', Maybe.some('imperial'), { ally: true }),
     word_of_power: d(

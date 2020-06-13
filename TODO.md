@@ -17,3 +17,4 @@
 * get CardData from server
 * animate dialog
 * animate entering cards
+* random card rotation for discard and deck
