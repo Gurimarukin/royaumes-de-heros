@@ -33,8 +33,6 @@ export const PlayerZones: FunctionComponent<Props> = ({
   referentials,
   zippedOtherPlayers
 }) => {
-  const [playerId, player] = game.player
-
   const playerZone = useCallback(
     (ref: Referential, id: PlayerId, player: PartialPlayer): JSX.Element => (
       <div key={PlayerId.unwrap(id)}>
@@ -46,6 +44,8 @@ export const PlayerZones: FunctionComponent<Props> = ({
     ),
     [call, game]
   )
+
+  const [playerId, player] = game.player
 
   return (
     <div>
