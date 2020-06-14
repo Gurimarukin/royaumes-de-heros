@@ -21,6 +21,8 @@ interface Props {
   readonly player: [PlayerId, PartialPlayer]
 }
 
+const ATTACK = 'attack'
+
 export const Hero: FunctionComponent<Props> = ({
   call,
   game,
@@ -62,7 +64,7 @@ export const Hero: FunctionComponent<Props> = ({
     <div
       onClick={onClick}
       css={styles.container}
-      className={isOther ? 'attack' : undefined}
+      className={isOther ? ATTACK : undefined}
       style={{ left, top }}
     >
       {transitions.map(({ key, props }) => (
@@ -91,7 +93,7 @@ const styles = {
     alignItems: 'center',
     userSelect: 'none',
 
-    '&.attack': {
+    [`&.${ATTACK}`]: {
       cursor: "url('/images/cursors/swords.svg'), auto"
     }
   }),

@@ -8,10 +8,12 @@ export interface DialogProps {
   readonly children?: ReactNode
 }
 
+const SHOWN = 'shown'
+
 export const DialogStyled = forwardRef<HTMLDivElement, DialogProps>(
   ({ shown, title, children }, ref) => (
     <div ref={ref} css={styles.container}>
-      <div css={styles.box} className={shown ? 'shown' : undefined}>
+      <div css={styles.box} className={shown ? SHOWN : undefined}>
         <h2 css={styles.title}>{title}</h2>
         <div>{children}</div>
       </div>
@@ -42,7 +44,7 @@ const styles = {
     maxHeight: '98vh',
     marginTop: '-98vh',
 
-    '&.shown': {
+    [`&.${SHOWN}`]: {
       marginTop: 0
     }
   }),

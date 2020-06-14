@@ -18,6 +18,7 @@ interface Props {
 }
 
 const HIDDEN = 'hidden'
+
 export const CardSimple = forwardRef<HTMLDivElement, Props>(
   ({ card, onClick, className, style, children }, ref) => {
     const data = CardData.get(card.key)

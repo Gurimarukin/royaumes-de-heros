@@ -14,6 +14,7 @@ interface Props {
 export type AbilityIcon = Faction | 'expend' | 'sacrifice'
 
 const CROSSED = 'crossed'
+
 export const AbilityIcon: FunctionComponent<Props> = ({ icon, crossedOut = false, className }) => {
   const src =
     icon === 'expend'

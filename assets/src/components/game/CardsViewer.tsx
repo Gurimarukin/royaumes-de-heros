@@ -14,6 +14,8 @@ interface Props {
   readonly toggleCard?: (id: CardId) => () => void
 }
 
+const SELECTED = 'selected'
+
 export const CardsViewer: FunctionComponent<Props> = ({ selected = [], toggleCard, cards }) => (
   <div css={styles.cards}>
     {cards.map(([id, card], j) => (
@@ -27,7 +29,7 @@ export const CardsViewer: FunctionComponent<Props> = ({ selected = [], toggleCar
             selected,
             List.exists(_ => _ === id)
           )
-            ? 'selected'
+            ? SELECTED
             : undefined
         }
         style={{ cursor: toggleCard === undefined ? undefined : 'pointer' }}
@@ -56,7 +58,7 @@ const styles = {
     border: '5px solid transparent',
     transition: 'all 0.2s',
 
-    '&.selected': {
+    [`&.${SELECTED}`]: {
       borderColor: 'crimson'
     },
 
