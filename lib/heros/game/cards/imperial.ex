@@ -75,157 +75,183 @@ defmodule Heros.Game.Cards.Imperial do
 
   # Primary ablilities
 
-  @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def primary_ability(game, :close_ranks, player_id) do
-    game
-    |> Game.update_player(player_id, fn player ->
-      champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
-      player |> Player.incr_combat(5 + champions * 2)
-    end)
+  @spec primary_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def primary_ability(:close_ranks) do
+    fn game, player_id ->
+      game
+      |> Game.update_player(player_id, fn player ->
+        champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
+        player |> Player.incr_combat(5 + champions * 2)
+      end)
+    end
   end
 
-  def primary_ability(game, :command, player_id) do
-    game
-    |> Game.add_gold(player_id, 2)
-    |> Game.add_combat(player_id, 3)
-    |> Game.heal(player_id, 4)
-    |> Game.draw_card(player_id, 1)
+  def primary_ability(:command) do
+    fn game, player_id ->
+      game
+      |> Game.add_gold(player_id, 2)
+      |> Game.add_combat(player_id, 3)
+      |> Game.heal(player_id, 4)
+      |> Game.draw_card(player_id, 1)
+    end
   end
 
-  def primary_ability(game, :domination, player_id) do
-    game
-    |> Game.add_combat(player_id, 6)
-    |> Game.heal(player_id, 6)
-    |> Game.draw_card(player_id, 1)
+  def primary_ability(:domination) do
+    fn game, player_id ->
+      game
+      |> Game.add_combat(player_id, 6)
+      |> Game.heal(player_id, 6)
+      |> Game.draw_card(player_id, 1)
+    end
   end
 
-  def primary_ability(game, :rally_troops, player_id) do
-    game
-    |> Game.add_combat(player_id, 5)
-    |> Game.heal(player_id, 5)
+  def primary_ability(:rally_troops) do
+    fn game, player_id ->
+      game
+      |> Game.add_combat(player_id, 5)
+      |> Game.heal(player_id, 5)
+    end
   end
 
-  def primary_ability(game, :recruit, player_id) do
-    game
-    |> Game.add_gold(player_id, 2)
-    |> Game.update_player(player_id, fn player ->
-      champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
-      player |> Player.heal(3 + champions * 1)
-    end)
+  def primary_ability(:recruit) do
+    fn game, player_id ->
+      game
+      |> Game.add_gold(player_id, 2)
+      |> Game.update_player(player_id, fn player ->
+        champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
+        player |> Player.heal(3 + champions * 1)
+      end)
+    end
   end
 
-  def primary_ability(game, :taxation, player_id) do
-    game |> Game.add_gold(player_id, 2)
+  def primary_ability(:taxation) do
+    fn game, player_id -> game |> Game.add_gold(player_id, 2) end
   end
 
-  def primary_ability(game, :word_of_power, player_id) do
-    game |> Game.draw_card(player_id, 2)
+  def primary_ability(:word_of_power) do
+    fn game, player_id -> game |> Game.draw_card(player_id, 2) end
   end
 
-  def primary_ability(_game, _, _player_id), do: nil
+  def primary_ability(_), do: nil
 
   # Expend abilities
 
-  @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
-  def expend_ability(game, :arkus, player_id, _card_id) do
-    game
-    |> Game.add_combat(player_id, 5)
-    |> Game.draw_card(player_id, 1)
+  @spec expend_ability(atom) :: nil | (Game.t(), Player.id(), Card.id() -> Game.t())
+  def expend_ability(:arkus) do
+    fn game, player_id, _card_id ->
+      game
+      |> Game.add_combat(player_id, 5)
+      |> Game.draw_card(player_id, 1)
+    end
   end
 
-  def expend_ability(game, :darian, player_id, _card_id) do
-    game |> Game.queue_select_effect(player_id, add_combat: 3, heal: 4)
+  def expend_ability(:darian) do
+    fn game, player_id, _card_id ->
+      game |> Game.queue_select_effect(player_id, add_combat: 3, heal: 4)
+    end
   end
 
-  def expend_ability(game, :cristov, player_id, _card_id) do
-    game
-    |> Game.add_combat(player_id, 2)
-    |> Game.heal(player_id, 3)
+  def expend_ability(:cristov) do
+    fn game, player_id, _card_id ->
+      game
+      |> Game.add_combat(player_id, 2)
+      |> Game.heal(player_id, 3)
+    end
   end
 
-  def expend_ability(game, :kraka, player_id, _card_id) do
-    game
-    |> Game.heal(player_id, 2)
-    |> Game.draw_card(player_id, 1)
+  def expend_ability(:kraka) do
+    fn game, player_id, _card_id ->
+      game
+      |> Game.heal(player_id, 2)
+      |> Game.draw_card(player_id, 1)
+    end
   end
 
-  def expend_ability(game, :man_at_arms, player_id, card_id) do
-    game
-    |> Game.update_player(player_id, fn player ->
-      other_guards =
-        Enum.count(player.fight_zone, fn {id, c} -> Card.guard?(c.key) and id != card_id end)
+  def expend_ability(:man_at_arms) do
+    fn game, player_id, card_id ->
+      game
+      |> Game.update_player(player_id, fn player ->
+        other_guards =
+          Enum.count(player.fight_zone, fn {id, c} -> Card.guard?(c.key) and id != card_id end)
 
-      player |> Player.incr_combat(2 + other_guards * 1)
-    end)
+        player |> Player.incr_combat(2 + other_guards * 1)
+      end)
+    end
   end
 
-  def expend_ability(game, :weyan, player_id, card_id) do
-    game
-    |> Game.update_player(player_id, fn player ->
-      other_champions =
-        Enum.count(player.fight_zone, fn {id, c} -> Card.champion?(c.key) and id != card_id end)
+  def expend_ability(:weyan) do
+    fn game, player_id, card_id ->
+      game
+      |> Game.update_player(player_id, fn player ->
+        other_champions =
+          Enum.count(player.fight_zone, fn {id, c} -> Card.champion?(c.key) and id != card_id end)
 
-      player |> Player.incr_combat(3 + other_champions * 1)
-    end)
+        player |> Player.incr_combat(3 + other_champions * 1)
+      end)
+    end
   end
 
-  def expend_ability(game, :tithe_priest, player_id, _card_id) do
-    game |> Game.queue_select_effect(player_id, add_gold: 1, heal_for_champions: {0, 1})
+  def expend_ability(:tithe_priest) do
+    fn game, player_id, _card_id ->
+      game |> Game.queue_select_effect(player_id, add_gold: 1, heal_for_champions: {0, 1})
+    end
   end
 
-  def expend_ability(_game, _, _player_id, _card_id), do: nil
+  def expend_ability(_), do: nil
 
   # Ally abilities
 
-  @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def ally_ability(game, :arkus, player_id) do
-    game |> Game.heal(player_id, 6)
+  @spec ally_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def ally_ability(:arkus) do
+    fn game, player_id -> game |> Game.heal(player_id, 6) end
   end
 
-  def ally_ability(game, :close_ranks, player_id) do
-    game |> Game.heal(player_id, 6)
+  def ally_ability(:close_ranks) do
+    fn game, player_id -> game |> Game.heal(player_id, 6) end
   end
 
-  def ally_ability(game, :domination, player_id) do
-    game |> Game.queue_prepare_champion(player_id)
+  def ally_ability(:domination) do
+    fn game, player_id -> game |> Game.queue_prepare_champion(player_id) end
   end
 
-  def ally_ability(game, :cristov, player_id) do
-    game |> Game.draw_card(player_id, 1)
+  def ally_ability(:cristov) do
+    fn game, player_id -> game |> Game.draw_card(player_id, 1) end
   end
 
-  def ally_ability(game, :kraka, player_id) do
-    game
-    |> Game.update_player(player_id, fn player ->
-      champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
-      player |> Player.heal(champions * 2)
-    end)
+  def ally_ability(:kraka) do
+    fn game, player_id ->
+      game
+      |> Game.update_player(player_id, fn player ->
+        champions = KeyList.count(player.fight_zone, &Card.champion?(&1.key))
+        player |> Player.heal(champions * 2)
+      end)
+    end
   end
 
-  def ally_ability(game, :rally_troops, player_id) do
-    game |> Game.queue_prepare_champion(player_id)
+  def ally_ability(:rally_troops) do
+    fn game, player_id -> game |> Game.queue_prepare_champion(player_id) end
   end
 
-  def ally_ability(game, :recruit, player_id) do
-    game |> Game.add_gold(player_id, 1)
+  def ally_ability(:recruit) do
+    fn game, player_id -> game |> Game.add_gold(player_id, 1) end
   end
 
-  def ally_ability(game, :taxation, player_id) do
-    game |> Game.heal(player_id, 6)
+  def ally_ability(:taxation) do
+    fn game, player_id -> game |> Game.heal(player_id, 6) end
   end
 
-  def ally_ability(game, :word_of_power, player_id) do
-    game |> Game.heal(player_id, 5)
+  def ally_ability(:word_of_power) do
+    fn game, player_id -> game |> Game.heal(player_id, 5) end
   end
 
-  def ally_ability(_game, _, _player_id), do: nil
+  def ally_ability(_), do: nil
 
   # Sacrifice ability
 
-  @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def sacrifice_ability(game, :word_of_power, player_id) do
-    game |> Game.add_combat(player_id, 5)
+  @spec sacrifice_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def sacrifice_ability(:word_of_power) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 5) end
   end
 
-  def sacrifice_ability(_game, _, _player_id), do: nil
+  def sacrifice_ability(_), do: nil
 end

@@ -8,6 +8,9 @@ defmodule Heros.Utils.Option do
   def to_nilable({:ok, a}), do: a
   def to_nilable(:error), do: nil
 
+  def get_or_else({:ok, a}, _default), do: a
+  def get_or_else(:error, default), do: default
+
   def chain({:ok, a}, f), do: f.(a)
   def chain(:error, _f), do: :error
 

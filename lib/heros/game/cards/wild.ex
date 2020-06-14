@@ -70,139 +70,155 @@ defmodule Heros.Game.Cards.Wild do
 
   # Primary ablilities
 
-  @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def primary_ability(game, :elven_curse, player_id) do
-    game
-    |> Game.add_combat(player_id, 6)
-    |> Game.queue_target_opponent_to_discard(player_id)
+  @spec primary_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def primary_ability(:elven_curse) do
+    fn game, player_id ->
+      game
+      |> Game.add_combat(player_id, 6)
+      |> Game.queue_target_opponent_to_discard(player_id)
+    end
   end
 
-  def primary_ability(game, :elven_gift, player_id) do
-    game
-    |> Game.add_gold(player_id, 2)
-    |> Game.queue_draw_then_discard(player_id)
+  def primary_ability(:elven_gift) do
+    fn game, player_id ->
+      game
+      |> Game.add_gold(player_id, 2)
+      |> Game.queue_draw_then_discard(player_id)
+    end
   end
 
-  def primary_ability(game, :natures_bounty, player_id) do
-    game |> Game.add_gold(player_id, 4)
+  def primary_ability(:natures_bounty) do
+    fn game, player_id -> game |> Game.add_gold(player_id, 4) end
   end
 
-  def primary_ability(game, :rampage, player_id) do
-    game
-    |> Game.add_combat(player_id, 6)
-    |> Game.queue_draw_then_discard(player_id, 2)
+  def primary_ability(:rampage) do
+    fn game, player_id ->
+      game
+      |> Game.add_combat(player_id, 6)
+      |> Game.queue_draw_then_discard(player_id, 2)
+    end
   end
 
-  def primary_ability(game, :spark, player_id) do
-    game
-    |> Game.add_combat(player_id, 3)
-    |> Game.queue_target_opponent_to_discard(player_id)
+  def primary_ability(:spark) do
+    fn game, player_id ->
+      game
+      |> Game.add_combat(player_id, 3)
+      |> Game.queue_target_opponent_to_discard(player_id)
+    end
   end
 
-  def primary_ability(game, :wolf_form, player_id) do
-    game
-    |> Game.add_combat(player_id, 8)
-    |> Game.queue_target_opponent_to_discard(player_id)
+  def primary_ability(:wolf_form) do
+    fn game, player_id ->
+      game
+      |> Game.add_combat(player_id, 8)
+      |> Game.queue_target_opponent_to_discard(player_id)
+    end
   end
 
-  def primary_ability(_game, _, _player_id), do: nil
+  def primary_ability(_), do: nil
 
   # Expend abilities
 
-  @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
-  def expend_ability(game, :broelyn, player_id, _card_id) do
-    game |> Game.add_gold(player_id, 2)
+  @spec expend_ability(atom) :: nil | (Game.t(), Player.id(), Card.id() -> Game.t())
+  def expend_ability(:broelyn) do
+    fn game, player_id, _card_id -> game |> Game.add_gold(player_id, 2) end
   end
 
-  def expend_ability(game, :cron, player_id, _card_id) do
-    game |> Game.add_combat(player_id, 5)
+  def expend_ability(:cron) do
+    fn game, player_id, _card_id -> game |> Game.add_combat(player_id, 5) end
   end
 
-  def expend_ability(game, :dire_wolf, player_id, _card_id) do
-    game |> Game.add_combat(player_id, 3)
+  def expend_ability(:dire_wolf) do
+    fn game, player_id, _card_id -> game |> Game.add_combat(player_id, 3) end
   end
 
-  def expend_ability(game, :grak, player_id, _card_id) do
-    game
-    |> Game.add_combat(player_id, 6)
-    |> Game.queue_draw_then_discard(player_id)
+  def expend_ability(:grak) do
+    fn game, player_id, _card_id ->
+      game
+      |> Game.add_combat(player_id, 6)
+      |> Game.queue_draw_then_discard(player_id)
+    end
   end
 
-  def expend_ability(game, :orc_grunt, player_id, _card_id) do
-    game |> Game.add_combat(player_id, 2)
+  def expend_ability(:orc_grunt) do
+    fn game, player_id, _card_id -> game |> Game.add_combat(player_id, 2) end
   end
 
-  def expend_ability(game, :torgen, player_id, _card_id) do
-    game
-    |> Game.add_combat(player_id, 4)
-    |> Game.queue_target_opponent_to_discard(player_id)
+  def expend_ability(:torgen) do
+    fn game, player_id, _card_id ->
+      game
+      |> Game.add_combat(player_id, 4)
+      |> Game.queue_target_opponent_to_discard(player_id)
+    end
   end
 
-  def expend_ability(game, :wolf_shaman, player_id, card_id) do
-    game
-    |> Game.update_player(player_id, fn player ->
-      other_wilds =
-        Enum.count(player.fight_zone, fn {id, c} ->
-          Card.faction(c.key) == :wild and id != card_id
-        end)
+  def expend_ability(:wolf_shaman) do
+    fn game, player_id, card_id ->
+      game
+      |> Game.update_player(player_id, fn player ->
+        other_wilds =
+          Enum.count(player.fight_zone, fn {id, c} ->
+            Card.faction(c.key) == :wild and id != card_id
+          end)
 
-      player |> Player.incr_combat(2 + other_wilds * 1)
-    end)
+        player |> Player.incr_combat(2 + other_wilds * 1)
+      end)
+    end
   end
 
-  def expend_ability(_game, _, _player_id, _card_id), do: nil
+  def expend_ability(_), do: nil
 
   # Ally abilities
 
-  @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def ally_ability(game, :broelyn, player_id) do
-    game |> Game.queue_target_opponent_to_discard(player_id)
+  @spec ally_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def ally_ability(:broelyn) do
+    fn game, player_id -> game |> Game.queue_target_opponent_to_discard(player_id) end
   end
 
-  def ally_ability(game, :cron, player_id) do
-    game |> Game.draw_card(player_id, 1)
+  def ally_ability(:cron) do
+    fn game, player_id -> game |> Game.draw_card(player_id, 1) end
   end
 
-  def ally_ability(game, :dire_wolf, player_id) do
-    game |> Game.add_combat(player_id, 4)
+  def ally_ability(:dire_wolf) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 4) end
   end
 
-  def ally_ability(game, :elven_curse, player_id) do
-    game |> Game.add_combat(player_id, 3)
+  def ally_ability(:elven_curse) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 3) end
   end
 
-  def ally_ability(game, :elven_gift, player_id) do
-    game |> Game.add_combat(player_id, 4)
+  def ally_ability(:elven_gift) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 4) end
   end
 
-  def ally_ability(game, :grak, player_id) do
-    game |> Game.queue_draw_then_discard(player_id)
+  def ally_ability(:grak) do
+    fn game, player_id -> game |> Game.queue_draw_then_discard(player_id) end
   end
 
-  def ally_ability(game, :natures_bounty, player_id) do
-    game |> Game.queue_target_opponent_to_discard(player_id)
+  def ally_ability(:natures_bounty) do
+    fn game, player_id -> game |> Game.queue_target_opponent_to_discard(player_id) end
   end
 
-  def ally_ability(game, :orc_grunt, player_id) do
-    game |> Game.draw_card(player_id, 1)
+  def ally_ability(:orc_grunt) do
+    fn game, player_id -> game |> Game.draw_card(player_id, 1) end
   end
 
-  def ally_ability(game, :spark, player_id) do
-    game |> Game.add_combat(player_id, 2)
+  def ally_ability(:spark) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 2) end
   end
 
-  def ally_ability(_game, _, _player_id), do: nil
+  def ally_ability(_), do: nil
 
   # Sacrifice ability
 
-  @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def sacrifice_ability(game, :natures_bounty, player_id) do
-    game |> Game.add_combat(player_id, 4)
+  @spec sacrifice_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def sacrifice_ability(:natures_bounty) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 4) end
   end
 
-  def sacrifice_ability(game, :wolf_form, player_id) do
-    game |> Game.queue_target_opponent_to_discard(player_id)
+  def sacrifice_ability(:wolf_form) do
+    fn game, player_id -> game |> Game.queue_target_opponent_to_discard(player_id) end
   end
 
-  def sacrifice_ability(_game, _, _player_id), do: nil
+  def sacrifice_ability(_), do: nil
 end

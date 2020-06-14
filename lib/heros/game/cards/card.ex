@@ -76,46 +76,45 @@ defmodule Heros.Game.Cards.Card do
     end
   end
 
-  @spec primary_ability(Game.t(), atom, Player.id()) :: Game.t()
-  def primary_ability(game, :gem, player_id) do
-    game |> Game.add_gold(player_id, 2)
+  @spec primary_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def primary_ability(:gem) do
+    fn game, player_id -> game |> Game.add_gold(player_id, 2) end
   end
 
-  def primary_ability(game, key, player_id) do
-    Decks.Base.primary_ability(game, key, player_id) ||
-      Guild.primary_ability(game, key, player_id) ||
-      Imperial.primary_ability(game, key, player_id) ||
-      Necros.primary_ability(game, key, player_id) ||
-      Wild.primary_ability(game, key, player_id) ||
-      game
+  def primary_ability(key) do
+    Decks.Base.primary_ability(key) ||
+      Guild.primary_ability(key) ||
+      Imperial.primary_ability(key) ||
+      Necros.primary_ability(key) ||
+      Wild.primary_ability(key)
   end
 
-  @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
-  def expend_ability(game, key, player_id, card_id) do
-    Guild.expend_ability(game, key, player_id, card_id) ||
-      Imperial.expend_ability(game, key, player_id, card_id) ||
-      Necros.expend_ability(game, key, player_id, card_id) ||
-      Wild.expend_ability(game, key, player_id, card_id)
+  @spec expend_ability(atom) :: nil | (Game.t(), Player.id(), Card.id() -> Game.t())
+  def expend_ability(key) do
+    Guild.expend_ability(key) ||
+      Imperial.expend_ability(key) ||
+      Necros.expend_ability(key) ||
+      Wild.expend_ability(key)
   end
 
-  @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def ally_ability(game, key, player_id) do
-    Guild.ally_ability(game, key, player_id) ||
-      Imperial.ally_ability(game, key, player_id) ||
-      Necros.ally_ability(game, key, player_id) ||
-      Wild.ally_ability(game, key, player_id)
+  @spec ally_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def ally_ability(key) do
+    Guild.ally_ability(key) ||
+      Imperial.ally_ability(key) ||
+      Necros.ally_ability(key) ||
+      Wild.ally_ability(key)
   end
 
-  @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def sacrifice_ability(game, :gem, player_id) do
-    game |> Game.add_combat(player_id, 3)
+  @spec sacrifice_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def sacrifice_ability(:gem) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 3) end
   end
 
-  def sacrifice_ability(game, key, player_id) do
-    Guild.sacrifice_ability(game, key, player_id) ||
-      Imperial.sacrifice_ability(game, key, player_id) ||
-      Necros.sacrifice_ability(game, key, player_id) ||
-      Wild.sacrifice_ability(game, key, player_id)
+  def sacrifice_ability(key) do
+    Guild.sacrifice_ability(key) ||
+      Imperial.sacrifice_ability(key) ||
+      Necros.sacrifice_ability(key) ||
+      Wild.sacrifice_ability(key)
   end
 
   def full_reset(card) do

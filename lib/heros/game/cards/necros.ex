@@ -70,127 +70,145 @@ defmodule Heros.Game.Cards.Necros do
 
   # Primary ablilities
 
-  @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def primary_ability(game, :dark_energy, player_id) do
-    game |> Game.add_combat(player_id, 7)
+  @spec primary_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def primary_ability(:dark_energy) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 7) end
   end
 
-  def primary_ability(game, :dark_reward, player_id) do
-    game
-    |> Game.add_gold(player_id, 3)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+  def primary_ability(:dark_reward) do
+    fn game, player_id ->
+      game
+      |> Game.add_gold(player_id, 3)
+      |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+    end
   end
 
-  def primary_ability(game, :death_touch, player_id) do
-    game
-    |> Game.add_combat(player_id, 2)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+  def primary_ability(:death_touch) do
+    fn game, player_id ->
+      game
+      |> Game.add_combat(player_id, 2)
+      |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+    end
   end
 
-  def primary_ability(game, :influence, player_id) do
-    game |> Game.add_gold(player_id, 3)
+  def primary_ability(:influence) do
+    fn game, player_id -> game |> Game.add_gold(player_id, 3) end
   end
 
-  def primary_ability(game, :life_drain, player_id) do
-    game
-    |> Game.add_combat(player_id, 8)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+  def primary_ability(:life_drain) do
+    fn game, player_id ->
+      game
+      |> Game.add_combat(player_id, 8)
+      |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+    end
   end
 
-  def primary_ability(game, :the_rot, player_id) do
-    game
-    |> Game.add_combat(player_id, 4)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+  def primary_ability(:the_rot) do
+    fn game, player_id ->
+      game
+      |> Game.add_combat(player_id, 4)
+      |> Game.queue_sacrifice_from_hand_or_discard(player_id)
+    end
   end
 
-  def primary_ability(_game, _, _player_id), do: nil
+  def primary_ability(_), do: nil
 
   # Expend abilities
 
-  @spec expend_ability(Game.t(), atom, Player.id(), Card.id()) :: nil | Game.t()
-  def expend_ability(game, :cult_priest, player_id, _card_id) do
-    game |> Game.queue_select_effect(player_id, add_gold: 1, add_combat: 1)
+  @spec expend_ability(atom) :: nil | (Game.t(), Player.id(), Card.id() -> Game.t())
+  def expend_ability(:cult_priest) do
+    fn game, player_id, _card_id ->
+      game |> Game.queue_select_effect(player_id, add_gold: 1, add_combat: 1)
+    end
   end
 
-  def expend_ability(game, :death_cultist, player_id, _card_id) do
-    game |> Game.add_combat(player_id, 2)
+  def expend_ability(:death_cultist) do
+    fn game, player_id, _card_id -> game |> Game.add_combat(player_id, 2) end
   end
 
-  def expend_ability(game, :rayla, player_id, _card_id) do
-    game |> Game.add_combat(player_id, 3)
+  def expend_ability(:rayla) do
+    fn game, player_id, _card_id -> game |> Game.add_combat(player_id, 3) end
   end
 
-  def expend_ability(game, :krythos, player_id, _card_id) do
-    game
-    |> Game.add_combat(player_id, 3)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id, combat_per_card: 3)
+  def expend_ability(:krythos) do
+    fn game, player_id, _card_id ->
+      game
+      |> Game.add_combat(player_id, 3)
+      |> Game.queue_sacrifice_from_hand_or_discard(player_id, combat_per_card: 3)
+    end
   end
 
-  def expend_ability(game, :lys, player_id, _card_id) do
-    game
-    |> Game.add_combat(player_id, 2)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id, combat_per_card: 2)
+  def expend_ability(:lys) do
+    fn game, player_id, _card_id ->
+      game
+      |> Game.add_combat(player_id, 2)
+      |> Game.queue_sacrifice_from_hand_or_discard(player_id, combat_per_card: 2)
+    end
   end
 
-  def expend_ability(game, :tyrannor, player_id, _card_id) do
-    game
-    |> Game.add_combat(player_id, 4)
-    |> Game.queue_sacrifice_from_hand_or_discard(player_id, amount: 2)
+  def expend_ability(:tyrannor) do
+    fn game, player_id, _card_id ->
+      game
+      |> Game.add_combat(player_id, 4)
+      |> Game.queue_sacrifice_from_hand_or_discard(player_id, amount: 2)
+    end
   end
 
-  def expend_ability(game, :varrick, player_id, _card_id) do
-    game |> Game.queue_put_champion_from_discard_to_deck(player_id)
+  def expend_ability(:varrick) do
+    fn game, player_id, _card_id ->
+      game |> Game.queue_put_champion_from_discard_to_deck(player_id)
+    end
   end
 
-  def expend_ability(_game, _, _player_id, _card_id), do: nil
+  def expend_ability(_), do: nil
 
   # Ally abilities
 
-  @spec ally_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def ally_ability(game, :cult_priest, player_id) do
-    game |> Game.add_combat(player_id, 4)
+  @spec ally_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def ally_ability(:cult_priest) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 4) end
   end
 
-  def ally_ability(game, :dark_energy, player_id) do
-    game |> Game.draw_card(player_id, 1)
+  def ally_ability(:dark_energy) do
+    fn game, player_id -> game |> Game.draw_card(player_id, 1) end
   end
 
-  def ally_ability(game, :dark_reward, player_id) do
-    game |> Game.add_combat(player_id, 6)
+  def ally_ability(:dark_reward) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 6) end
   end
 
-  def ally_ability(game, :death_touch, player_id) do
-    game |> Game.add_combat(player_id, 2)
+  def ally_ability(:death_touch) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 2) end
   end
 
-  def ally_ability(game, :rayla, player_id) do
-    game |> Game.draw_card(player_id, 1)
+  def ally_ability(:rayla) do
+    fn game, player_id -> game |> Game.draw_card(player_id, 1) end
   end
 
-  def ally_ability(game, :life_drain, player_id) do
-    game |> Game.draw_card(player_id, 1)
+  def ally_ability(:life_drain) do
+    fn game, player_id -> game |> Game.draw_card(player_id, 1) end
   end
 
-  def ally_ability(game, :the_rot, player_id) do
-    game |> Game.add_combat(player_id, 3)
+  def ally_ability(:the_rot) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 3) end
   end
 
-  def ally_ability(game, :tyrannor, player_id) do
-    game |> Game.draw_card(player_id, 1)
+  def ally_ability(:tyrannor) do
+    fn game, player_id -> game |> Game.draw_card(player_id, 1) end
   end
 
-  def ally_ability(game, :varrick, player_id) do
-    game |> Game.draw_card(player_id, 1)
+  def ally_ability(:varrick) do
+    fn game, player_id -> game |> Game.draw_card(player_id, 1) end
   end
 
-  def ally_ability(_game, _, _player_id), do: nil
+  def ally_ability(_), do: nil
 
   # Sacrifice ability
 
-  @spec sacrifice_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def sacrifice_ability(game, :influence, player_id) do
-    game |> Game.add_combat(player_id, 3)
+  @spec sacrifice_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def sacrifice_ability(:influence) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 3) end
   end
 
-  def sacrifice_ability(_game, _, _player_id), do: nil
+  def sacrifice_ability(_), do: nil
 end

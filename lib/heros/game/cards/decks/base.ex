@@ -18,10 +18,22 @@ defmodule Heros.Game.Cards.Decks.Base do
   def type(:gold), do: :item
   def type(_), do: nil
 
-  @spec primary_ability(Game.t(), atom, Player.id()) :: nil | Game.t()
-  def primary_ability(game, :shortsword, player_id), do: game |> Game.add_combat(player_id, 2)
-  def primary_ability(game, :dagger, player_id), do: game |> Game.add_combat(player_id, 1)
-  def primary_ability(game, :ruby, player_id), do: game |> Game.add_gold(player_id, 2)
-  def primary_ability(game, :gold, player_id), do: game |> Game.add_gold(player_id, 1)
-  def primary_ability(_game, _, _player_id), do: nil
+  @spec primary_ability(atom) :: nil | (Game.t(), Player.id() -> Game.t())
+  def primary_ability(:shortsword) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 2) end
+  end
+
+  def primary_ability(:dagger) do
+    fn game, player_id -> game |> Game.add_combat(player_id, 1) end
+  end
+
+  def primary_ability(:ruby) do
+    fn game, player_id -> game |> Game.add_gold(player_id, 2) end
+  end
+
+  def primary_ability(:gold) do
+    fn game, player_id -> game |> Game.add_gold(player_id, 1) end
+  end
+
+  def primary_ability(_), do: nil
 end

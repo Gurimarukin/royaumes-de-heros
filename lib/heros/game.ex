@@ -138,10 +138,14 @@ defmodule Heros.Game do
   def play_card(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
       with_member(player.hand, card_id, fn card ->
-        game
-        |> update_player(player_id, &Player.move_from_hand_to_fight_zone(&1, {card_id, card}))
-        |> Card.primary_ability(card.key, player_id)
-        |> Option.some()
+        game =
+          game
+          |> update_player(player_id, &Player.move_from_hand_to_fight_zone(&1, {card_id, card}))
+
+        Card.primary_ability(card.key)
+        |> Option.from_nilable()
+        |> Option.map(fn f -> f.(game, player_id) end)
+        |> Option.alt(fn -> Option.some(game) end)
       end)
     end)
   end
@@ -160,10 +164,12 @@ defmodule Heros.Game do
   end
 
   defp use_expend_ability_bis(game, player_id, {card_id, card}) do
-    Card.expend_ability(game, card.key, player_id, card_id)
+    Card.expend_ability(card.key)
     |> Option.from_nilable()
-    |> Option.map(fn game ->
-      update_player(game, player_id, &Player.expend_card(&1, card_id))
+    |> Option.map(fn f ->
+      game
+      |> f.(player_id, card_id)
+      |> update_player(player_id, &Player.expend_card(&1, card_id))
     end)
   end
 
@@ -189,10 +195,12 @@ defmodule Heros.Game do
   end
 
   defp use_ally_ability_bis(game, player_id, {card_id, card}) do
-    Card.ally_ability(game, card.key, player_id)
+    Card.ally_ability(card.key)
     |> Option.from_nilable()
-    |> Option.map(fn game ->
-      update_player(game, player_id, &Player.consume_ally_ability(&1, card_id))
+    |> Option.map(fn f ->
+      game
+      |> f.(player_id)
+      |> update_player(player_id, &Player.consume_ally_ability(&1, card_id))
     end)
   end
 
@@ -200,11 +208,14 @@ defmodule Heros.Game do
   def use_sacrifice_ability(game, player_id, card_id) do
     main_phase_action(game, player_id, fn player ->
       with_member(player.fight_zone, card_id, fn card ->
-        game
-        |> update_player(player_id, &Player.remove_from_fight_zone(&1, card_id))
-        |> add_to_gems_or_cemetery({card_id, Card.get(card.key)})
-        |> Card.sacrifice_ability(card.key, player_id)
+        Card.sacrifice_ability(card.key)
         |> Option.from_nilable()
+        |> Option.map(fn f ->
+          game
+          |> update_player(player_id, &Player.remove_from_fight_zone(&1, card_id))
+          |> add_to_gems_or_cemetery({card_id, Card.get(card.key)})
+          |> f.(player_id)
+        end)
       end)
     end)
   end
