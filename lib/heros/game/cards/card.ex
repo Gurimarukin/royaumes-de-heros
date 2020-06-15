@@ -117,6 +117,24 @@ defmodule Heros.Game.Cards.Card do
       Wild.sacrifice_ability(key)
   end
 
+  def data do
+    [
+      {nil, %{key: :gem}}
+      | Decks.Base.get() ++ Guild.get() ++ Imperial.get() ++ Necros.get() ++ Wild.get()
+    ]
+    |> MapSet.new()
+    |> Enum.reduce(%{}, fn {_id, %{key: key}}, acc ->
+      Map.put(acc, key, %{
+        cost: cost(key),
+        type: type(key),
+        faction: faction(key),
+        expend: expend_ability(key) != nil,
+        ally: ally_ability(key) != nil,
+        sacrifice: sacrifice_ability(key) != nil
+      })
+    end)
+  end
+
   def full_reset(card) do
     card
     |> prepare()

@@ -1,22 +1,23 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent, ReactNode, useMemo, useCallback, useState } from 'react'
+import { FunctionComponent, ReactNode, useMemo, useCallback, useState, useContext } from 'react'
 import { animated } from 'react-spring'
 
+import { AbilityIcon } from './AbilityIcon'
 import { CardSimple } from './CardSimple'
 import { BaseButton } from '../Buttons'
 import { ClickOutside } from '../ClickOutside'
 import { params } from '../../params'
+import { CardDatasContext } from '../../contexts/CardDatasContext'
 import { CallChannel, CallMessage } from '../../models/CallMessage'
+import { PlayerId } from '../../models/PlayerId'
 import { Ability } from '../../models/game/Ability'
 import { Card as TCard } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
+import { CardData } from '../../models/game/CardData'
 import { Game } from '../../models/game/Game'
 import { Interaction } from '../../models/game/Interaction'
-import { PlayerId } from '../../models/PlayerId'
-import { CardData } from '../../utils/CardData'
-import { pipe, Maybe, Future } from '../../utils/fp'
-import { AbilityIcon } from './AbilityIcon'
+import { pipe, Maybe, Future, Dict } from '../../utils/fp'
 
 interface CommonProps {
   readonly style?: React.CSSProperties
@@ -53,6 +54,8 @@ export const Card: FunctionComponent<CardProps> = ({
   zone: zone,
   style
 }) => {
+  const data = Dict.lookup(card.key, useContext(CardDatasContext))
+
   const callAndRun = useCallback((msg: CallMessage) => () => pipe(call(msg), Future.runUnsafe), [
     call
   ])
@@ -69,8 +72,6 @@ export const Card: FunctionComponent<CardProps> = ({
     ),
     [callAndRun, cardId]
   )
-
-  const data = CardData.get(card.key)
 
   const isOther = game.player[0] !== playerId
   const isCurrent = Game.isCurrentPlayer(game)

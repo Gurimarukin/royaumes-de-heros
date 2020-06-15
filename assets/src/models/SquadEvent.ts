@@ -1,7 +1,7 @@
 import * as D from 'io-ts/lib/Decoder'
 
+import { CardData } from './game/CardData'
 import { Effect } from './game/Effect'
-import { CardData } from '../utils/CardData'
 import { Dict, Maybe, pipe } from '../utils/fp'
 
 export namespace SquadEvent {

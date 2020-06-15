@@ -16,6 +16,8 @@ import {
 } from 'fp-ts/lib/function'
 import { pipe as _pipe } from 'fp-ts/lib/pipeable'
 
+import * as D from 'io-ts/lib/Decoder'
+
 import { Do as _Do } from 'fp-ts-contrib/lib/Do'
 
 export const unknownToError = (e: unknown): Error =>
@@ -84,7 +86,12 @@ export const Maybe = {
         () => [],
         _ => [_]
       )
-    )
+    ),
+
+  codec: <A>(d: D.Decoder<A>): D.Decoder<_Option.Option<A>> => ({
+    decode: (u: unknown) =>
+      u === null ? _Either.right(_Option.none) : _pipe(d.decode(u), _Either.map(_Option.some))
+  })
 }
 
 /**

@@ -33,5 +33,6 @@ defmodule HerosWeb.Router do
     else
       conn
     end
+    |> assign(:card_data, Heros.Game.Cards.Card.data())
   end
 end

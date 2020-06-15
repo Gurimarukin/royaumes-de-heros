@@ -1,1 +1,1 @@
-<%= ReactPhoenix.ClientSide.react_component("MyComponents.App", %{user: assigns[:user]}) %>
+<%= ReactPhoenix.ClientSide.react_component("MyComponents.App", %{user: assigns[:user], card_data: assigns[:card_data]}) %>

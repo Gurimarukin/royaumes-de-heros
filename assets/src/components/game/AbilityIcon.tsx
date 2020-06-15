@@ -2,7 +2,7 @@
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent } from 'react'
 
-import { Faction } from '../../utils/CardData'
+import { Faction } from '../../models/game/CardData'
 import { Maybe, List } from '../../utils/fp'
 
 interface Props {

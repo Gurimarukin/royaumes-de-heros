@@ -7,6 +7,7 @@ import { Link } from './Link'
 import { Router } from './Router'
 import { LobbyComponent } from './LobbyComponent'
 import { Game } from './game/Game'
+import { CardDatasContext } from '../contexts/CardDatasContext'
 import { UserContext } from '../contexts/UserContext'
 import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
@@ -17,7 +18,6 @@ import { SquadState } from '../models/SquadState'
 import { SquadEvent } from '../models/SquadEvent'
 import { pipe, Either, Future, List, Maybe, flow } from '../utils/fp'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
-import { CardData } from '../utils/CardData'
 
 interface Props {
   readonly id: SquadId
@@ -27,16 +27,20 @@ const stateWithEvent = D.tuple(SquadState.codec, SquadEvent.codec)
 
 export const Squad: FunctionComponent<Props> = ({ id }) => {
   const user = useContext(UserContext)
+  const cardDatas = useContext(CardDatasContext)
 
   const [state, setState] = useState<AsyncState<ChannelError, SquadState>>(AsyncState.Loading)
   const [events, setEvents] = useState<[number, string][]>([])
 
-  const appendEvent = useCallback((event: SquadEvent) => {
-    pipe(
-      SquadEvent.pretty(CardData.cards)(event),
-      Maybe.map(e => setEvents(flow(List.takeRight(99), _ => List.snoc(_, [Date.now(), e]))))
-    )
-  }, [])
+  const appendEvent = useCallback(
+    (event: SquadEvent) => {
+      pipe(
+        SquadEvent.pretty(cardDatas)(event),
+        Maybe.map(e => setEvents(flow(List.takeRight(99), _ => List.snoc(_, [Date.now(), e]))))
+      )
+    },
+    [cardDatas]
+  )
 
   const onJoinError = useCallback(
     PhoenixUtils.handleResponse(ChannelError.codec.decode)(error => {
@@ -56,7 +60,10 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
     []
   )
 
-  const [, channel] = useChannel(user.token, `squad:${id}`, { onJoinError, onUpdate })
+  const [, channel] = useChannel(user.token, `squad:${id}`, {
+    onJoinError,
+    onUpdate
+  })
 
   return pipe(state, AsyncState.fold({ onLoading, onError, onSuccess }))
 

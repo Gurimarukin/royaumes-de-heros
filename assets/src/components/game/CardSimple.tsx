@@ -1,13 +1,14 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { ReactNode, Fragment, forwardRef } from 'react'
+import { ReactNode, Fragment, forwardRef, useContext } from 'react'
 import { animated } from 'react-spring'
 
 import { AbilityIcon } from './AbilityIcon'
-import { Card } from '../../models/game/Card'
-import { CardData } from '../../utils/CardData'
-import { pipe, Maybe } from '../../utils/fp'
 import { params } from '../../params'
+import { CardDatasContext } from '../../contexts/CardDatasContext'
+import { Card } from '../../models/game/Card'
+import { CardData } from '../../models/game/CardData'
+import { pipe, Maybe, Dict } from '../../utils/fp'
 
 interface Props {
   readonly card: Card
@@ -21,7 +22,8 @@ const HIDDEN = 'hidden'
 
 export const CardSimple = forwardRef<HTMLDivElement, Props>(
   ({ card, onClick, className, style, children }, ref) => {
-    const data = CardData.get(card.key)
+    const data = Dict.lookup(card.key, useContext(CardDatasContext))
+
     return (
       <div ref={ref} onClick={onClick} css={styles.container} className={className} style={style}>
         {pipe(
