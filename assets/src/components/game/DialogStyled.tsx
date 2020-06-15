@@ -42,11 +42,13 @@ const styles = {
     maxWidth: '98%',
     height: 'auto',
     maxHeight: '98vh',
-    marginTop: '-98vh',
-    transition: 'all 0.3s',
+    opacity: 0,
+    visibility: 'hidden',
+    transition: 'all 0.2s',
 
     [`&.${SHOWN}`]: {
-      marginTop: 0
+      opacity: 1,
+      visibility: 'visible'
     }
   }),
 
