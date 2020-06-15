@@ -43,6 +43,7 @@ const styles = {
     height: 'auto',
     maxHeight: '98vh',
     marginTop: '-98vh',
+    transition: 'all 0.3s',
 
     [`&.${SHOWN}`]: {
       marginTop: 0
