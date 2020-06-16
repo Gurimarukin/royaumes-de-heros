@@ -73,7 +73,6 @@ export const CardSelector: FunctionComponent<Props> = ({
       >
         {confirmLabel(selected)}
       </ButtonUnderline>
-      {/* {' '} */}
     </div>
   )
 }

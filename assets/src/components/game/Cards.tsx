@@ -20,7 +20,6 @@ import { pipe, List } from '../../utils/fp'
 interface Props {
   readonly call: CallChannel
   readonly showDiscard: (playerId: PlayerId) => void
-  readonly showCardDetail: (key: string) => void
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, [PlayerId, OtherPlayer]][]
@@ -33,23 +32,25 @@ interface CardWithCoord {
   readonly coord: Coord
 }
 
-namespace CardWithCoord {
-  export const byId = ord.contramap(ordString, (c: CardWithCoord) => CardId.unwrap(c.card[0]))
+type CardWithCoordWithI = CardWithCoord & { readonly i: number }
+
+namespace CardWithCoordWithI {
+  export const byId = ord.contramap(ordString, (c: CardWithCoordWithI) => CardId.unwrap(c.card[0]))
 }
 
 type Cards = [CardWithCoord[], Coord[]]
+type CardsWithI = [CardWithCoordWithI[], Coord[]]
 
 export const Cards: FunctionComponent<Props> = ({
   call,
   showDiscard,
-  showCardDetail,
   game,
   referentials,
   zippedOtherPlayers
 }) => {
   const [currentId, current] = game.player
 
-  const [cards, hiddens]: Cards = useMemo(() => {
+  const [cards, hiddens]: CardsWithI = useMemo(() => {
     const init: Cards = [
       [
         // market
@@ -103,7 +104,14 @@ export const Cards: FunctionComponent<Props> = ({
         ]
       ])
     )
-    return [pipe(res[0], List.sortBy([CardWithCoord.byId])), res[1]]
+    return [
+      pipe(
+        res[0],
+        List.mapWithIndex<CardWithCoord, CardWithCoordWithI>((i, c) => ({ ...c, i: i + 1 })),
+        List.sortBy([CardWithCoordWithI.byId])
+      ),
+      res[1]
+    ]
   }, [
     current.deck,
     current.discard,
@@ -122,17 +130,16 @@ export const Cards: FunctionComponent<Props> = ({
       {hiddens.map(([left, top], i) => (
         <HiddenCard key={i} style={{ left, top }} />
       ))}
-      {cards.map(({ card: [cardId, card], playerId, zone, coord: [left, top] }) => (
+      {cards.map(({ card: [cardId, card], playerId, zone, coord: [left, top], i: zIndex }) => (
         <Card
           key={CardId.unwrap(cardId)}
           call={call}
           showDiscard={showDiscard}
-          showCardDetail={showCardDetail}
           game={game}
           playerId={playerId}
           zone={zone}
           card={[cardId, card]}
-          style={{ left, top }}
+          style={{ left, top, zIndex }}
         />
       ))}
     </div>

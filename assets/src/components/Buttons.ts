@@ -14,9 +14,9 @@ export const BaseButton = styled.button({
   backgroundColor: '#f6f0cd',
   color: '#4a3b20',
   borderColor: '#b59458',
+  cursor: 'inherit',
 
   '&:not(:disabled)': {
-    cursor: 'pointer',
     boxShadow: '0 0 8px -4px black'
   },
 

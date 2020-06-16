@@ -1,20 +1,20 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent, ReactNode, useMemo, useCallback, useState, useContext } from 'react'
+import { FunctionComponent, useMemo, useCallback, useContext } from 'react'
 import { animated } from 'react-spring'
 
 import { AbilityIcon } from './AbilityIcon'
-import { CardSimple } from './CardSimple'
+import { CardSimpleWithIcons } from './CardSimpleWithIcons'
 import { BaseButton } from '../Buttons'
-import { ClickOutside } from '../ClickOutside'
 import { params } from '../../params'
 import { CardDatasContext } from '../../contexts/CardDatasContext'
+import { ShowCardDetailContext } from '../../contexts/ShowCardDetailContext'
 import { CallChannel, CallMessage } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
 import { Ability } from '../../models/game/Ability'
 import { Card as TCard } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
-import { CardData } from '../../models/game/CardData'
+import { CardData, Faction, CardType } from '../../models/game/CardData'
 import { Game } from '../../models/game/Game'
 import { Interaction } from '../../models/game/Interaction'
 import { pipe, Maybe, Future, Dict } from '../../utils/fp'
@@ -26,7 +26,6 @@ interface CommonProps {
 type CardProps = {
   readonly call: CallChannel
   readonly showDiscard: (playerId: PlayerId) => void
-  readonly showCardDetail: (key: string) => void
   readonly game: Game
   readonly playerId: PlayerId
   readonly card: [CardId, TCard]
@@ -35,34 +34,64 @@ type CardProps = {
 
 export type Zone = 'market' | 'hand' | 'fightZone' | 'discard'
 
-type OnClickAndCursor = [React.MouseEventHandler, Maybe<string>]
-function OnClickAndCursor(onClick: React.MouseEventHandler, cursor?: string): OnClickAndCursor {
-  return [onClick, Maybe.fromNullable(cursor)]
+type Abilities = Readonly<Record<Ability, boolean>> & { readonly faction: Faction }
+
+type OnClickAndCursor = [Maybe<React.MouseEventHandler>, Maybe<Cursor>]
+function OnClickAndCursor(onClick?: React.MouseEventHandler, cursor?: Cursor): OnClickAndCursor {
+  return [Maybe.fromNullable(onClick), Maybe.fromNullable(cursor)]
 }
 
-const OPENED = 'opened'
-const ATTACK = 'attack'
-const BUY = 'buy'
+type Cursor = string
+namespace Cursor {
+  export const ATTACK = 'attack'
+  export const BAN = 'ban'
+  export const BUY = 'buy'
+  export const EYE = 'eye'
+  export const STAR = 'star'
+}
 
-export const Card: FunctionComponent<CardProps> = ({
-  call,
-  showDiscard,
-  showCardDetail,
-  game,
-  playerId,
-  card: [cardId, card],
-  zone: zone,
-  style
+const ABILITIES = 'abilities'
+
+export const Card: FunctionComponent<CardProps> = props => {
+  const card = props.card[1]
+  const cardDatas = useContext(CardDatasContext)
+  const data = Dict.lookup(card.key, cardDatas)
+
+  return pipe(
+    data,
+    Maybe.fold(
+      () => (
+        <div css={[styles.container, styles.transitionLeftTop]}>
+          <CardSimpleWithIcons card={card} />
+        </div>
+      ),
+      _ => <SomeCard props={props} cardDatas={cardDatas} data={_} />
+    )
+  )
+}
+
+interface SomeCardProps {
+  readonly props: CardProps
+  readonly cardDatas: Dict<CardData>
+  readonly data: CardData
+}
+
+const SomeCard: FunctionComponent<SomeCardProps> = ({
+  props: {
+    call,
+    showDiscard,
+    game,
+    playerId,
+    card: [cardId, card],
+    zone: zone,
+    style
+  },
+  cardDatas,
+  data
 }) => {
-  const data = Dict.lookup(card.key, useContext(CardDatasContext))
-
   const callAndRun = useCallback((msg: CallMessage) => () => pipe(call(msg), Future.runUnsafe), [
     call
   ])
-
-  const [abilitiesOpened, setAbilitiesOpened] = useState(false)
-  const closeAbilities = useCallback(() => setAbilitiesOpened(false), [])
-  const toggleAbilities = useCallback(() => setAbilitiesOpened(_ => !_), [])
 
   const ability = useCallback(
     (key: Ability, label: string, icon: AbilityIcon): JSX.Element => (
@@ -76,12 +105,41 @@ export const Card: FunctionComponent<CardProps> = ({
   const isOther = game.player[0] !== playerId
   const isCurrent = Game.isCurrentPlayer(game)
   const pendingInteraction = Game.pendingInteraction(game)
+
+  const abilities: Maybe<Abilities> = pipe(
+    pendingInteraction,
+    Maybe.fold(
+      () =>
+        zone === 'fightZone' && isCurrent && !isOther && Maybe.isSome(data.faction)
+          ? Maybe.some({
+              expend: data.expend && !card.expend_ability_used,
+              ally:
+                data.ally &&
+                !card.ally_ability_used &&
+                2 <=
+                  CardData.countFaction(cardDatas, game.player[1].fight_zone, data.faction.value),
+              sacrifice: data.sacrifice,
+              faction: data.faction.value
+            })
+          : Maybe.none,
+      _ => Maybe.none
+    )
+  )
+
   const onClickAndCursor = useMemo<Maybe<OnClickAndCursor>>(() => {
     switch (zone) {
       case 'market':
-        return isCurrent
-          ? Maybe.some(OnClickAndCursor(callAndRun(CallMessage.BuyCard(cardId)), BUY))
-          : Maybe.none
+        if (isCurrent) {
+          const cost = pipe(
+            data.cost,
+            Maybe.getOrElse(() => 0)
+          )
+          if (cost <= game.player[1].gold) {
+            return Maybe.some(OnClickAndCursor(callAndRun(CallMessage.BuyCard(cardId)), Cursor.BUY))
+          }
+          return Maybe.some(OnClickAndCursor(undefined, Cursor.BAN))
+        }
+        return Maybe.none
 
       case 'hand':
         return !isOther && isCurrent
@@ -94,13 +152,32 @@ export const Card: FunctionComponent<CardProps> = ({
           Maybe.fold(
             () => {
               if (isCurrent) {
-                return isOther
-                  ? Maybe.some(OnClickAndCursor(callAndRun(CallMessage.Attack(playerId, cardId))))
-                  : pipe(
-                      data,
-                      Maybe.filter(({ expend, ally, sacrifice }) => expend || ally || sacrifice),
-                      Maybe.map(_ => OnClickAndCursor(toggleAbilities))
-                    )
+                if (isOther) {
+                  if (CardType.isChampion(data.type)) {
+                    // TODO: take defense modifiers into account
+                    const defense = data.type[1]
+                    if (game.player[1].combat < defense) {
+                      return Maybe.some(OnClickAndCursor(undefined, Cursor.BAN))
+                    }
+
+                    const attack = callAndRun(CallMessage.Attack(playerId, cardId))
+
+                    if (
+                      CardType.isGuard(data.type) ||
+                      CardData.countGuards(cardDatas, game.player[1].fight_zone) === 0
+                    ) {
+                      return Maybe.some(OnClickAndCursor(attack, Cursor.ATTACK))
+                    }
+
+                    return Maybe.some(OnClickAndCursor(undefined, Cursor.BAN))
+                  }
+                  return Maybe.none
+                }
+                return pipe(
+                  abilities,
+                  Maybe.filter(({ expend, ally, sacrifice }) => expend || ally || sacrifice),
+                  Maybe.map(_ => OnClickAndCursor(undefined, Cursor.STAR))
+                )
               }
               return Maybe.none
             },
@@ -108,13 +185,15 @@ export const Card: FunctionComponent<CardProps> = ({
               interaction === 'stun_champion' && isOther
                 ? Maybe.some(
                     OnClickAndCursor(
-                      callAndRun(CallMessage.Interact(Interaction.StunChampion(playerId, cardId)))
+                      callAndRun(CallMessage.Interact(Interaction.StunChampion(playerId, cardId))),
+                      Cursor.ATTACK
                     )
                   )
                 : interaction === 'prepare_champion' && !isOther
                 ? Maybe.some(
                     OnClickAndCursor(
-                      callAndRun(CallMessage.Interact(Interaction.PrepareChampion(cardId)))
+                      callAndRun(CallMessage.Interact(Interaction.PrepareChampion(cardId))),
+                      Cursor.STAR
                     )
                   )
                 : Maybe.none
@@ -122,23 +201,27 @@ export const Card: FunctionComponent<CardProps> = ({
         )
 
       case 'discard':
-        return Maybe.some(OnClickAndCursor(() => showDiscard(playerId)))
+        return Maybe.some(OnClickAndCursor(() => showDiscard(playerId), Cursor.EYE))
     }
   }, [
+    abilities,
     callAndRun,
+    cardDatas,
     cardId,
-    data,
-    pendingInteraction,
+    data.cost,
+    data.type,
+    game.player,
     isCurrent,
     isOther,
+    pendingInteraction,
     playerId,
     showDiscard,
-    toggleAbilities,
     zone
   ])
+
   const onClick = pipe(
     onClickAndCursor,
-    Maybe.map(([_]) => _),
+    Maybe.chain(([_]) => _),
     Maybe.toUndefined
   )
   const cursor = pipe(
@@ -147,6 +230,7 @@ export const Card: FunctionComponent<CardProps> = ({
     Maybe.toUndefined
   )
 
+  const showCardDetail = useContext(ShowCardDetailContext)
   const onContextMenu = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault()
@@ -155,36 +239,36 @@ export const Card: FunctionComponent<CardProps> = ({
     [card.key, showCardDetail]
   )
 
-  return (
-    <ClickOutside onClickOutside={closeAbilities}>
-      <div
-        onClick={onClick}
-        onContextMenu={onContextMenu}
-        css={[styles.container, styles.transitionAll]}
-        className={cursor}
-        style={style}
-      >
-        {pipe(
-          data,
-          Maybe.fold<CardData, ReactNode>(
-            () => <CardSimple card={card} />,
-            ({ faction, expend, ally, sacrifice }) => (
-              <CardSimple card={card}>
-                <div css={styles.abilities} className={abilitiesOpened ? OPENED : undefined}>
-                  {expend && !card.expend_ability_used
-                    ? ability('expend', 'Activer', 'expend')
-                    : null}
-                  {ally && !card.ally_ability_used && Maybe.isSome(faction)
-                    ? ability('ally', 'Allié', faction.value)
-                    : null}
-                  {sacrifice ? ability('sacrifice', 'Sacrifice', 'sacrifice') : null}
-                </div>
-              </CardSimple>
-            )
-          )
-        )}
-      </div>
-    </ClickOutside>
+  return pipe(
+    abilities,
+    Maybe.fold(
+      () => (
+        <CardSimpleWithIcons
+          card={card}
+          onClick={onClick}
+          onContextMenu={onContextMenu}
+          css={[styles.container, styles.transitionLeftTop]}
+          className={cursor}
+          style={style}
+        />
+      ),
+      ({ faction, expend, ally, sacrifice }) => (
+        <CardSimpleWithIcons
+          card={card}
+          onClick={onClick}
+          onContextMenu={onContextMenu}
+          css={[styles.container, styles.transitionLeftTop]}
+          className={cursor}
+          style={style}
+        >
+          <div className={ABILITIES}>
+            {expend ? ability('expend', 'Activer', 'expend') : null}
+            {ally ? ability('ally', 'Allié', faction) : null}
+            {sacrifice ? ability('sacrifice', 'Sacrifice', 'sacrifice') : null}
+          </div>
+        </CardSimpleWithIcons>
+      )
+    )
   )
 }
 
@@ -202,12 +286,24 @@ const styles = {
     position: 'absolute',
     // willChange: 'left, top',
 
-    [`&.${ATTACK}`]: {
+    [`&.${Cursor.ATTACK}`]: {
       cursor: "url('/images/cursors/swords.svg'), auto"
     },
 
-    [`&.${BUY}`]: {
+    [`&.${Cursor.BAN}`]: {
+      cursor: "url('/images/cursors/ban.svg'), auto"
+    },
+
+    [`&.${Cursor.BUY}`]: {
       cursor: "url('/images/cursors/coin.svg'), auto"
+    },
+
+    [`&.${Cursor.EYE}`]: {
+      cursor: "url('/images/cursors/eye.svg'), auto"
+    },
+
+    [`&.${Cursor.STAR}`]: {
+      cursor: "url('/images/cursors/star.svg'), auto"
     },
 
     '& > img': {
@@ -215,32 +311,32 @@ const styles = {
       height: '100%',
       borderRadius: params.card.borderRadius,
       boxShadow: '0 0 4px black'
-    }
-  }),
+    },
 
-  transitionAll: css({
-    transition: 'all 1s'
-  }),
+    [`& .${ABILITIES}`]: {
+      position: 'absolute',
+      left: abilityPadding,
+      top: abilityPadding,
+      width: params.card.width - 2 * abilityPadding,
+      opacity: 0,
+      visibility: 'hidden',
+      borderRadius: '4px',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      transition: 'all 0.2s',
+      boxShadow: '0 0 6px black'
+    },
 
-  abilities: css({
-    position: 'absolute',
-    left: abilityPadding,
-    top: abilityPadding,
-    width: params.card.width - 2 * abilityPadding,
-    opacity: 0,
-    visibility: 'hidden',
-    borderRadius: '4px',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    transition: 'all 0.2s',
-    boxShadow: '0 0 6px black',
-
-    [`&.${OPENED}`]: {
+    [`&:hover .${ABILITIES}`]: {
       visibility: 'visible',
       opacity: 1
     }
+  }),
+
+  transitionLeftTop: css({
+    transition: 'left 1s, top 1s'
   }),
 
   ability: css({

@@ -1,5 +1,7 @@
 import * as D from 'io-ts/lib/Decoder'
 
+import { Card } from './Card'
+import { CardId } from './CardId'
 import { Dict, Maybe, pipe } from '../../utils/fp'
 
 export namespace CardType {
@@ -8,6 +10,14 @@ export namespace CardType {
     D.literal('action'),
     D.tuple(D.union(D.literal('not_guard'), D.literal('guard')), D.number)
   )
+
+  export function isChampion(type: CardType): type is ['not_guard' | 'guard', number] {
+    return Array.isArray(type)
+  }
+
+  export function isGuard(type: CardType): type is ['guard', number] {
+    return isChampion(type) && type[0] === 'guard'
+  }
 }
 
 export type CardType = D.TypeOf<typeof CardType.codec>
@@ -36,16 +46,12 @@ export namespace PartialCardData {
 
 export type PartialCardData = D.TypeOf<typeof PartialCardData.codec>
 
-export type CardData = PartialCardData & NameAndImage
-
 interface NameAndImage {
   readonly name: string
   readonly image: string
 }
 
-function d(name: string, image: string): NameAndImage {
-  return { name, image }
-}
+export type CardData = PartialCardData & NameAndImage
 
 export namespace CardData {
   export function fromPartial(rec: Dict<PartialCardData>): Dict<CardData> {
@@ -67,6 +73,33 @@ export namespace CardData {
   }
 
   export const hidden = '/images/cards/hidden.jpg'
+
+  export function countFaction(
+    cardDatas: Dict<CardData>,
+    cards: [CardId, Card][],
+    faction: Faction
+  ): number {
+    return cards.filter(([, c]) =>
+      pipe(
+        Dict.lookup(c.key, cardDatas),
+        Maybe.chain(_ => _.faction),
+        Maybe.exists(_ => _ === faction)
+      )
+    ).length
+  }
+
+  export function countGuards(cardDatas: Dict<CardData>, cards: [CardId, Card][]): number {
+    return cards.filter(([, c]) =>
+      pipe(
+        Dict.lookup(c.key, cardDatas),
+        Maybe.exists(_ => CardType.isGuard(_.type))
+      )
+    ).length
+  }
+}
+
+function d(name: string, image: string): NameAndImage {
+  return { name, image }
 }
 
 const namesAndImages: Dict<NameAndImage> = {

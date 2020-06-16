@@ -17,6 +17,7 @@ import { Player } from '../../models/game/Player'
 import { Referential } from '../../models/game/geometry/Referential'
 import { pipe, List, Maybe, Future, Either, Task } from '../../utils/fp'
 import { GameStyled } from './GameStyled'
+import { ShowCardDetailContext } from '../../contexts/ShowCardDetailContext'
 
 interface Props {
   readonly call: CallChannel
@@ -68,24 +69,25 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
   const closeDialog = useCallback(() => setDialogProps(_ => ({ ..._, shown: false })), [])
 
   return (
-    <GameStyled>
-      <BoardContainer
-        call={call}
-        game={game}
-        referentials={referentials}
-        zippedOtherPlayers={zippedOtherPlayers}
-        showDiscard={showDiscard}
-        showCardDetail={showCardDetail}
-      />
-      <RightBar
-        cardDetail={cardDetail}
-        hideCardDetail={hideCardDetail}
-        isCurrentPlayer={TGame.isCurrentPlayer(game)}
-        endTurn={endTurn}
-        events={events}
-      />
-      <Dialog call={call} closeDialog={closeDialog} game={game} props={dialogProps} />
-    </GameStyled>
+    <ShowCardDetailContext.Provider value={showCardDetail}>
+      <GameStyled>
+        <BoardContainer
+          call={call}
+          game={game}
+          referentials={referentials}
+          zippedOtherPlayers={zippedOtherPlayers}
+          showDiscard={showDiscard}
+        />
+        <RightBar
+          cardDetail={cardDetail}
+          hideCardDetail={hideCardDetail}
+          isCurrentPlayer={TGame.isCurrentPlayer(game)}
+          endTurn={endTurn}
+          events={events}
+        />
+        <Dialog call={call} closeDialog={closeDialog} game={game} props={dialogProps} />
+      </GameStyled>
+    </ShowCardDetailContext.Provider>
   )
 }
 

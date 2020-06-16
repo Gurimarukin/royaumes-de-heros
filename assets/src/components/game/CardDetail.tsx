@@ -2,9 +2,9 @@
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent, useCallback } from 'react'
 
-import { Maybe, pipe } from '../../utils/fp'
 import { CardSimple } from './CardSimple'
 import { Card } from '../../models/game/Card'
+import { Maybe, pipe } from '../../utils/fp'
 
 interface Props {
   readonly card: Maybe<string>

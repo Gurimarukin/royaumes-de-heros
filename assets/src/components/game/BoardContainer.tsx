@@ -22,7 +22,6 @@ interface Props {
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, [PlayerId, OtherPlayer]][]
   readonly showDiscard: (playerId: PlayerId) => void
-  readonly showCardDetail: (key: string) => void
 }
 
 interface BoardSize {
@@ -99,8 +98,7 @@ export const BoardContainer: FunctionComponent<Props> = ({
   game,
   referentials,
   zippedOtherPlayers,
-  showDiscard,
-  showCardDetail
+  showDiscard
 }) => {
   const board = useMemo<BoardSize>(
     () => ({ width: params.board.width(referentials), height: params.board.height }),
@@ -174,7 +172,6 @@ export const BoardContainer: FunctionComponent<Props> = ({
           referentials={referentials}
           zippedOtherPlayers={zippedOtherPlayers}
           showDiscard={showDiscard}
-          showCardDetail={showCardDetail}
         />
       </a.div>
     </BoardContainerStyled>
