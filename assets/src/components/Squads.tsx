@@ -143,9 +143,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    backgroundColor: '#6a0080',
+    backgroundColor: 'darkslateblue',
     padding: '2em 0 1em'
-    // boxShadow: '0 0 8px wheat'
   }),
 
   pseudo: css({
