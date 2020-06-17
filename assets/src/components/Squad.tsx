@@ -4,6 +4,7 @@ import { jsx } from '@emotion/core'
 import { FunctionComponent, useState, useContext, useCallback } from 'react'
 
 import { Link } from './Link'
+import { Loading } from './Loading'
 import { Router } from './Router'
 import { LobbyComponent } from './LobbyComponent'
 import { Game } from './game/Game'
@@ -68,12 +69,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
   return pipe(state, AsyncState.fold({ onLoading, onError, onSuccess }))
 
   function onLoading(): JSX.Element {
-    return (
-      <div>
-        <Link to={Router.routes.squads}>retour</Link>
-        <div>Loading...</div>
-      </div>
-    )
+    return <Loading />
   }
 
   function onError(error: ChannelError): JSX.Element {
