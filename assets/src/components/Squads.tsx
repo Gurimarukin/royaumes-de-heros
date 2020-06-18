@@ -2,9 +2,11 @@
 import * as D from 'io-ts/lib/Decoder'
 import { jsx, css } from '@emotion/core'
 import { Channel } from 'phoenix'
-import { useContext, FunctionComponent, useState, useCallback } from 'react'
+import { useContext, FunctionComponent, useState, useCallback, Fragment } from 'react'
 
 import { ButtonUnderline } from './Buttons'
+import { ClickOutside } from './ClickOutside'
+import { Check, Pencil } from './icons'
 import { Link } from './Link'
 import { Loading } from './Loading'
 import { Router } from './Router'
@@ -61,6 +63,36 @@ const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
   const history = useContext(HistoryContext)
   const user = useContext(UserContext)
 
+  const handleInputMount = useCallback((elt: HTMLInputElement | null) => elt?.select(), [])
+
+  const [edit, setEdit] = useState(false)
+  const startEditing = useCallback(() => setEdit(true), [])
+
+  const [userName, setUserName] = useState(user.name)
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setUserName(e.target.value),
+    []
+  )
+
+  const undoChanges = useCallback(() => {
+    setEdit(false)
+    setUserName(user.name)
+  }, [user.name])
+
+  const submitName = useCallback(() => {
+    if (isValidUserName(userName)) {
+      setEdit(false)
+      // TODO: send to server
+    }
+  }, [userName])
+
+  const handleKeyUp = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') submitName()
+    },
+    [submitName]
+  )
+
   const createGame = useCallback(() => {
     pipe(
       () => channel.push('create', {}),
@@ -82,7 +114,39 @@ const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
     <div css={styles.container}>
       <div css={styles.header}>
         <h1>Royaumes de Héros</h1>
-        <div css={styles.pseudo}>Pseudalité : {user.name}</div>
+        <div css={styles.pseudo}>
+          <span>Pseudalité :</span>
+          {edit ? (
+            <ClickOutside onClickOutside={undoChanges}>
+              <div css={styles.userNameInputContainer}>
+                <span css={styles.userNameInputHitbox}>{userName}</span>
+                <input
+                  ref={handleInputMount}
+                  type='text'
+                  value={userName}
+                  onChange={handleChange}
+                  onKeyUp={handleKeyUp}
+                  autoFocus={true}
+                  css={styles.userNameInput}
+                />
+              </div>
+              <button
+                disabled={!isValidUserName(userName)}
+                onClick={submitName}
+                css={styles.iconBtn}
+              >
+                <Check />
+              </button>
+            </ClickOutside>
+          ) : (
+            <Fragment>
+              <span css={styles.userName}>{userName}</span>
+              <button css={styles.iconBtn} onClick={startEditing}>
+                <Pencil />
+              </button>
+            </Fragment>
+          )}
+        </div>
         <ButtonUnderline onClick={createGame}>Nouvelle partie</ButtonUnderline>
       </div>
 
@@ -120,6 +184,10 @@ const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
   )
 }
 
+function isValidUserName(value: string): boolean {
+  return value.trim() !== ''
+}
+
 function stageLabel(stage: Stage): string {
   switch (stage) {
     case 'lobby':
@@ -149,7 +217,69 @@ const styles = {
 
   pseudo: css({
     fontSize: '1.2em',
-    margin: '2em 0'
+    margin: '2em 0',
+    display: 'flex',
+    alignItems: 'center'
+  }),
+
+  userName: css({
+    display: 'inline-block',
+    margin: '0 0.33em',
+    padding: '0.33em',
+    fontWeight: 'bold'
+  }),
+
+  userNameInputContainer: css({
+    position: 'relative',
+    margin: '0 0.33em',
+    fontWeight: 'bold'
+  }),
+
+  userNameInputHitbox: css({
+    display: 'inline-block',
+    visibility: 'hidden',
+    fontWeight: 'inherit',
+    padding: '0.33em'
+  }),
+
+  userNameInput: css({
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+    fontFamily: 'inherit',
+    fontSize: '1em',
+    fontWeight: 'inherit',
+    color: 'inherit',
+    padding: '0.33em',
+    backgroundColor: 'transparent',
+    border: 'none',
+    outline: '1px solid bisque',
+    boxShadow: '0 0 2px 1px bisque'
+  }),
+
+  iconBtn: css({
+    cursor: 'inherit',
+    display: 'inline',
+    border: 'none',
+    padding: '0.33em',
+    backgroundColor: 'unset',
+    color: 'inherit',
+    fontSize: '1em',
+    width: '1.67em',
+    height: '1.67em',
+    borderRadius: '2px',
+    transition: 'all 0.2s',
+
+    '&:not(:disabled):hover': {
+      backgroundColor: 'rgba(0, 0, 0, 0.4)'
+    },
+
+    '&:disabled': {
+      color: '#827463'
+    }
   }),
 
   squadsContainer: css({
