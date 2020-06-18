@@ -226,7 +226,8 @@ const styles = {
     display: 'inline-block',
     margin: '0 0.33em',
     padding: '0.33em',
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    lineHeight: 'normal'
   }),
 
   userNameInputContainer: css({
@@ -239,7 +240,8 @@ const styles = {
     display: 'inline-block',
     visibility: 'hidden',
     fontWeight: 'inherit',
-    padding: '0.33em'
+    padding: '0.33em',
+    lineHeight: 'normal'
   }),
 
   userNameInput: css({
@@ -248,7 +250,6 @@ const styles = {
     top: 0,
     right: 0,
     width: '100%',
-    height: '100%',
     fontFamily: 'inherit',
     fontSize: '1em',
     fontWeight: 'inherit',
