@@ -6,7 +6,6 @@ import { Cards } from './Cards'
 import { MarketZone } from './MarketZone'
 import { Overlay } from './Overlay'
 import { PlayerZones } from './PlayerZones'
-import { CallChannel } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
 import { Game } from '../../models/game/Game'
 import { OtherPlayer } from '../../models/game/OtherPlayer'
@@ -14,7 +13,6 @@ import { Referentials } from '../../models/game/Referentials'
 import { Referential } from '../../models/game/geometry/Referential'
 
 interface Props {
-  readonly call: CallChannel
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, [PlayerId, OtherPlayer]][]
@@ -22,7 +20,6 @@ interface Props {
 }
 
 export const Board: FunctionComponent<Props> = ({
-  call,
   game,
   referentials,
   zippedOtherPlayers,
@@ -30,14 +27,8 @@ export const Board: FunctionComponent<Props> = ({
 }) => (
   <Fragment>
     <MarketZone />
-    <PlayerZones
-      call={call}
-      game={game}
-      referentials={referentials}
-      zippedOtherPlayers={zippedOtherPlayers}
-    />
+    <PlayerZones game={game} referentials={referentials} zippedOtherPlayers={zippedOtherPlayers} />
     <Cards
-      call={call}
       showDiscard={showDiscard}
       game={game}
       referentials={referentials}

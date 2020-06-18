@@ -9,6 +9,7 @@ import { Router } from './Router'
 import { LobbyComponent } from './LobbyComponent'
 import { Game } from './game/Game'
 import { CardDatasContext } from '../contexts/CardDatasContext'
+import { ChannelContext } from '../contexts/ChannelContext'
 import { UserContext } from '../contexts/UserContext'
 import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
@@ -66,44 +67,51 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
     onUpdate
   })
 
-  return pipe(state, AsyncState.fold({ onLoading, onError, onSuccess }))
+  const call = useCallback(
+    (msg: CallMessage): Future<Either<unknown, unknown>> =>
+      pipe(
+        () => channel.push('call', (msg as unknown) as object),
+        PhoenixUtils.pushToFuture,
+        Future.map(
+          Either.bimap(
+            _ => {
+              appendEvent('error')
+              return _
+            },
+            _ => _
+          )
+        )
+      ),
+    [appendEvent, channel]
+  )
 
-  function onLoading(): JSX.Element {
-    return <Loading />
-  }
+  const onLoading = useCallback((): JSX.Element => <Loading />, [])
 
-  function onError(error: ChannelError): JSX.Element {
-    return (
+  const onError = useCallback(
+    (error: ChannelError): JSX.Element => (
       <div>
         <Link to={Router.routes.squads}>retour</Link>
         <pre>Error: {JSON.stringify(error, null, 2)}</pre>
       </div>
-    )
-  }
+    ),
+    []
+  )
 
-  function onSuccess(state: SquadState): JSX.Element {
-    switch (state[0]) {
-      case 'lobby':
-        return <LobbyComponent call={call} state={state[1]} />
+  const onSuccess = useCallback(
+    (state: SquadState): JSX.Element => {
+      switch (state[0]) {
+        case 'lobby':
+          return <LobbyComponent state={state[1]} />
+        case 'game':
+          return <Game game={state[1]} events={events} />
+      }
+    },
+    [events]
+  )
 
-      case 'game':
-        return <Game call={call} game={state[1]} events={events} />
-    }
-  }
-
-  function call(msg: CallMessage): Future<Either<unknown, unknown>> {
-    return pipe(
-      () => channel.push('call', (msg as unknown) as object),
-      PhoenixUtils.pushToFuture,
-      Future.map(
-        Either.bimap(
-          _ => {
-            appendEvent('error')
-            return _
-          },
-          _ => _
-        )
-      )
-    )
-  }
+  return (
+    <ChannelContext.Provider value={{ call }}>
+      {pipe(state, AsyncState.fold({ onLoading, onError, onSuccess }))}
+    </ChannelContext.Provider>
+  )
 }

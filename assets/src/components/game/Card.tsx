@@ -8,8 +8,9 @@ import { CardSimpleWithIcons } from './CardSimpleWithIcons'
 import { BaseButton } from '../Buttons'
 import { params } from '../../params'
 import { CardDatasContext } from '../../contexts/CardDatasContext'
+import { ChannelContext } from '../../contexts/ChannelContext'
 import { ShowCardDetailContext } from '../../contexts/ShowCardDetailContext'
-import { CallChannel, CallMessage } from '../../models/CallMessage'
+import { CallMessage } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
 import { Ability } from '../../models/game/Ability'
 import { Card as TCard } from '../../models/game/Card'
@@ -24,7 +25,6 @@ interface CommonProps {
 }
 
 type CardProps = {
-  readonly call: CallChannel
   readonly showDiscard: (playerId: PlayerId) => void
   readonly game: Game
   readonly playerId: PlayerId
@@ -78,7 +78,6 @@ interface SomeCardProps {
 
 const SomeCard: FunctionComponent<SomeCardProps> = ({
   props: {
-    call,
     showDiscard,
     game,
     playerId,
@@ -89,7 +88,8 @@ const SomeCard: FunctionComponent<SomeCardProps> = ({
   cardDatas,
   data
 }) => {
-  const callAndRun = useCallback((msg: CallMessage) => () => pipe(call(msg), Future.runUnsafe), [
+  const { call } = useContext(ChannelContext)
+  const callAndRun = useCallback((msg: CallMessage) => () => pipe(msg, call, Future.runUnsafe), [
     call
   ])
 

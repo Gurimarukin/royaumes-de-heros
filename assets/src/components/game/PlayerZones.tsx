@@ -6,14 +6,12 @@ import { CombatAndGold } from './playerZone/CombatAndGold'
 import { Discard } from './playerZone/Discard'
 import { FightZone } from './playerZone/FightZone'
 import { Hero } from './playerZone/Hero'
-import { CallChannel } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
 import { Game } from '../../models/game/Game'
 import { Referentials } from '../../models/game/Referentials'
 import { Referential } from '../../models/game/geometry/Referential'
 
 interface Props {
-  readonly call: CallChannel
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, [PlayerId, PartialPlayer]][]
@@ -28,7 +26,6 @@ export interface PartialPlayer {
 }
 
 export const PlayerZones: FunctionComponent<Props> = ({
-  call,
   game,
   referentials,
   zippedOtherPlayers
@@ -39,10 +36,10 @@ export const PlayerZones: FunctionComponent<Props> = ({
         <FightZone playerRef={ref} current={id === game.current_player} />
         <Discard playerRef={ref} />
         <CombatAndGold playerRef={ref} player={player} />
-        <Hero call={call} game={game} playerRef={ref} player={[id, player]} />
+        <Hero game={game} playerRef={ref} player={[id, player]} />
       </div>
     ),
-    [call, game]
+    [game]
   )
 
   const [playerId, player] = game.player

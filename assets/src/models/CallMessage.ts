@@ -2,9 +2,6 @@ import { PlayerId } from './PlayerId'
 import { Ability } from './game/Ability'
 import { CardId } from './game/CardId'
 import { Interaction } from './game/Interaction'
-import { Future, Either } from '../utils/fp'
-
-export type CallChannel = (msg: CallMessage) => Future<Either<unknown, unknown>>
 
 export type CallMessage =
   | CallMessage.Attack

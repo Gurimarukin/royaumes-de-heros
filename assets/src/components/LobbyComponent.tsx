@@ -1,21 +1,24 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
-import { FunctionComponent, useContext } from 'react'
+import { FunctionComponent, useContext, useCallback } from 'react'
 
 import { Link } from './Link'
 import { Router } from './Router'
+import { ChannelContext } from '../contexts/ChannelContext'
 import { UserContext } from '../contexts/UserContext'
-import { CallChannel, CallMessage } from '../models/CallMessage'
+import { CallMessage } from '../models/CallMessage'
 import { Lobby } from '../models/lobby/Lobby'
 import { Future, pipe } from '../utils/fp'
 
 interface Props {
-  readonly call: CallChannel
   readonly state: Lobby
 }
 
-export const LobbyComponent: FunctionComponent<Props> = ({ call, state }) => {
+export const LobbyComponent: FunctionComponent<Props> = ({ state }) => {
   const user = useContext(UserContext)
+  const { call } = useContext(ChannelContext)
+
+  const play = useCallback(() => pipe(CallMessage.startGame, call, Future.runUnsafe), [call])
 
   return (
     <div>
@@ -25,8 +28,4 @@ export const LobbyComponent: FunctionComponent<Props> = ({ call, state }) => {
       <button onClick={play}>Jouer</button>
     </div>
   )
-
-  function play() {
-    pipe(call(CallMessage.startGame), Future.runUnsafe)
-  }
 }

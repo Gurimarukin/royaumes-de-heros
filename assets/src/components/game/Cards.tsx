@@ -6,7 +6,6 @@ import { FunctionComponent, useMemo } from 'react'
 import { Card, HiddenCard, Zone } from './Card'
 import { params } from '../../params'
 import { PlayerId } from '../../models/PlayerId'
-import { CallChannel } from '../../models/CallMessage'
 import { Card as TCard } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
@@ -18,7 +17,6 @@ import { Referential } from '../../models/game/geometry/Referential'
 import { pipe, List } from '../../utils/fp'
 
 interface Props {
-  readonly call: CallChannel
   readonly showDiscard: (playerId: PlayerId) => void
   readonly game: Game
   readonly referentials: Referentials
@@ -42,7 +40,6 @@ type Cards = [CardWithCoord[], Coord[]]
 type CardsWithI = [CardWithCoordWithI[], Coord[]]
 
 export const Cards: FunctionComponent<Props> = ({
-  call,
   showDiscard,
   game,
   referentials,
@@ -133,7 +130,6 @@ export const Cards: FunctionComponent<Props> = ({
       {cards.map(({ card: [cardId, card], playerId, zone, coord: [left, top], i: zIndex }) => (
         <Card
           key={CardId.unwrap(cardId)}
-          call={call}
           showDiscard={showDiscard}
           game={game}
           playerId={playerId}

@@ -1,15 +1,16 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 import styled from '@emotion/styled'
-import { FunctionComponent, useCallback, useMemo } from 'react'
+import { FunctionComponent, useCallback, useMemo, useContext } from 'react'
 
 import { CardSelector } from './CardSelector'
 import { DialogStyled, DialogProps } from './DialogStyled'
 import { Effect } from './Effect'
 import { ButtonUnderline, BaseButton } from '../Buttons'
 import { ClickOutside } from '../ClickOutside'
+import { ChannelContext } from '../../contexts/ChannelContext'
 import { Diff } from '../../models/Diff'
-import { CallChannel, CallMessage } from '../../models/CallMessage'
+import { CallMessage } from '../../models/CallMessage'
 import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
 import { Interaction } from '../../models/game/Interaction'
@@ -18,7 +19,6 @@ import { Player } from '../../models/game/Player'
 import { pipe, Future, Maybe, Either } from '../../utils/fp'
 
 interface Props {
-  readonly call: CallChannel
   readonly closeDialog: () => void
   readonly game: Game
   readonly props: DialogProps
@@ -29,10 +29,11 @@ type WithoutShown = {
   [K in Keys]?: DialogProps[K]
 }
 
-export const Dialog: FunctionComponent<Props> = ({ call, closeDialog, game, props }) => {
+export const Dialog: FunctionComponent<Props> = ({ closeDialog, game, props }) => {
+  const { call } = useContext(ChannelContext)
   const interact = useCallback(
     (interaction: Interaction) => () =>
-      pipe(call(CallMessage.Interact(interaction)), Future.runUnsafe),
+      pipe(CallMessage.Interact(interaction), call, Future.runUnsafe),
     [call]
   )
   const interactCard = useCallback(

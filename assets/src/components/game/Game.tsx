@@ -1,13 +1,16 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
-import { FunctionComponent, useState, useCallback, useMemo } from 'react'
+import { FunctionComponent, useState, useCallback, useMemo, useContext } from 'react'
 
 import { BoardContainer } from './BoardContainer'
 import { CardsViewer } from './CardsViewer'
 import { Dialog } from './Dialog'
 import { DialogProps } from './DialogStyled'
+import { GameStyled } from './GameStyled'
 import { RightBar } from './RightBar'
-import { CallChannel, CallMessage } from '../../models/CallMessage'
+import { ChannelContext } from '../../contexts/ChannelContext'
+import { ShowCardDetailContext } from '../../contexts/ShowCardDetailContext'
+import { CallMessage } from '../../models/CallMessage'
 import { Card } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
 import { PlayerId } from '../../models/PlayerId'
@@ -16,16 +19,13 @@ import { OtherPlayer } from '../../models/game/OtherPlayer'
 import { Player } from '../../models/game/Player'
 import { Referential } from '../../models/game/geometry/Referential'
 import { pipe, List, Maybe, Future, Either, Task } from '../../utils/fp'
-import { GameStyled } from './GameStyled'
-import { ShowCardDetailContext } from '../../contexts/ShowCardDetailContext'
 
 interface Props {
-  readonly call: CallChannel
   readonly game: TGame
   readonly events: [number, string][]
 }
 
-export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
+export const Game: FunctionComponent<Props> = ({ game, events }) => {
   const referentials = useMemo(
     () => ({
       market: Referential.market,
@@ -37,15 +37,18 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
   const zippedOtherPlayers = List.zip(referentials.others, game.other_players)
 
   // end turn
+  const { call } = useContext(ChannelContext)
   const endTurn = useCallback(() => {
     pipe(
-      call(CallMessage.DiscardPhase),
+      CallMessage.DiscardPhase,
+      call,
       Future.chain(
         Either.fold(
           _ => Future.right(undefined),
           _ =>
             pipe(
-              call(CallMessage.DrawPhase),
+              CallMessage.DrawPhase,
+              call,
               Task.delay(1000),
               Future.map(_ => {})
             )
@@ -72,7 +75,6 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
     <ShowCardDetailContext.Provider value={showCardDetail}>
       <GameStyled>
         <BoardContainer
-          call={call}
           game={game}
           referentials={referentials}
           zippedOtherPlayers={zippedOtherPlayers}
@@ -85,7 +87,7 @@ export const Game: FunctionComponent<Props> = ({ call, game, events }) => {
           endTurn={endTurn}
           events={events}
         />
-        <Dialog call={call} closeDialog={closeDialog} game={game} props={dialogProps} />
+        <Dialog closeDialog={closeDialog} game={game} props={dialogProps} />
       </GameStyled>
     </ShowCardDetailContext.Provider>
   )

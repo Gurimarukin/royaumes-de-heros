@@ -7,7 +7,6 @@ import { useSpring, animated as a } from 'react-spring'
 import { Board } from './Board'
 import { BoardContainerStyled } from './BoardContainerStyled'
 import { params } from '../../params'
-import { CallChannel } from '../../models/CallMessage'
 import { PlayerId } from '../../models/PlayerId'
 import { Game } from '../../models/game/Game'
 import { OtherPlayer } from '../../models/game/OtherPlayer'
@@ -17,7 +16,6 @@ import { useWindowEvent } from '../../hooks/useWindowEvent'
 import { Maybe, pipe, flow, List } from '../../utils/fp'
 
 interface Props {
-  readonly call: CallChannel
   readonly game: Game
   readonly referentials: Referentials
   readonly zippedOtherPlayers: [Referential, [PlayerId, OtherPlayer]][]
@@ -94,7 +92,6 @@ const maxScale = 1
 const moveStepPx = 100
 
 export const BoardContainer: FunctionComponent<Props> = ({
-  call,
   game,
   referentials,
   zippedOtherPlayers,
@@ -167,7 +164,6 @@ export const BoardContainer: FunctionComponent<Props> = ({
         style={{ transform: props.s.interpolate(trans), left: props.x, top: props.y }}
       >
         <Board
-          call={call}
           game={game}
           referentials={referentials}
           zippedOtherPlayers={zippedOtherPlayers}

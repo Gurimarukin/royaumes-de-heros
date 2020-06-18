@@ -1,13 +1,14 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent, useMemo, useCallback } from 'react'
+import { FunctionComponent, useMemo, useCallback, useContext } from 'react'
 import { animated as a } from 'react-spring'
 
 import { PartialPlayer } from '../PlayerZones'
 import { params } from '../../../params'
+import { ChannelContext } from '../../../contexts/ChannelContext'
 import { useValTransition } from '../../../hooks/useValTransition'
 import { PlayerId } from '../../../models/PlayerId'
-import { CallChannel, CallMessage } from '../../../models/CallMessage'
+import { CallMessage } from '../../../models/CallMessage'
 import { Game } from '../../../models/game/Game'
 import { Interaction } from '../../../models/game/Interaction'
 import { Rectangle } from '../../../models/game/geometry/Rectangle'
@@ -15,7 +16,6 @@ import { Referential } from '../../../models/game/geometry/Referential'
 import { pipe, Future, Maybe } from '../../../utils/fp'
 
 interface Props {
-  readonly call: CallChannel
   readonly game: Game
   readonly playerRef: Referential
   readonly player: [PlayerId, PartialPlayer]
@@ -24,12 +24,12 @@ interface Props {
 const ATTACK = 'attack'
 
 export const Hero: FunctionComponent<Props> = ({
-  call,
   game,
   playerRef,
   player: [playerId, { name, hp }]
 }) => {
-  const callAndRun = useCallback((msg: CallMessage) => () => pipe(call(msg), Future.runUnsafe), [
+  const { call } = useContext(ChannelContext)
+  const callAndRun = useCallback((msg: CallMessage) => () => pipe(msg, call, Future.runUnsafe), [
     call
   ])
 
