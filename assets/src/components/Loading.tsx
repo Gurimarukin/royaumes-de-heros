@@ -11,6 +11,7 @@ const styles = {
     // backgroundImage: "url('/images/bg.jpg')",
     // backgroundSize: '100% 100%',
     backgroundColor: '#222222',
+    fontSize: '2em',
     color: 'bisque',
     display: 'flex',
     justifyContent: 'center',
