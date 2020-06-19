@@ -18,6 +18,8 @@ defmodule HerosWeb.Router do
   scope "/", HerosWeb do
     pipe_through :browser
 
+    post "/rename", UserController, :rename
+
     get "/*path", PageController, :index
   end
 
@@ -33,6 +35,5 @@ defmodule HerosWeb.Router do
     else
       conn
     end
-    |> assign(:card_data, Heros.Game.Cards.Card.data())
   end
 end

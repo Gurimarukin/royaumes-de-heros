@@ -1,5 +1,10 @@
-import { createContext } from 'react'
+import { createContext, Dispatch, SetStateAction } from 'react'
 
 import { User } from '../models/User'
 
-export const UserContext = createContext<User>(User.empty)
+interface Context {
+  readonly user: User
+  readonly setUser: Dispatch<SetStateAction<User>>
+}
+
+export const UserContext = createContext<Context>({ user: User.empty, setUser: () => {} })

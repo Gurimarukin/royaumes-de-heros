@@ -5,8 +5,9 @@ import { draw } from 'io-ts/lib/Tree'
 import { FunctionComponent, useState, useContext, useEffect } from 'react'
 
 import { Router } from './Router'
-import { HistoryContext } from '../contexts/HistoryContext'
 import { CardDatasContext } from '../contexts/CardDatasContext'
+import { CsrfTokenContext } from '../contexts/CsrfTokenContext'
+import { HistoryContext } from '../contexts/HistoryContext'
 import { UserContext } from '../contexts/UserContext'
 import { PartialCardData, CardData } from '../models/game/CardData'
 import { User } from '../models/User'
@@ -15,25 +16,16 @@ import { pipe, Either } from '../utils/fp'
 interface Props {
   readonly user: unknown
   readonly card_data: unknown
+  readonly csrf_token: unknown
 }
 const cardDatasCodec = D.record(PartialCardData.codec)
 
 export const App: FunctionComponent<Props> = props => {
-  const user = pipe(
-    props.user,
-    User.codec.decode,
-    Either.getOrElse<D.DecodeError, User>(e => {
-      throw Error(`couldn't decode user:\n${draw(e)}`)
-    })
-  )
+  const [user, setUser] = useState(decode(User.codec, 'user')(props.user))
 
-  const cardDatas = pipe(
-    props.card_data,
-    cardDatasCodec.decode,
-    Either.fold(e => {
-      throw Error(`couldn't decode cardDatas:\n${draw(e)}`)
-    }, CardData.fromPartial)
-  )
+  const cardDatas = pipe(props.card_data, decode(cardDatasCodec, 'cardDatas'), CardData.fromPartial)
+
+  const csrfToken = decode(D.string, 'csrfToken')(props.csrf_token)
 
   const history = useContext(HistoryContext)
   const [path, setPath] = useState(history.location.pathname)
@@ -42,10 +34,23 @@ export const App: FunctionComponent<Props> = props => {
   }, [history])
 
   return (
-    <UserContext.Provider value={user}>
+    <UserContext.Provider value={{ user, setUser }}>
       <CardDatasContext.Provider value={cardDatas}>
-        <Router path={path} />
+        <CsrfTokenContext.Provider value={csrfToken}>
+          <Router path={path} />
+        </CsrfTokenContext.Provider>
       </CardDatasContext.Provider>
     </UserContext.Provider>
   )
+}
+
+function decode<A>(codec: D.Decoder<A>, name: string): (u: unknown) => A {
+  return u =>
+    pipe(
+      u,
+      codec.decode,
+      Either.getOrElse<D.DecodeError, A>(e => {
+        throw Error(`couldn't decode ${name}:\n${draw(e)}`)
+      })
+    )
 }

@@ -1,7 +1,6 @@
 /** @jsx jsx */
 import * as D from 'io-ts/lib/Decoder'
 import { jsx, css } from '@emotion/core'
-import { Channel } from 'phoenix'
 import { useContext, FunctionComponent, useState, useCallback, Fragment } from 'react'
 
 import { ButtonUnderline } from './Buttons'
@@ -10,19 +9,22 @@ import { Check, Pencil } from './icons'
 import { Link } from './Link'
 import { Loading } from './Loading'
 import { Router } from './Router'
+import { CsrfTokenContext } from '../contexts/CsrfTokenContext'
 import { HistoryContext } from '../contexts/HistoryContext'
 import { UserContext } from '../contexts/UserContext'
 import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
 import { Stage } from '../models/Stage'
+import { SquadsEvent } from '../models/SquadsEvent'
 import { SquadId } from '../models/SquadId'
 import { SquadShort } from '../models/SquadShort'
-import { pipe, Future, flow, Either } from '../utils/fp'
+import { pipe, Future, flow, Either, Maybe, IO } from '../utils/fp'
+import { HttpUtils } from '../utils/HttpUtils'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
 export const Squads: FunctionComponent = () => {
-  const user = useContext(UserContext)
+  const { user } = useContext(UserContext)
 
   const [state, setState] = useState<AsyncState<ChannelError, SquadShort[]>>(AsyncState.Loading)
 
@@ -34,20 +36,28 @@ export const Squads: FunctionComponent = () => {
   )
 
   const [, channel] = useChannel(user.token, 'squads', { onJoinSuccess, onUpdate: onJoinSuccess })
+  const pushEvent = useCallback(
+    (event: SquadsEvent): Future<Either<unknown, unknown>> =>
+      pipe(
+        () => channel.push(event[0], (event[1] as unknown) as object),
+        PhoenixUtils.pushToFuture
+      ),
+    [channel]
+  )
 
-  return pipe(state, AsyncState.fold({ onLoading, onError, onSuccess: onSuccess(channel) }))
+  const onLoading = useCallback((): JSX.Element => <Loading />, [])
 
-  function onLoading(): JSX.Element {
-    return <Loading />
-  }
+  const onError = useCallback(
+    (error: ChannelError): JSX.Element => <pre>Error: {JSON.stringify(error)}</pre>,
+    []
+  )
 
-  function onError(error: ChannelError): JSX.Element {
-    return <pre>Error: {JSON.stringify(error)}</pre>
-  }
+  const onSuccess = useCallback(
+    (squads: SquadShort[]): JSX.Element => <SuccesSquads pushEvent={pushEvent} squads={squads} />,
+    [pushEvent]
+  )
 
-  function onSuccess(channel: Channel): (squads: SquadShort[]) => JSX.Element {
-    return squads => <SuccesSquads channel={channel} squads={squads} />
-  }
+  return pipe(state, AsyncState.fold({ onLoading, onError, onSuccess }))
 }
 
 const idCodec = D.type({
@@ -55,13 +65,13 @@ const idCodec = D.type({
 })
 
 interface Props {
-  readonly channel: Channel
+  readonly pushEvent: (event: SquadsEvent) => Future<Either<unknown, unknown>>
   readonly squads: SquadShort[]
 }
 
-const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
+const SuccesSquads: FunctionComponent<Props> = ({ pushEvent, squads }) => {
   const history = useContext(HistoryContext)
-  const user = useContext(UserContext)
+  const { user, setUser } = useContext(UserContext)
 
   const handleInputMount = useCallback((elt: HTMLInputElement | null) => elt?.select(), [])
 
@@ -79,12 +89,40 @@ const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
     setUserName(user.name)
   }, [user.name])
 
+  const validUserName = pipe(
+    Maybe.some(userName.trim()),
+    Maybe.filter(_ => _ !== '')
+  )
+
+  const csrfToken = useContext(CsrfTokenContext)
   const submitName = useCallback(() => {
-    if (isValidUserName(userName)) {
-      setEdit(false)
-      // TODO: send to server
-    }
-  }, [userName])
+    pipe(
+      validUserName,
+      Maybe.map(name => {
+        setEdit(false)
+        if (name !== user.name) {
+          pipe(
+            HttpUtils.post(csrfToken)('/rename', name),
+            Future.chain(_ =>
+              _.ok
+                ? pipe(
+                    Future.apply(() => _.text()),
+                    Future.map(name => {
+                      setUser(_ => ({ ..._, name }))
+                      setUserName(name)
+                    })
+                  )
+                : pipe(
+                    IO.apply(() => setUserName(user.name)),
+                    Future.fromIOEither
+                  )
+            ),
+            Future.runUnsafe
+          )
+        }
+      })
+    )
+  }, [csrfToken, setUser, user.name, validUserName])
 
   const handleKeyUp = useCallback(
     (e: React.KeyboardEvent) => {
@@ -95,8 +133,8 @@ const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
 
   const createGame = useCallback(() => {
     pipe(
-      () => channel.push('create', {}),
-      PhoenixUtils.pushToFuture,
+      SquadsEvent.Create,
+      pushEvent,
       Future.map(
         Either.fold(
           _ => {},
@@ -108,7 +146,7 @@ const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
       ),
       Future.runUnsafe
     )
-  }, [channel, history])
+  }, [history, pushEvent])
 
   return (
     <div css={styles.container}>
@@ -119,7 +157,7 @@ const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
           {edit ? (
             <ClickOutside onClickOutside={undoChanges}>
               <div css={styles.userNameInputContainer}>
-                <span css={styles.userNameInputHitbox}>{userName}</span>
+                <span css={styles.userNameInputHitbox}>{userName === '' ? ' ' : userName}</span>
                 <input
                   ref={handleInputMount}
                   type='text'
@@ -131,7 +169,7 @@ const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
                 />
               </div>
               <button
-                disabled={!isValidUserName(userName)}
+                disabled={Maybe.isNone(validUserName)}
                 onClick={submitName}
                 css={styles.iconBtn}
               >
@@ -182,10 +220,6 @@ const SuccesSquads: FunctionComponent<Props> = ({ channel, squads }) => {
       </div>
     </div>
   )
-}
-
-function isValidUserName(value: string): boolean {
-  return value.trim() !== ''
 }
 
 function stageLabel(stage: Stage): string {
@@ -293,6 +327,7 @@ const styles = {
   squads: css({
     width: '1100px',
     fontSize: '1.1em',
+    textAlign: 'center',
 
     '& td, & th': {
       padding: '0.67em 0.33em'
@@ -300,7 +335,8 @@ const styles = {
   }),
 
   squadsHeader: css({
-    borderBottom: '3px double darkgoldenrod'
+    borderBottom: '3px double darkgoldenrod',
+    fontWeight: 'bold'
   }),
 
   squad: css({

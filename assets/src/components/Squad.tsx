@@ -28,7 +28,7 @@ interface Props {
 const stateWithEvent = D.tuple(SquadState.codec, SquadEvent.codec)
 
 export const Squad: FunctionComponent<Props> = ({ id }) => {
-  const user = useContext(UserContext)
+  const { user } = useContext(UserContext)
   const cardDatas = useContext(CardDatasContext)
 
   const [state, setState] = useState<AsyncState<ChannelError, SquadState>>(AsyncState.Loading)

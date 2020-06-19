@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const LobbyComponent: FunctionComponent<Props> = ({ state }) => {
-  const user = useContext(UserContext)
+  const { user } = useContext(UserContext)
   const { call } = useContext(ChannelContext)
 
   const play = useCallback(() => pipe(CallMessage.startGame, call, Future.runUnsafe), [call])
