@@ -356,9 +356,11 @@ const styles = {
   squadJoin: css({
     color: 'inherit',
     cursor: 'inherit',
+    padding: '0.1em 0.2em',
+    transition: 'all 0.2s',
 
-    '&:not(:hover)': {
-      textDecoration: 'none'
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.2)'
     }
   })
 }
