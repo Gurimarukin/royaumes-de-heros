@@ -52,9 +52,7 @@ const styles = {
   }),
 
   cardDetail: css({
-    flexGrow: 1,
-    flexShrink: 0,
-    flexBasis: 0,
+    flex: '1 0 0',
     border: '1px solid darkgoldenrod',
     borderWidth: '0 0 1px 1px',
     overflow: 'hidden'
@@ -66,9 +64,7 @@ const styles = {
   }),
 
   chat: css({
-    flexGrow: 1,
-    flexShrink: 0,
-    flexBasis: 0,
+    flex: '1 0 0',
     border: '1px solid darkgoldenrod',
     borderWidth: '1px 0 0 1px'
   }),
