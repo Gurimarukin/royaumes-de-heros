@@ -3,10 +3,10 @@ import * as D from 'io-ts/lib/Decoder'
 import { jsx } from '@emotion/core'
 import { FunctionComponent, useState, useContext, useCallback } from 'react'
 
-import { Link } from './Link'
+import { Error } from './Error'
 import { Loading } from './Loading'
-import { Router } from './Router'
 import { LobbyComponent } from './LobbyComponent'
+import { Router } from './Router'
 import { Game } from './game/Game'
 import { CardDatasContext } from '../contexts/CardDatasContext'
 import { ChannelContext } from '../contexts/ChannelContext'
@@ -89,10 +89,14 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
 
   const onError = useCallback(
     (error: ChannelError): JSX.Element => (
-      <div>
-        <Link to={Router.routes.squads}>retour</Link>
-        <pre>Error: {JSON.stringify(error, null, 2)}</pre>
-      </div>
+      <Error
+        error={error}
+        messages={{
+          403: 'Impossible de rejoindre cette partie',
+          404: 'Impossible de trouver cette partie'
+        }}
+        link={[Router.routes.squads, 'retour']}
+      />
     ),
     []
   )

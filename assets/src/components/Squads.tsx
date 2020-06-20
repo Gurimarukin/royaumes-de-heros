@@ -5,6 +5,7 @@ import { useContext, FunctionComponent, useState, useCallback, Fragment } from '
 
 import { ButtonUnderline } from './Buttons'
 import { ClickOutside } from './ClickOutside'
+import { Error } from './Error'
 import { Check, Pencil } from './icons'
 import { Link } from './Link'
 import { Loading } from './Loading'
@@ -47,10 +48,7 @@ export const Squads: FunctionComponent = () => {
 
   const onLoading = useCallback((): JSX.Element => <Loading />, [])
 
-  const onError = useCallback(
-    (error: ChannelError): JSX.Element => <pre>Error: {JSON.stringify(error)}</pre>,
-    []
-  )
+  const onError = useCallback((error: ChannelError): JSX.Element => <Error error={error} />, [])
 
   const onSuccess = useCallback(
     (squads: SquadShort[]): JSX.Element => <SuccesSquads pushEvent={pushEvent} squads={squads} />,
