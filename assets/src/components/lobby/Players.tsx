@@ -22,7 +22,7 @@ export const Players: FunctionComponent<Props> = ({ lobby }) => {
   return (
     <table css={styles.container}>
       <thead>
-        <tr css={styles.playersHeader}>
+        <tr css={styles.header}>
           <th css={styles.owner} />
           <th css={styles.playerName}>Joueurs</th>
           <th css={styles.ready}>Prêt</th>
@@ -60,7 +60,7 @@ const styles = {
     }
   }),
 
-  playersHeader: css({
+  header: css({
     borderBottom: '3px double darkgoldenrod',
     fontWeight: 'bold'
   }),
@@ -80,10 +80,7 @@ const styles = {
 
   playerName: css({
     flex: '1 0 0',
-
-    'th&': {
-      textAlign: 'left'
-    },
+    textAlign: 'left',
 
     [`tr.${SELF} &`]: {
       textDecoration: 'underline'
