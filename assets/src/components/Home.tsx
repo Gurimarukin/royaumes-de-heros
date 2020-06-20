@@ -7,16 +7,15 @@ import { ButtonUnderline } from './Buttons'
 import { ClickOutside } from './ClickOutside'
 import { Error } from './Error'
 import { Check, Pencil } from './icons'
-import { Link } from './Link'
 import { Loading } from './Loading'
 import { Router } from './Router'
+import { Squads } from './home/Squads'
 import { CsrfTokenContext } from '../contexts/CsrfTokenContext'
 import { HistoryContext } from '../contexts/HistoryContext'
 import { UserContext } from '../contexts/UserContext'
 import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
-import { Stage } from '../models/Stage'
 import { SquadsEvent } from '../models/SquadsEvent'
 import { SquadId } from '../models/SquadId'
 import { SquadShort } from '../models/SquadShort'
@@ -24,7 +23,7 @@ import { pipe, Future, flow, Either, Maybe, IO } from '../utils/fp'
 import { HttpUtils } from '../utils/HttpUtils'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
 
-export const Squads: FunctionComponent = () => {
+export const Home: FunctionComponent = () => {
   const { user } = useContext(UserContext)
 
   const [state, setState] = useState<AsyncState<ChannelError, SquadShort[]>>(AsyncState.Loading)
@@ -186,47 +185,15 @@ const SuccesSquads: FunctionComponent<Props> = ({ pushEvent, squads }) => {
         <ButtonUnderline onClick={createGame}>Nouvelle partie</ButtonUnderline>
       </div>
 
-      <div css={styles.squadsContainer}>
+      <div css={styles.squads}>
         {squads.length === 0 ? (
-          <div css={styles.squads}>Pas de partie en cours.</div>
+          <div css={styles.noSquads}>Pas de partie en cours.</div>
         ) : (
-          <table css={styles.squads}>
-            <thead>
-              <tr css={styles.squadsHeader}>
-                <th>Phase</th>
-                <th>Joueurs</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {squads.map(squad => (
-                <tr key={SquadId.unwrap(squad.id)} css={styles.squad}>
-                  <td>{stageLabel(squad.stage)}</td>
-                  <td css={styles.squadNPlayers}>{squad.n_players}</td>
-                  <td css={styles.squadJoinContainer}>
-                    {squad.stage === 'lobby' ? (
-                      <Link to={Router.routes.squad(squad.id)} css={styles.squadJoin}>
-                        rejoindre
-                      </Link>
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Squads squads={squads} />
         )}
       </div>
     </div>
   )
-}
-
-function stageLabel(stage: Stage): string {
-  switch (stage) {
-    case 'lobby':
-      return 'Salon'
-    case 'game':
-      return 'En partie'
-  }
 }
 
 const styles = {
@@ -315,50 +282,14 @@ const styles = {
     }
   }),
 
-  squadsContainer: css({
+  squads: css({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     paddingTop: '2em'
   }),
 
-  squads: css({
-    width: '1100px',
-    fontSize: '1.1em',
-    textAlign: 'center',
-
-    '& td, & th': {
-      padding: '0.67em 0.33em'
-    }
-  }),
-
-  squadsHeader: css({
-    borderBottom: '3px double darkgoldenrod',
-    fontWeight: 'bold'
-  }),
-
-  squad: css({
-    '&:nth-of-type(2n)': {
-      backgroundColor: 'rgba(245, 222, 179, 0.3)'
-    }
-  }),
-
-  squadNPlayers: css({
+  noSquads: css({
     textAlign: 'center'
-  }),
-
-  squadJoinContainer: css({
-    textAlign: 'right'
-  }),
-
-  squadJoin: css({
-    color: 'inherit',
-    cursor: 'inherit',
-    padding: '0.1em 0.2em',
-    transition: 'all 0.2s',
-
-    '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)'
-    }
   })
 }

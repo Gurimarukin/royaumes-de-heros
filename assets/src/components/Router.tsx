@@ -5,7 +5,7 @@ import { end, lit, zero, type, parse, Route, format } from 'fp-ts-routing'
 
 import { NotFound } from './NotFound'
 import { Squad } from './Squad'
-import { Squads } from './Squads'
+import { Home } from './Home'
 import { SquadId } from '../models/SquadId'
 import { Maybe } from '../utils/fp'
 
@@ -31,7 +31,7 @@ const squadMatch = lit('game').then(type('id', SquadId.codec))
 
 /* eslint-disable react/jsx-key */
 const routes = zero<TitleWithElt>()
-  .alt(squadsMatch.parser.map(_ => [Maybe.none, <Squads />]))
+  .alt(squadsMatch.parser.map(_ => [Maybe.none, <Home />]))
   .alt(squadMatch.parser.map(({ id }) => [Maybe.none, <Squad id={id} />]))
 
 function route(s: string): TitleWithElt {
