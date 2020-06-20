@@ -5,7 +5,7 @@ import { PlayerId } from '../PlayerId'
 
 export namespace Lobby {
   export const codec = D.type({
-    owner: D.string,
+    owner: PlayerId.codec,
     players: D.array(D.tuple(PlayerId.codec, LobbyPlayer.codec)),
     ready: D.boolean
   })
