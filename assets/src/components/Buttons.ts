@@ -1,7 +1,6 @@
 import styled from '@emotion/styled'
 
 export const BaseButton = styled.button({
-  position: 'relative',
   fontFamily: 'inherit',
   fontSize: 'inherit',
   display: 'flex',
@@ -26,6 +25,8 @@ export const BaseButton = styled.button({
 })
 
 export const ButtonUnderline = styled(BaseButton)({
+  position: 'relative',
+
   '&::after': {
     content: `''`,
     position: 'absolute',
