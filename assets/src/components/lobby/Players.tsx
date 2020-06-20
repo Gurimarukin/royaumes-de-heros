@@ -22,7 +22,7 @@ export const Players: FunctionComponent<Props> = ({ lobby }) => {
   return (
     <table css={styles.container}>
       <thead>
-        <tr css={[styles.row, styles.playersHeader]}>
+        <tr css={styles.playersHeader}>
           <th css={styles.owner} />
           <th css={styles.playerName}>Joueurs</th>
           <th css={styles.ready}>Prêt</th>
@@ -58,10 +58,6 @@ const styles = {
     '& td, & th': {
       padding: '0.67em 0.33em'
     }
-  }),
-
-  row: css({
-    display: 'flex'
   }),
 
   playersHeader: css({
