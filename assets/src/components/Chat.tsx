@@ -2,7 +2,7 @@
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent, useCallback, useRef, useEffect } from 'react'
 
-import { Maybe, pipe } from '../../utils/fp'
+import { Maybe, pipe } from '../utils/fp'
 
 interface Props {
   readonly lines: [number, string][]

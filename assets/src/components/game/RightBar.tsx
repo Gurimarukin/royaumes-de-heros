@@ -3,7 +3,7 @@ import { jsx, css } from '@emotion/core'
 import { FunctionComponent } from 'react'
 
 import { CardDetail } from './CardDetail'
-import { Chat } from './Chat'
+import { Chat } from '../Chat'
 import { ButtonUnderline } from '../Buttons'
 import { params } from '../../params'
 import { Maybe } from '../../utils/fp'
