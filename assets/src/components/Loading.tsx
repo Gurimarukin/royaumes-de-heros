@@ -8,8 +8,6 @@ const styles = {
   container: css({
     width: '100vw',
     height: '100vh',
-    // backgroundImage: "url('/images/bg.jpg')",
-    // backgroundSize: '100% 100%',
     backgroundColor: '#222222',
     fontSize: '2em',
     color: 'bisque',
