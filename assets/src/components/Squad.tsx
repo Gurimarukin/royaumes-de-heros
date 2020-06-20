@@ -5,7 +5,7 @@ import { FunctionComponent, useState, useContext, useCallback } from 'react'
 
 import { Error } from './Error'
 import { Loading } from './Loading'
-import { LobbyComponent } from './LobbyComponent'
+import { Lobby } from './lobby/Lobby'
 import { Router } from './Router'
 import { Game } from './game/Game'
 import { CardDatasContext } from '../contexts/CardDatasContext'
@@ -105,7 +105,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
     (state: SquadState): JSX.Element => {
       switch (state[0]) {
         case 'lobby':
-          return <LobbyComponent state={state[1]} />
+          return <Lobby lobby={state[1]} events={events} />
         case 'game':
           return <Game game={state[1]} events={events} />
       }
