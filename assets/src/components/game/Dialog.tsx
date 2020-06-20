@@ -6,7 +6,7 @@ import { FunctionComponent, useCallback, useMemo, useContext } from 'react'
 import { CardSelector } from './CardSelector'
 import { DialogStyled, DialogProps } from './DialogStyled'
 import { Effect } from './Effect'
-import { ButtonUnderline, BaseButton } from '../Buttons'
+import { ButtonUnderline, BaseButton, SecondaryButton } from '../Buttons'
 import { ClickOutside } from '../ClickOutside'
 import { ChannelContext } from '../../contexts/ChannelContext'
 import { Diff } from '../../models/Diff'
@@ -250,18 +250,6 @@ const Group = styled.div({
   justifyContent: 'center',
   padding: '0 1.67em',
   marginBottom: '1em'
-})
-
-const SecondaryButton = styled(ButtonUnderline)({
-  backgroundColor: 'dimgrey',
-  borderColor: 'dimgrey',
-  margin: '0 1em',
-
-  color: 'white',
-  '&::after': {
-    borderColor: 'white',
-    bottom: '0.1em'
-  }
 })
 
 const EffectButton = styled(BaseButton)({

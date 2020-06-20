@@ -45,3 +45,15 @@ export const ButtonUnderline = styled(BaseButton)({
     opacity: 1
   }
 })
+
+export const SecondaryButton = styled(ButtonUnderline)({
+  backgroundColor: 'dimgrey',
+  borderColor: 'dimgrey',
+  margin: '0 1em',
+  color: 'white',
+
+  '&::after': {
+    borderColor: 'white',
+    bottom: '0.1em'
+  }
+})
