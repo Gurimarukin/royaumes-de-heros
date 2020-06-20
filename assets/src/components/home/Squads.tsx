@@ -61,6 +61,7 @@ const styles = {
   }),
 
   header: css({
+    width: '100%',
     display: 'flex',
     borderBottom: '3px double darkgoldenrod',
     fontWeight: 'bold'
