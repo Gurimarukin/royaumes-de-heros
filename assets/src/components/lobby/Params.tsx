@@ -31,11 +31,9 @@ export const Params: FunctionComponent<Props> = ({ lobby }) => (
 
 const styles = {
   container: css({
-    minHeight: '50%',
-    backgroundImage: "url('/images/sandstone_top.png')",
-    color: 'black',
-    border: '3px solid darkgoldenrod',
-    borderWidth: '0 3px 3px 0',
+    height: '100%',
+    backgroundColor: 'black',
+    borderRight: '1px solid darkgoldenrod',
     fontSize: '1.1em',
     padding: '.33em'
   })

@@ -30,26 +30,22 @@ export const Lobby: FunctionComponent<Props> = ({ lobby, events }) => {
 
   return (
     <div css={styles.container}>
-      <div css={styles.leftPanel}>
-        <div css={styles.paramsAndSquad}>
-          <div css={styles.paramsContainer}>
-            <Params lobby={lobby} />
-          </div>
-          <div css={styles.squad}>
-            <Players lobby={lobby} />
-          </div>
-        </div>
-        <footer css={styles.footer}>
-          {isOwner ? (
-            <ButtonUnderline onClick={play} disabled={!lobby.ready}>
-              Jouer
-            </ButtonUnderline>
-          ) : null}
-          <Link to={Router.routes.squads} css={styles.leaveBtn}>
-            Quitter
-          </Link>
-        </footer>
+      <div css={styles.params}>
+        <Params lobby={lobby} />
       </div>
+      <div css={styles.squad}>
+        <Players lobby={lobby} />
+      </div>
+      <footer css={styles.footer}>
+        {isOwner ? (
+          <ButtonUnderline onClick={play} disabled={!lobby.ready}>
+            Jouer
+          </ButtonUnderline>
+        ) : null}
+        <Link to={Router.routes.squads} css={styles.leaveBtn}>
+          Quitter
+        </Link>
+      </footer>
       <Chat lines={events} css={styles.chat} />
     </div>
   )
@@ -62,33 +58,28 @@ const styles = {
     backgroundImage: "url('/images/bg.jpg')",
     backgroundSize: '100% 100%',
     color: 'bisque',
-    display: 'flex'
+    display: 'grid',
+    gridTemplateColumns: `1fr 3fr ${params.card.widthPlusMargin + params.card.margin}px`,
+    gridTemplateRows: '1fr auto',
+    gridTemplateAreas: `
+      "params squad chat"
+      "footer footer footer"
+    `
   }),
 
-  leftPanel: css({
-    flex: '1 0 0',
-    display: 'flex',
-    flexDirection: 'column'
-  }),
-
-  paramsAndSquad: css({
-    flex: '1 0 0',
-    display: 'flex'
-  }),
-
-  paramsContainer: css({
-    flex: '1 0 0',
-    paddingRight: '0.67em'
+  params: css({
+    gridArea: 'params'
   }),
 
   squad: css({
-    flex: '3 0 0',
-    padding: '.33em .67em .33em 0',
+    gridArea: 'squad',
+    padding: '.33em .67em',
     display: 'flex',
     justifyContent: 'center'
   }),
 
   footer: css({
+    gridArea: 'footer',
     display: 'flex',
     justifyContent: 'center',
     padding: '0.67em 0',
@@ -132,7 +123,7 @@ const styles = {
   }),
 
   chat: css({
-    width: params.card.widthPlusMargin + params.card.margin,
+    gridArea: 'chat',
     borderLeft: '1px solid darkgoldenrod'
   })
 }

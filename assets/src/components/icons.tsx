@@ -3,35 +3,45 @@ import { css, jsx, keyframes } from '@emotion/core'
 
 import { FunctionComponent } from 'react'
 
-type SVGComponent = FunctionComponent<Props>
+type SVGComponent = FunctionComponent<React.SVGProps<SVGSVGElement>>
 
-interface Props {
-  className?: string
-}
-
-export const Check: SVGComponent = ({ className }) => (
+export const Ban: SVGComponent = props => (
   <svg
     focusable={false}
     xmlns='http://www.w3.org/2000/svg'
     viewBox='0 0 512 512'
     css={styles.base}
-    className={className}
+    {...props}
   >
     <path
       fill='currentColor'
-      d='M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z'
-      className=''
+      d='M256 8C119.034 8 8 119.033 8 256s111.034 248 248 248 248-111.034 248-248S392.967 8 256 8zm130.108 117.892c65.448 65.448 70 165.481 20.677 235.637L150.47 105.216c70.204-49.356 170.226-44.735 235.638 20.676zM125.892 386.108c-65.448-65.448-70-165.481-20.677-235.637L361.53 406.784c-70.203 49.356-170.226 44.736-235.638-20.676z'
     />
   </svg>
 )
 
-export const Coin: SVGComponent = ({ className }) => (
+export const Check: SVGComponent = props => (
   <svg
     focusable={false}
     xmlns='http://www.w3.org/2000/svg'
     viewBox='0 0 512 512'
     css={styles.base}
-    className={className}
+    {...props}
+  >
+    <path
+      fill='currentColor'
+      d='M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z'
+    />
+  </svg>
+)
+
+export const Coin: SVGComponent = props => (
+  <svg
+    focusable={false}
+    xmlns='http://www.w3.org/2000/svg'
+    viewBox='0 0 512 512'
+    css={styles.base}
+    {...props}
   >
     <path
       fill='currentColor'
@@ -40,13 +50,28 @@ export const Coin: SVGComponent = ({ className }) => (
   </svg>
 )
 
-export const Pencil: SVGComponent = ({ className }) => (
+export const Crown: SVGComponent = props => (
+  <svg
+    focusable={false}
+    xmlns='http://www.w3.org/2000/svg'
+    viewBox='0 0 640 512'
+    css={styles.base}
+    {...props}
+  >
+    <path
+      fill='currentColor'
+      d='M528 464H112c-8.8 0-16 7.2-16 16v16c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16v-16c0-8.8-7.2-16-16-16zm64-336c-26.5 0-48 21.5-48 48 0 7.1 1.6 13.7 4.4 19.8L476 239.2c-5.2 3.1-10.8 4.6-16.4 4.6-11.1 0-21.9-5.8-27.8-16.1L350.3 85C361 76.2 368 63 368 48c0-26.5-21.5-48-48-48s-48 21.5-48 48c0 15 7 28.2 17.7 37l-81.5 142.6c-5.9 10.4-16.7 16.1-27.8 16.1-5.6 0-11.3-1.5-16.4-4.6l-72.3-43.4c2.7-6 4.4-12.7 4.4-19.8 0-26.5-21.5-48-48-48S0 149.5 0 176s21.5 48 48 48c2.6 0 5.2-.4 7.7-.8L128 416h384l72.3-192.8c2.5.4 5.1.8 7.7.8 26.5 0 48-21.5 48-48s-21.5-48-48-48zM478.7 368H161.3l-36-96.1 14 8.4c12.4 7.5 26.7 11.4 41.1 11.4 28.7 0 55.3-15.4 69.5-40.3L320 128.7l70.1 122.7c14.2 24.9 40.8 40.3 69.5 40.3 14.5 0 28.7-3.9 41.1-11.4l14-8.4-36 96.1z'
+    />
+  </svg>
+)
+
+export const Pencil: SVGComponent = props => (
   <svg
     focusable={false}
     xmlns='http://www.w3.org/2000/svg'
     viewBox='0 0 512 512'
     css={styles.base}
-    className={className}
+    {...props}
   >
     <path
       fill='currentColor'
@@ -55,13 +80,13 @@ export const Pencil: SVGComponent = ({ className }) => (
   </svg>
 )
 
-export const Potion: SVGComponent = ({ className }) => (
+export const Potion: SVGComponent = props => (
   <svg
     focusable={false}
     xmlns='http://www.w3.org/2000/svg'
     viewBox='0 0 416 512'
     css={styles.base}
-    className={className}
+    {...props}
   >
     <path
       fill='currentColor'
@@ -70,13 +95,13 @@ export const Potion: SVGComponent = ({ className }) => (
   </svg>
 )
 
-export const Skull: SVGComponent = ({ className }) => (
+export const Skull: SVGComponent = props => (
   <svg
     focusable={false}
     xmlns='http://www.w3.org/2000/svg'
     viewBox='0 0 512 512'
     css={styles.base}
-    className={className}
+    {...props}
   >
     <g className='fa-group'>
       <path
@@ -93,13 +118,13 @@ export const Skull: SVGComponent = ({ className }) => (
   </svg>
 )
 
-export const Swords: SVGComponent = ({ className }) => (
+export const Swords: SVGComponent = props => (
   <svg
     focusable={false}
     xmlns='http://www.w3.org/2000/svg'
     viewBox='0 0 512 512'
     css={styles.base}
-    className={className}
+    {...props}
   >
     <path
       fill='currentColor'

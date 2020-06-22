@@ -2,7 +2,7 @@
 import { jsx, css } from '@emotion/core'
 import { FunctionComponent, useContext } from 'react'
 
-import { Check } from '../icons'
+import { Check, Crown, Ban } from '../icons'
 import { UserContext } from '../../contexts/UserContext'
 import { PlayerId } from '../../models/PlayerId'
 import { Lobby } from '../../models/lobby/Lobby'
@@ -33,12 +33,26 @@ export const Players: FunctionComponent<Props> = ({ lobby }) => {
         {lobby.players.map(([id, player]) =>
           pipe(id === user.id, isSelf => (
             <tr key={PlayerId.unwrap(id)} css={styles.player} className={isSelf ? SELF : undefined}>
-              <td css={styles.owner}>{id === lobby.owner ? 'propriétaire' : null}</td>
+              <td css={styles.owner}>
+                {id === lobby.owner ? (
+                  <span title='Propriétaire'>
+                    <Crown />
+                  </span>
+                ) : null}
+              </td>
               <td css={styles.playerName}>{player.name}</td>
               <td css={styles.ready}>
                 <Check />
               </td>
-              {isOwner ? <td css={styles.ownerActions}>{!isSelf ? 'Expulser' : null}</td> : null}
+              {isOwner ? (
+                <td css={styles.ownerActions}>
+                  {!isSelf ? (
+                    <span title='Expulser' css={styles.ban}>
+                      <Ban />
+                    </span>
+                  ) : null}
+                </td>
+              ) : null}
             </tr>
           ))
         )}
@@ -77,7 +91,9 @@ const styles = {
 
   owner: css({
     width: '12ch',
-    textAlign: 'center'
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
   }),
 
   playerName: css({
@@ -91,12 +107,20 @@ const styles = {
 
   ready: css({
     width: '5ch',
-    textAlign: 'center'
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
   }),
 
   ownerActions: css({
     width: '12ch',
     display: 'flex',
-    justifyContent: 'flex-end'
+    justifyContent: 'center',
+    alignItems: 'center'
+  }),
+
+  ban: css({
+    color: '#ca0404',
+    display: 'flex'
   })
 }
