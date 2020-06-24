@@ -2,8 +2,16 @@ defmodule Heros.Utils.KeyList do
   # find(list({A, B}), A, C) :: C | B
   def find(list, key, default \\ nil) do
     case List.keyfind(list, key, 0, default) do
-      ^default -> nil
+      ^default -> default
       {^key, elt} -> elt
+    end
+  end
+
+  # find_where(list({A, B}), (B -> boolean), C) :: C | A
+  def find_where(list, f, default \\ nil) do
+    case Enum.find(list, default, fn {_, b} -> f.(b) end) do
+      ^default -> default
+      {key, _} -> key
     end
   end
 
