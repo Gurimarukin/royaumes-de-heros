@@ -152,6 +152,29 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(squad_pid) == squad
   end
+
+  test "member leaves" do
+    %{get: get, call: call} = agent()
+    {:ok, p1} = SimpleGenServer.start_link()
+    {:ok, p2} = SimpleGenServer.start_link()
+
+    {:ok, squad_pid} = Squad.start_link(broadcast_update: call)
+
+    {:ok, {_, {"Player 1", :lobby_joined}}} = Squad.connect(squad_pid, "p1", "Player 1", p1)
+    {:ok, {_, {"Player 2", :lobby_joined}}} = Squad.connect(squad_pid, "p2", "Player 2", p2)
+
+    {:ok, {squad, {"Player 1", :lobby_left}}} = Squad.leave(squad_pid, "p1")
+
+    assert get.() == []
+
+    assert squad == %Squad{
+             broadcast_update: call,
+             owner: "p2",
+             members: [{"p2", %Member{name: "Player 2", sockets: MapSet.new([p2])}}],
+             state:
+               {:lobby, %Lobby{players: [{"p2", %Lobby.Player{name: "Player 2"}}], ready: false}}
+           }
+  end
 end
 
 # defmodule Heros.SquadTest do

@@ -1,6 +1,8 @@
 /** @jsx jsx */
 import * as D from 'io-ts/lib/Decoder'
 import { jsx } from '@emotion/core'
+import { Lazy } from 'fp-ts/lib/function'
+import { Push } from 'phoenix'
 import { FunctionComponent, useState, useContext, useCallback } from 'react'
 
 import { Error } from './Error'
@@ -67,22 +69,30 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
     onUpdate
   })
 
-  const call = useCallback(
-    (msg: CallMessage): Future<Either<unknown, unknown>> =>
+  const pushToFuture = useCallback(
+    (push: Lazy<Push>): Future<Either<unknown, unknown>> =>
       pipe(
-        () => channel.push('call', (msg as unknown) as object),
+        push,
         PhoenixUtils.pushToFuture,
         Future.map(
-          Either.bimap(
-            _ => {
-              appendEvent('error')
-              return _
-            },
-            _ => _
-          )
+          Either.mapLeft(_ => {
+            appendEvent('error')
+            return _
+          })
         )
       ),
-    [appendEvent, channel]
+    [appendEvent]
+  )
+
+  const call = useCallback(
+    (msg: CallMessage): Future<Either<unknown, unknown>> =>
+      pushToFuture(() => channel.push('call', (msg as unknown) as object)),
+    [channel, pushToFuture]
+  )
+
+  const leave = useCallback(
+    (): Future<Either<unknown, unknown>> => pushToFuture(() => channel.push('leave', {})),
+    [channel, pushToFuture]
   )
 
   const onLoading = useCallback((): JSX.Element => <Loading />, [])
@@ -95,7 +105,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
           403: 'Impossible de rejoindre cette partie',
           404: 'Impossible de trouver cette partie'
         }}
-        link={[Router.routes.squads, 'retour']}
+        link={[Router.routes.home, 'retour']}
       />
     ),
     []
@@ -114,7 +124,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
   )
 
   return (
-    <ChannelContext.Provider value={{ call }}>
+    <ChannelContext.Provider value={{ call, leave }}>
       {pipe(state, AsyncState.fold({ onLoading, onError, onSuccess }))}
     </ChannelContext.Provider>
   )

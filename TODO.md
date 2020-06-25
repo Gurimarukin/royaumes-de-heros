@@ -7,6 +7,7 @@
 * remove player name from Lobby
 * add lobby name
 * persist chat (reduce it on back also)
+* game leave
 
 * shortcuts: center players, center market
 * reduce opacity hand when not turn

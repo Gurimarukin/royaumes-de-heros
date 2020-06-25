@@ -25,14 +25,14 @@ defmodule HerosWeb.SquadChannel do
   end
 
   def handle_in("call", message, socket) do
-    case GenServer.call(socket.assigns.squad_pid, {socket.assigns.user.id, message}) do
-      {:ok, update} ->
-        broadcast_update(update, socket)
-        {:reply, :ok, socket}
+    broadcast_if_ok(
+      GenServer.call(socket.assigns.squad_pid, {socket.assigns.user.id, message}),
+      socket
+    )
+  end
 
-      :error ->
-        {:reply, :error, socket}
-    end
+  def handle_in("leave", _message, socket) do
+    broadcast_if_ok(Squad.leave(socket.assigns.squad_pid, socket.assigns.user.id), socket)
   end
 
   def handle_info({:update, update}, socket) do
@@ -67,6 +67,13 @@ defmodule HerosWeb.SquadChannel do
           {:ok, squad} -> broadcast_update(squad, socket)
         end
     end
+  end
+
+  defp broadcast_if_ok(:error, socket), do: {:reply, :error, socket}
+
+  defp broadcast_if_ok({:ok, update}, socket) do
+    broadcast_update(update, socket)
+    {:reply, :ok, socket}
   end
 
   defp broadcast_update(update, socket) do

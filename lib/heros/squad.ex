@@ -45,6 +45,10 @@ defmodule Heros.Squad do
     GenServer.call(squad, {:disconnect, socket})
   end
 
+  def leave(squad, member_id) do
+    GenServer.call(squad, {:leave, member_id})
+  end
+
   def init(broadcast_update) do
     {:ok,
      %Squad{
@@ -181,6 +185,11 @@ defmodule Heros.Squad do
     |> to_reply(squad)
   end
 
+  def handle_call({:leave, member_id}, _from, squad) do
+    player_leave(squad, member_id)
+    |> to_reply(squad)
+  end
+
   def handle_call(message, from, squad) do
     res =
       case squad.state do
@@ -204,49 +213,24 @@ defmodule Heros.Squad do
   end
 
   def handle_info({:check_reconnected, member_id}, squad) do
-    case KeyList.find(squad.members, member_id) do
-      nil ->
-        {:noreply, squad}
+    squad =
+      player_leave(squad, member_id)
+      |> Option.map(fn {squad, message} ->
+        squad.broadcast_update.({squad, message})
+        squad
+      end)
+      |> Option.get_or_else(fn -> squad end)
 
-      member ->
-        Logger.debug(~s"Squad #{inspect(self())}: #{member.name} left")
+    {:noreply, squad}
 
-        res =
-          case squad.state do
-            {:lobby, lobby} ->
-              Lobby.leave(lobby, member_id)
-              |> Option.map(fn lobby ->
-                squad =
-                  %{squad | state: {:lobby, lobby}}
-                  |> delete_member(member_id)
-                  |> update_owner(member_id)
-
-                {squad, {member.name, :lobby_left}}
-              end)
-
-            {:game, _game} ->
-              {squad, {member.name, :game_disconnected}}
-              |> Option.some()
-          end
-
-        case res do
-          {:ok, {squad, message}} ->
-            squad.broadcast_update.({squad, message})
-            {:noreply, squad}
-
-          :error ->
-            {:noreply, squad}
-        end
-
-        # game =
-        #   if System.system_time(:millisecond) >= user.last_seen + 10000 do
-        #     Logger.debug(~s"Game #{game.lobby.name}: #{user.user_name} disconnected")
-        #     update_in(game.users, &Utils.keydelete(&1, id_user))
-        #   else
-        #     Logger.debug(~s"Game #{game.lobby.name}: #{user.user_name} reconnected in time")
-        #     game
-        #   end
-    end
+    # game =
+    #   if System.system_time(:millisecond) >= user.last_seen + 10000 do
+    #     Logger.debug(~s"Game #{game.lobby.name}: #{user.user_name} disconnected")
+    #     update_in(game.users, &Utils.keydelete(&1, id_user))
+    #   else
+    #     Logger.debug(~s"Game #{game.lobby.name}: #{user.user_name} reconnected in time")
+    #     game
+    #   end
   end
 
   def handle_info({:DOWN, _ref, :process, socket, _reason}, squad) do
@@ -254,6 +238,29 @@ defmodule Heros.Squad do
       {:stop, reason, _reply, squad} -> {:stop, reason, squad}
       {:reply, _reply, squad} -> {:noreply, squad}
     end
+  end
+
+  defp player_leave(squad, member_id) do
+    with_member(squad.members, member_id, fn member ->
+      Logger.debug(~s"Squad #{inspect(self())}: #{member.name} left")
+
+      case squad.state do
+        {:lobby, lobby} ->
+          Lobby.leave(lobby, member_id)
+          |> Option.map(fn lobby ->
+            squad =
+              %{squad | state: {:lobby, lobby}}
+              |> delete_member(member_id)
+              |> update_owner(member_id)
+
+            {squad, {member.name, :lobby_left}}
+          end)
+
+        {:game, _game} ->
+          {squad, {member.name, :game_disconnected}}
+          |> Option.some()
+      end
+    end)
   end
 
   defp start_game(lobby) do

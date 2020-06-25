@@ -4,16 +4,15 @@ import { FunctionComponent, useContext, useCallback } from 'react'
 
 import { Params } from './Params'
 import { Players } from './Players'
-import { ButtonUnderline } from '../Buttons'
+import { ButtonUnderline, SecondaryButton } from '../Buttons'
 import { Chat } from '../Chat'
-import { Link } from '../Link'
 import { Router } from '../Router'
 import { params } from '../../params'
 import { ChannelContext } from '../../contexts/ChannelContext'
 import { UserContext } from '../../contexts/UserContext'
 import { CallMessage } from '../../models/CallMessage'
 import { Lobby as TLobby } from '../../models/lobby/Lobby'
-import { Future, pipe } from '../../utils/fp'
+import { Future, pipe, Either, IO } from '../../utils/fp'
 
 interface Props {
   readonly lobby: TLobby
@@ -22,9 +21,30 @@ interface Props {
 
 export const Lobby: FunctionComponent<Props> = ({ lobby, events }) => {
   const { user } = useContext(UserContext)
-  const { call } = useContext(ChannelContext)
+  const { call, leave } = useContext(ChannelContext)
 
   const play = useCallback(() => pipe(CallMessage.startGame, call, Future.runUnsafe), [call])
+
+  const leaveAndRedirect = useCallback(
+    () =>
+      pipe(
+        leave(),
+        Future.chain(
+          Either.fold(
+            _ => Future.unit,
+            _ =>
+              pipe(
+                IO.apply(() => {
+                  window.location.href = Router.routes.home
+                }),
+                Future.fromIOEither
+              )
+          )
+        ),
+        Future.runUnsafe
+      ),
+    [leave]
+  )
 
   const isOwner = user.id === lobby.owner
 
@@ -42,9 +62,7 @@ export const Lobby: FunctionComponent<Props> = ({ lobby, events }) => {
             Jouer
           </ButtonUnderline>
         ) : null}
-        <Link to={Router.routes.squads} css={styles.leaveBtn}>
-          Quitter
-        </Link>
+        <SecondaryButton onClick={leaveAndRedirect}>Quitter</SecondaryButton>
       </footer>
       <Chat lines={events} css={styles.chat} />
     </div>
@@ -91,36 +109,36 @@ const styles = {
     }
   }),
 
-  leaveBtn: css({
-    position: 'relative',
-    textDecoration: 'none',
-    lineHeight: 1,
-    border: '3px solid',
-    padding: '0.5em 0.6em 0.4em',
-    transition: 'all 0.2s',
-    cursor: 'inherit',
-    color: 'white',
-    backgroundColor: 'dimgrey',
-    borderColor: 'dimgrey',
+  // leaveBtn: css({
+  //   position: 'relative',
+  //   textDecoration: 'none',
+  //   lineHeight: 1,
+  //   border: '3px solid',
+  //   padding: '0.5em 0.6em 0.4em',
+  //   transition: 'all 0.2s',
+  //   cursor: 'inherit',
+  //   color: 'white',
+  //   backgroundColor: 'dimgrey',
+  //   borderColor: 'dimgrey',
 
-    '&::after': {
-      content: `''`,
-      position: 'absolute',
-      bottom: '0.2em',
-      left: '0.6em',
-      width: 'calc(100% - 1.2em + 3px)',
-      border: '1px solid',
-      borderWidth: '1px 0',
-      borderRadius: '50%',
-      opacity: 0,
-      transition: 'all 0.2s',
-      borderColor: 'white'
-    },
+  //   '&::after': {
+  //     content: `''`,
+  //     position: 'absolute',
+  //     bottom: '0.2em',
+  //     left: '0.6em',
+  //     width: 'calc(100% - 1.2em + 3px)',
+  //     border: '1px solid',
+  //     borderWidth: '1px 0',
+  //     borderRadius: '50%',
+  //     opacity: 0,
+  //     transition: 'all 0.2s',
+  //     borderColor: 'white'
+  //   },
 
-    '&:hover::after': {
-      opacity: 1
-    }
-  }),
+  //   '&:hover::after': {
+  //     opacity: 1
+  //   }
+  // }),
 
   chat: css({
     gridArea: 'chat',

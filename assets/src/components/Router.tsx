@@ -26,12 +26,12 @@ export function Router({ path }: Props): ReactElement {
   return node
 }
 
-const squadsMatch = end
+const homeMatch = end
 const squadMatch = lit('game').then(type('id', SquadId.codec))
 
 /* eslint-disable react/jsx-key */
 const routes = zero<TitleWithElt>()
-  .alt(squadsMatch.parser.map(_ => [Maybe.none, <Home />]))
+  .alt(homeMatch.parser.map(_ => [Maybe.none, <Home />]))
   .alt(squadMatch.parser.map(({ id }) => [Maybe.none, <Squad id={id} />]))
 
 function route(s: string): TitleWithElt {
@@ -41,7 +41,7 @@ function route(s: string): TitleWithElt {
 
 export namespace Router {
   export const routes = {
-    squads: format(squadsMatch.formatter, {}),
+    home: format(homeMatch.formatter, {}),
     squad: (id: SquadId): string => format(squadMatch.formatter, { id })
   }
 }
