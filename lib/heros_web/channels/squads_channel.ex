@@ -8,7 +8,13 @@ defmodule HerosWeb.SquadsChannel do
   end
 
   def handle_in("create", _message, socket) do
-    id = Squads.create(Squads)
+    id = UUID.uuid1(:hex)
+
+    Squads.create(Squads, id, fn msg ->
+      broadcast_update(socket)
+      HerosWeb.Endpoint.broadcast!("squad:" <> id, "update", %{update: msg})
+    end)
+
     broadcast_update(socket)
     {:reply, {:ok, %{id: id}}, socket}
   end

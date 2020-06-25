@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :heros,
+  squad_timeout: 500
+
 # Configure your database
 config :heros, Heros.Repo,
   username: "elixir",

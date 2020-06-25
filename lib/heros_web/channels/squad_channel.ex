@@ -63,7 +63,7 @@ defmodule HerosWeb.SquadChannel do
         nil
 
       squad_pid ->
-        case Squad.disconnect(squad_pid, socket.assigns.user.id, self()) do
+        case Squad.disconnect(squad_pid, self()) do
           {:ok, squad} -> broadcast_update(squad, socket)
         end
     end

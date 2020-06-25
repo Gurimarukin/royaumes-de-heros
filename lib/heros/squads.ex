@@ -17,10 +17,8 @@ defmodule Heros.Squads do
     GenServer.call(squads, {:lookup, id})
   end
 
-  def create(squads) do
-    id = UUID.uuid1(:hex)
-    :ok = GenServer.call(squads, {:create, id})
-    id
+  def create(squads, id, broadcast_update) do
+    :ok = GenServer.call(squads, {:create, id, broadcast_update})
   end
 
   def init(:ok) do
@@ -37,11 +35,16 @@ defmodule Heros.Squads do
     {:reply, Map.fetch(ids, id), {ids, refs}}
   end
 
-  def handle_call({:create, id}, _from, {ids, refs}) do
+  def handle_call({:create, id, broadcast_update}, _from, {ids, refs}) do
     if Map.has_key?(ids, id) do
       {:reply, {:error, :already_exists}, {ids, refs}}
     else
-      {:ok, squad} = DynamicSupervisor.start_child(Heros.SquadSupervisor, Heros.Squad)
+      {:ok, squad} =
+        DynamicSupervisor.start_child(
+          Heros.SquadSupervisor,
+          {Heros.Squad, [broadcast_update: broadcast_update]}
+        )
+
       ref = Process.monitor(squad)
 
       ids = Map.put(ids, id, squad)

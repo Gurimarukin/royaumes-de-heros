@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :heros,
+  squad_timeout: 8000
+
 # Configure your database
 config :heros, Heros.Repo,
   username: "elixir",
@@ -26,9 +29,9 @@ config :heros, HerosWeb.Endpoint,
       "--mode",
       "development",
       "--watch-stdin",
-    # npm: [
-    #   "run",
-    #   "watch",
+      # npm: [
+      #   "run",
+      #   "watch",
       cd: Path.expand("../assets", __DIR__)
     ]
   ]

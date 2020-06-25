@@ -8,7 +8,8 @@
 use Mix.Config
 
 config :heros,
-  ecto_repos: [Heros.Repo]
+  ecto_repos: [Heros.Repo],
+  squad_timeout: 30000
 
 # Configures the endpoint
 config :heros, HerosWeb.Endpoint,

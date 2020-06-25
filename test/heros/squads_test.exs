@@ -11,15 +11,15 @@ defmodule Heros.SquadsTest do
   test "spawns squads", %{squads: squads} do
     assert Squads.lookup(squads, "squad") == :error
 
-    squad_id = Squads.create(squads)
+    :ok = Squads.create(squads, :squad_id, fn _ -> nil end)
 
-    assert {:ok, squad_pid} = Squads.lookup(squads, squad_id)
+    assert {:ok, squad_pid} = Squads.lookup(squads, :squad_id)
 
     assert is_pid(squad_pid)
 
     assert Squads.list(squads) == [
              %{
-               id: squad_id,
+               id: :squad_id,
                stage: :lobby,
                n_players: 0
              }
@@ -27,12 +27,12 @@ defmodule Heros.SquadsTest do
   end
 
   test "removes squads on exit", %{squads: squads} do
-    squad_id = Squads.create(squads)
+    :ok = Squads.create(squads, :squad_id, fn _ -> nil end)
 
-    {:ok, squad} = Squads.lookup(squads, squad_id)
+    {:ok, squad_pid} = Squads.lookup(squads, :squad_id)
 
-    Agent.stop(squad)
+    Agent.stop(squad_pid)
 
-    assert Squads.lookup(squads, squad_id) == :error
+    assert Squads.lookup(squads, :squad_id) == :error
   end
 end
