@@ -1,7 +1,7 @@
 use Mix.Config
 
 config :heros,
-  squad_timeout: 8000
+  squad_timeout: 5000
 
 # Configure your database
 config :heros, Heros.Repo,
