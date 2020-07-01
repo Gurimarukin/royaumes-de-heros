@@ -122,7 +122,7 @@ defmodule Heros.Squad do
 
   def handle_call({:leave, member_id}, _from, squad) do
     player_leave(squad, member_id)
-    |> to_reply(squad)
+    |> stop_if_empty(squad)
   end
 
   def handle_call(message, from, squad) do
@@ -220,6 +220,16 @@ defmodule Heros.Squad do
           |> Option.some()
       end
     end)
+  end
+
+  defp stop_if_empty(:error, squad), do: to_reply(:error, squad)
+
+  defp stop_if_empty({:ok, {squad, message}}, old_squad) do
+    if length(squad.members) == 0 do
+      {:stop, :normal, {:ok, {squad, message}}, squad}
+    else
+      to_reply({:ok, {squad, message}}, old_squad)
+    end
   end
 
   defp start_game(lobby) do
