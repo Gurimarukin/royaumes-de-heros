@@ -125,41 +125,6 @@ defmodule Heros.Squad do
   end
 
   def handle_call({:disconnect, socket}, _from, squad) do
-    # with_member(squad.members, member_id, fn member ->
-    #   Logger.debug(~s"Squad #{inspect(self())}: #{member_id} disconnected #{inspect(socket)}")
-
-    #   sockets = MapSet.delete(member.sockets, socket)
-
-    #   if MapSet.size(sockets) == 0 do
-    #     Logger.debug(~s"Squad #{inspect(self())}: no more connections for #{member_id}")
-    #     Logger.debug(~s"Squad #{inspect(self())}: #{member_id} left")
-
-    #     case squad.state do
-    #       {:lobby, lobby} ->
-    #         Lobby.leave(lobby, member_id)
-    #         |> Option.map(fn lobby ->
-    #           %{squad | state: {:lobby, lobby}}
-    #           |> delete_member(member_id)
-    #           |> update_owner(member_id)
-    #         end)
-    #         |> Option.map(&{&1, {KeyList.find(names(squad), member_id), :lobby_left}})
-
-    #       state ->
-    #         %{squad | state: state}
-    #         |> update_member(member_id, &%{&1 | sockets: sockets})
-    #         |> update_owner(member_id)
-    #         |> Option.some()
-    #         |> Option.map(&{&1, {KeyList.find(names(squad), member_id), :game_disconnected}})
-    #     end
-    #   else
-    #     squad
-    #     |> update_member(member_id, &%{&1 | sockets: sockets})
-    #     |> Option.some()
-    #     |> Option.map(&{&1, nil})
-    #   end
-    # end)
-    # |> to_reply(squad)
-
     KeyList.find_where(squad.members, &MapSet.member?(&1.sockets, socket))
     |> Option.from_nilable()
     |> Option.map(fn member_id ->
@@ -177,7 +142,7 @@ defmodule Heros.Squad do
             ProcessUtils.send_self_after(@squad_timeout, {:check_reconnected, member_id})
           end
 
-          %{member | sockets: sockets}
+          %{member | last_seen: System.system_time(:millisecond), sockets: sockets}
         end)
 
       {%{squad | members: members}, nil}
@@ -214,23 +179,21 @@ defmodule Heros.Squad do
 
   def handle_info({:check_reconnected, member_id}, squad) do
     squad =
-      player_leave(squad, member_id)
-      |> Option.map(fn {squad, message} ->
-        squad.broadcast_update.({squad, message})
-        squad
+      with_member(squad.members, member_id, fn member ->
+        if System.system_time(:millisecond) >= member.last_seen + @squad_timeout do
+          player_leave(squad, member_id)
+          |> Option.map(fn {squad, message} ->
+            squad.broadcast_update.({squad, message})
+            squad
+          end)
+          |> Option.get_or_else(fn -> squad end)
+        else
+          Logger.debug(~s"Squad #{inspect(self())}: #{member.name} reconnected in time")
+          squad
+        end
       end)
-      |> Option.get_or_else(fn -> squad end)
 
     {:noreply, squad}
-
-    # game =
-    #   if System.system_time(:millisecond) >= user.last_seen + 10000 do
-    #     Logger.debug(~s"Game #{game.lobby.name}: #{user.user_name} disconnected")
-    #     update_in(game.users, &Utils.keydelete(&1, id_user))
-    #   else
-    #     Logger.debug(~s"Game #{game.lobby.name}: #{user.user_name} reconnected in time")
-    #     game
-    #   end
   end
 
   def handle_info({:DOWN, _ref, :process, socket, _reason}, squad) do

@@ -60,13 +60,14 @@ defmodule Heros.SquadTest do
 
     assert Squad.get(squad_pid) == squad
 
-    assert squad == %Squad{
-             broadcast_update: call,
-             owner: "p1",
-             members: [{"p1", %Member{name: "Player 1", sockets: MapSet.new([p1])}}],
-             state:
-               {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
-           }
+    %Squad{
+      broadcast_update: ^call,
+      owner: "p1",
+      members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+    } = squad
+
+    assert sockets == MapSet.new([p1])
   end
 
   test "player can connect multiple times" do
@@ -79,13 +80,14 @@ defmodule Heros.SquadTest do
     {:ok, {_, {"Player 1", :lobby_joined}}} = Squad.connect(squad_pid, "p1", "Player 1", p1_1)
     {:ok, {squad, nil}} = Squad.connect(squad_pid, "p1", "whatever", p1_2)
 
-    assert squad == %Squad{
-             broadcast_update: call,
-             owner: "p1",
-             members: [{"p1", %Member{name: "Player 1", sockets: MapSet.new([p1_1, p1_2])}}],
-             state:
-               {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
-           }
+    %Squad{
+      broadcast_update: ^call,
+      owner: "p1",
+      members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+    } = squad
+
+    assert sockets == MapSet.new([p1_1, p1_2])
   end
 
   test "socket crashes" do
@@ -100,13 +102,14 @@ defmodule Heros.SquadTest do
 
     assert not Process.alive?(p1)
 
-    assert Squad.get(squad_pid) == %Squad{
-             broadcast_update: call,
-             owner: "p1",
-             members: [{"p1", %Member{name: "Player 1", sockets: MapSet.new()}}],
-             state:
-               {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
-           }
+    %Squad{
+      broadcast_update: ^call,
+      owner: "p1",
+      members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+    } = Squad.get(squad_pid)
+
+    assert sockets == MapSet.new([])
   end
 
   test "member disconnects" do
@@ -119,36 +122,94 @@ defmodule Heros.SquadTest do
     {:ok, {_, {"Player 1", :lobby_joined}}} = Squad.connect(squad_pid, "p1", "Player 1", p1)
     {:ok, {squad, {"Player 2", :lobby_joined}}} = Squad.connect(squad_pid, "p2", "Player 2", p2)
 
-    assert squad == %Squad{
-             broadcast_update: call,
-             owner: "p1",
-             members: [
-               {"p1", %Member{name: "Player 1", sockets: MapSet.new([p1])}},
-               {"p2", %Member{name: "Player 2", sockets: MapSet.new([p2])}}
-             ],
-             state:
-               {:lobby,
-                %Lobby{
-                  players: [
-                    {"p1", %Lobby.Player{name: "Player 1"}},
-                    {"p2", %Lobby.Player{name: "Player 2"}}
-                  ],
-                  ready: true
-                }}
-           }
+    %Squad{
+      broadcast_update: ^call,
+      owner: "p1",
+      members: [
+        {"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets1}},
+        {"p2", %Member{last_seen: _, name: "Player 2", sockets: sockets2}}
+      ],
+      state:
+        {:lobby,
+         %Lobby{
+           players: [
+             {"p1", %Lobby.Player{name: "Player 1"}},
+             {"p2", %Lobby.Player{name: "Player 2"}}
+           ],
+           ready: true
+         }}
+    } = squad
+
+    assert sockets1 == MapSet.new([p1])
+    assert sockets2 == MapSet.new([p2])
 
     GenServer.stop(p1)
 
     Process.sleep(550)
 
-    squad = %Squad{
-      broadcast_update: call,
-      owner: "p2",
-      members: [{"p2", %Member{name: "Player 2", sockets: MapSet.new([p2])}}],
-      state: {:lobby, %Lobby{players: [{"p2", %Lobby.Player{name: "Player 2"}}], ready: false}}
-    }
+    [{got1, {"Player 1", :lobby_left}}] = get.()
 
-    assert get.() == [{squad, {"Player 1", :lobby_left}}]
+    got2 = Squad.get(squad_pid)
+
+    assert got1 == got2
+
+    %Squad{
+      broadcast_update: ^call,
+      owner: "p2",
+      members: [{"p2", %Member{last_seen: _, name: "Player 2", sockets: sockets}}],
+      state: {:lobby, %Lobby{players: [{"p2", %Lobby.Player{name: "Player 2"}}], ready: false}}
+    } = got1
+
+    assert sockets == MapSet.new([p2])
+  end
+
+  test "member reconnects in time" do
+    %{get: get, call: call} = agent()
+    {:ok, p1_1} = SimpleGenServer.start_link()
+    {:ok, p1_2} = SimpleGenServer.start_link()
+
+    {:ok, squad_pid} = Squad.start_link(broadcast_update: call)
+
+    {:ok, {squad, {"Player 1", :lobby_joined}}} = Squad.connect(squad_pid, "p1", "Player 1", p1_1)
+
+    %Squad{
+      broadcast_update: ^call,
+      owner: "p1",
+      members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+    } = squad
+
+    assert sockets == MapSet.new([p1_1])
+
+    GenServer.stop(p1_1)
+
+    Process.sleep(100)
+
+    %Squad{
+      broadcast_update: ^call,
+      owner: "p1",
+      members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+    } = Squad.get(squad_pid)
+
+    assert sockets == MapSet.new([])
+
+    {:ok, {squad, nil}} = Squad.connect(squad_pid, "p1", "whatever", p1_2)
+
+    %Squad{
+      broadcast_update: ^call,
+      owner: "p1",
+      members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+    } = squad
+
+    assert sockets == MapSet.new([p1_2])
+
+    assert get.() == []
+
+    Process.sleep(450)
+
+    assert get.() == []
 
     assert Squad.get(squad_pid) == squad
   end
@@ -167,13 +228,14 @@ defmodule Heros.SquadTest do
 
     assert get.() == []
 
-    assert squad == %Squad{
-             broadcast_update: call,
-             owner: "p2",
-             members: [{"p2", %Member{name: "Player 2", sockets: MapSet.new([p2])}}],
-             state:
-               {:lobby, %Lobby{players: [{"p2", %Lobby.Player{name: "Player 2"}}], ready: false}}
-           }
+    %Squad{
+      broadcast_update: ^call,
+      owner: "p2",
+      members: [{"p2", %Member{last_seen: _, name: "Player 2", sockets: sockets}}],
+      state: {:lobby, %Lobby{players: [{"p2", %Lobby.Player{name: "Player 2"}}], ready: false}}
+    } = squad
+
+    assert sockets == MapSet.new([p2])
   end
 end
 
