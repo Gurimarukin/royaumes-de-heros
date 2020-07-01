@@ -41,10 +41,6 @@ defmodule Heros.Squad do
     GenServer.call(squad, {:connect, member_id, player_name, socket})
   end
 
-  def disconnect(squad, socket) do
-    GenServer.call(squad, {:disconnect, socket})
-  end
-
   def leave(squad, member_id) do
     GenServer.call(squad, {:leave, member_id})
   end
@@ -124,32 +120,6 @@ defmodule Heros.Squad do
     |> to_reply(squad)
   end
 
-  def handle_call({:disconnect, socket}, _from, squad) do
-    KeyList.find_where(squad.members, &MapSet.member?(&1.sockets, socket))
-    |> Option.from_nilable()
-    |> Option.map(fn member_id ->
-      members =
-        KeyList.update(squad.members, member_id, fn member ->
-          Logger.debug(
-            ~s"Squad #{inspect(self())}: #{member.name} disconnected #{inspect(socket)}"
-          )
-
-          sockets = MapSet.delete(member.sockets, socket)
-
-          if MapSet.size(sockets) == 0 do
-            Logger.debug(~s"Squad #{inspect(self())}: no more connections for #{member.name}")
-
-            ProcessUtils.send_self_after(@squad_timeout, {:check_reconnected, member_id})
-          end
-
-          %{member | last_seen: System.system_time(:millisecond), sockets: sockets}
-        end)
-
-      {%{squad | members: members}, nil}
-    end)
-    |> to_reply(squad)
-  end
-
   def handle_call({:leave, member_id}, _from, squad) do
     player_leave(squad, member_id)
     |> to_reply(squad)
@@ -197,10 +167,36 @@ defmodule Heros.Squad do
   end
 
   def handle_info({:DOWN, _ref, :process, socket, _reason}, squad) do
-    case handle_call({:disconnect, socket}, nil, squad) do
+    case player_disconnect(socket, squad) do
       {:stop, reason, _reply, squad} -> {:stop, reason, squad}
       {:reply, _reply, squad} -> {:noreply, squad}
     end
+  end
+
+  defp player_disconnect(socket, squad) do
+    KeyList.find_where(squad.members, &MapSet.member?(&1.sockets, socket))
+    |> Option.from_nilable()
+    |> Option.map(fn member_id ->
+      members =
+        KeyList.update(squad.members, member_id, fn member ->
+          Logger.debug(
+            ~s"Squad #{inspect(self())}: #{member.name} disconnected #{inspect(socket)}"
+          )
+
+          sockets = MapSet.delete(member.sockets, socket)
+
+          if MapSet.size(sockets) == 0 do
+            Logger.debug(~s"Squad #{inspect(self())}: no more connections for #{member.name}")
+
+            ProcessUtils.send_self_after(@squad_timeout, {:check_reconnected, member_id})
+          end
+
+          %{member | last_seen: System.system_time(:millisecond), sockets: sockets}
+        end)
+
+      {%{squad | members: members}, nil}
+    end)
+    |> to_reply(squad)
   end
 
   defp player_leave(squad, member_id) do

@@ -57,18 +57,6 @@ defmodule HerosWeb.SquadChannel do
     {:noreply, socket}
   end
 
-  def terminate(_reason, socket) do
-    case socket.assigns[:squad_pid] do
-      nil ->
-        nil
-
-      squad_pid ->
-        case Squad.disconnect(squad_pid, self()) do
-          {:ok, squad} -> broadcast_update(squad, socket)
-        end
-    end
-  end
-
   defp broadcast_if_ok(:error, socket), do: {:reply, :error, socket}
 
   defp broadcast_if_ok({:ok, update}, socket) do
