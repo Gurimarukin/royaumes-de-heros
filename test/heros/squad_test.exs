@@ -249,6 +249,25 @@ defmodule Heros.SquadTest do
 
     assert not Process.alive?(squad_pid)
   end
+
+  test "last member disconnects" do
+    %{get: get, call: call} = agent()
+    {:ok, p1} = SimpleGenServer.start_link()
+
+    {:ok, squad_pid} = Squad.start_link(broadcast_update: call)
+
+    {:ok, {_, {"Player 1", :lobby_joined}}} = Squad.connect(squad_pid, "p1", "Player 1", p1)
+
+    GenServer.stop(p1)
+
+    assert Process.alive?(squad_pid)
+
+    Process.sleep(550)
+
+    assert not Process.alive?(squad_pid)
+
+    [{_, {"Player 1", :lobby_left}}] = get.()
+  end
 end
 
 # defmodule Heros.SquadTest do

@@ -148,7 +148,7 @@ defmodule Heros.Squad do
   end
 
   def handle_info({:check_reconnected, member_id}, squad) do
-    squad =
+    res =
       with_member(squad.members, member_id, fn member ->
         if System.system_time(:millisecond) >= member.last_seen + @squad_timeout do
           player_leave(squad, member_id)
@@ -156,47 +156,48 @@ defmodule Heros.Squad do
             squad.broadcast_update.({squad, message})
             squad
           end)
-          |> Option.get_or_else(fn -> squad end)
         else
           Logger.debug(~s"Squad #{inspect(self())}: #{member.name} reconnected in time")
-          squad
+
+          Option.some(squad)
         end
       end)
+      |> Option.map(fn squad -> {squad, nil} end)
+      |> stop_if_empty(squad)
 
-    {:noreply, squad}
-  end
-
-  def handle_info({:DOWN, _ref, :process, socket, _reason}, squad) do
-    case player_disconnect(socket, squad) do
+    case res do
       {:stop, reason, _reply, squad} -> {:stop, reason, squad}
       {:reply, _reply, squad} -> {:noreply, squad}
     end
   end
 
-  defp player_disconnect(socket, squad) do
-    KeyList.find_where(squad.members, &MapSet.member?(&1.sockets, socket))
-    |> Option.from_nilable()
-    |> Option.map(fn member_id ->
-      members =
-        KeyList.update(squad.members, member_id, fn member ->
-          Logger.debug(
-            ~s"Squad #{inspect(self())}: #{member.name} disconnected #{inspect(socket)}"
-          )
+  def handle_info({:DOWN, _ref, :process, socket, _reason}, squad) do
+    squad =
+      KeyList.find_where(squad.members, &MapSet.member?(&1.sockets, socket))
+      |> Option.from_nilable()
+      |> Option.map(fn member_id ->
+        members =
+          KeyList.update(squad.members, member_id, fn member ->
+            Logger.debug(
+              ~s"Squad #{inspect(self())}: #{member.name} disconnected #{inspect(socket)}"
+            )
 
-          sockets = MapSet.delete(member.sockets, socket)
+            sockets = MapSet.delete(member.sockets, socket)
 
-          if MapSet.size(sockets) == 0 do
-            Logger.debug(~s"Squad #{inspect(self())}: no more connections for #{member.name}")
+            if MapSet.size(sockets) == 0 do
+              Logger.debug(~s"Squad #{inspect(self())}: no more connections for #{member.name}")
 
-            ProcessUtils.send_self_after(@squad_timeout, {:check_reconnected, member_id})
-          end
+              ProcessUtils.send_self_after(@squad_timeout, {:check_reconnected, member_id})
+            end
 
-          %{member | last_seen: System.system_time(:millisecond), sockets: sockets}
-        end)
+            %{member | last_seen: System.system_time(:millisecond), sockets: sockets}
+          end)
 
-      {%{squad | members: members}, nil}
-    end)
-    |> to_reply(squad)
+        %{squad | members: members}
+      end)
+      |> Option.get_or_else(fn -> squad end)
+
+    {:noreply, squad}
   end
 
   defp player_leave(squad, member_id) do
