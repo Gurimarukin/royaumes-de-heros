@@ -1,9 +1,10 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
-import { FunctionComponent, useState, useCallback, useMemo, useContext } from 'react'
+import { FunctionComponent, useState, useCallback, useMemo, useContext, ReactNode } from 'react'
 
 import { BoardContainer } from './BoardContainer'
 import { CardsViewer } from './CardsViewer'
+import { Confirm, ConfirmProps } from './Confirm'
 import { Dialog } from './Dialog'
 import { DialogProps } from './DialogStyled'
 import { GameStyled } from './GameStyled'
@@ -71,6 +72,15 @@ export const Game: FunctionComponent<Props> = ({ game, events }) => {
   )
   const closeDialog = useCallback(() => setDialogProps(_ => ({ ..._, shown: false })), [])
 
+  // confirm
+  const [confirmProps, setConfirmProps] = useState<ConfirmProps>(ConfirmProps.empty)
+  const confirm = useCallback(
+    (message: ReactNode, onConfirm: () => void) =>
+      setConfirmProps({ hidden: false, message, onConfirm }),
+    []
+  )
+  const hideConfirm = useCallback(() => setConfirmProps(_ => ({ ..._, hidden: true })), [])
+
   return (
     <ShowCardDetailContext.Provider value={showCardDetail}>
       <GameStyled>
@@ -84,10 +94,13 @@ export const Game: FunctionComponent<Props> = ({ game, events }) => {
           cardDetail={cardDetail}
           hideCardDetail={hideCardDetail}
           isCurrentPlayer={TGame.isCurrentPlayer(game)}
+          isAlive={Player.isAlive(game.player[1])}
           endTurn={endTurn}
+          confirm={confirm}
           events={events}
         />
         <Dialog closeDialog={closeDialog} game={game} props={dialogProps} />
+        <Confirm hideConfirm={hideConfirm} confirm={confirmProps} />
       </GameStyled>
     </ShowCardDetailContext.Provider>
   )

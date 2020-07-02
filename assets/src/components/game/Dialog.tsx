@@ -249,7 +249,11 @@ const Group = styled.div({
   display: 'flex',
   justifyContent: 'center',
   padding: '0 1.67em',
-  marginBottom: '1em'
+  marginBottom: '1em',
+
+  '& > button': {
+    margin: '0 1em'
+  }
 })
 
 const EffectButton = styled(BaseButton)({

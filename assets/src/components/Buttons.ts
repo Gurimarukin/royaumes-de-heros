@@ -50,7 +50,6 @@ export const ButtonUnderline = styled(BaseButton)({
 export const SecondaryButton = styled(ButtonUnderline)({
   backgroundColor: 'dimgrey',
   borderColor: 'dimgrey',
-  margin: '0 1em',
   color: 'white',
 
   '&::after': {

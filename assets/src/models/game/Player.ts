@@ -22,6 +22,10 @@ export namespace Player {
     fight_zone: D.array(D.tuple(CardId.codec, Card.codec))
     /* eslint-enable @typescript-eslint/camelcase */
   })
+
+  export function isAlive(player: Player): boolean {
+    return player.hp > 0
+  }
 }
 
 export type Player = D.TypeOf<typeof Player.codec>

@@ -19,6 +19,7 @@ export namespace SquadEvent {
 
   const event = D.union(
     D.literal('start_game'),
+    D.literal('surrendered'),
     D.literal('lobby_joined'),
     D.literal('lobby_left'),
     D.literal('game_disconnected'),
@@ -44,6 +45,8 @@ export namespace SquadEvent {
       const [playerName, event] = e
 
       if (event === 'start_game') return Maybe.some('Début de la partie')
+
+      if (event === 'surrendered') return Maybe.some(`${playerName} a abandonné`)
 
       if (event === 'lobby_joined') {
         return Maybe.some(`${playerName} a rejoint le salon`)

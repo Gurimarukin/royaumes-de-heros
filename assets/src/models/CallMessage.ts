@@ -11,6 +11,7 @@ export type CallMessage =
   | CallMessage.Interact
   | CallMessage.PlayCard
   | CallMessage.StartGame
+  | CallMessage.Surrender
   | CallMessage.UseAbility
 
 export namespace CallMessage {
@@ -41,7 +42,10 @@ export namespace CallMessage {
   }
 
   export type StartGame = 'start_game'
-  export const startGame: StartGame = 'start_game'
+  export const StartGame: StartGame = 'start_game'
+
+  export type Surrender = 'surrender'
+  export const Surrender: Surrender = 'surrender'
 
   export type UseAbility = [
     'use_expend_ability' | 'use_ally_ability' | 'use_sacrifice_ability',

@@ -23,7 +23,7 @@ export const Lobby: FunctionComponent<Props> = ({ lobby, events }) => {
   const { user } = useContext(UserContext)
   const { call, leave } = useContext(ChannelContext)
 
-  const play = useCallback(() => pipe(CallMessage.startGame, call, Future.runUnsafe), [call])
+  const play = useCallback(() => pipe(CallMessage.StartGame, call, Future.runUnsafe), [call])
 
   const leaveAndRedirect = useCallback(
     () =>

@@ -58,6 +58,11 @@ defmodule Heros.Game.Helpers do
      }}
   end
 
+  def handle_call({player_id, "surrender"}, _from, game, names) do
+    Game.surrender(game, player_id)
+    |> Option.map(&{&1, {KeyList.find(names, player_id), :surrendered}})
+  end
+
   def handle_call({player_id, ["play_card", card_id]}, _from, game, names) do
     Game.play_card(game, player_id, card_id)
     |> Option.map(

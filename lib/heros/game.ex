@@ -132,6 +132,16 @@ defmodule Heros.Game do
   # Callable actions
   #
 
+  @spec surrender(Game.t(), Player.id()) :: update()
+  def surrender(game, player_id) do
+    with_member(game.players, player_id, &Option.some(&1))
+    |> Option.filter(fn p ->
+      KeyList.count(game.players, &Player.alive?/1) > 1 and Player.alive?(p)
+    end)
+    |> Option.map(fn _ -> update_player(game, player_id, &Player.surrender/1) end)
+    |> Option.chain(&player_might_be_dead(&1, player_id))
+  end
+
   # Main phase
 
   @spec play_card(Game.t(), Player.id(), Card.id()) :: update()
@@ -276,7 +286,7 @@ defmodule Heros.Game do
       game
       |> update_player(attacker_id, &Player.decr_combat(&1, damages))
       |> update_player(defender_id, &Player.decr_hp(&1, damages))
-      |> check_victory(attacker_id)
+      |> player_might_be_dead(defender_id)
     end
   end
 
@@ -286,14 +296,28 @@ defmodule Heros.Game do
     end)
   end
 
-  defp check_victory(game, attacker_id) do
-    players_alive = game.players |> KeyList.count(&Player.alive?/1)
+  defp player_might_be_dead(game, player_id) do
+    with_member(game.players, player_id, fn player ->
+      if Player.alive?(player) do
+        Option.some(game)
+      else
+        game = game |> update_player(player_id, &Player.full_discard/1)
 
-    if players_alive == 1 do
-      {:victory, attacker_id, game}
-    else
-      Option.some(game)
-    end
+        case Enum.filter(game.players, fn {_, p} -> Player.alive?(p) end) do
+          [{winner_id, _}] ->
+            {:victory, winner_id, game}
+
+          _ ->
+            Option.some(
+              if game.current_player == player_id do
+                set_current_player(game, next_player_alive(game, player_id))
+              else
+                game
+              end
+            )
+        end
+      end
+    end)
   end
 
   defp attack_card(game, {attacker_id, attacker}, {defender_id, defender}, {card, card_id}) do

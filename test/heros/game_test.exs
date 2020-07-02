@@ -409,8 +409,22 @@ defmodule Heros.GameTest do
     assert Game.buy_card(game, "p1", gems |> hd() |> elem(0)) == :error
   end
 
-  test "game end" do
-    p1 = %{Player.empty() | hp: 4}
+  test "player die" do
+    [tithe_priest] = Cards.with_id(:tithe_priest)
+    [dagger] = Cards.with_id(:dagger)
+    [gem] = Cards.with_id(:gem)
+    [arkus] = Cards.with_id(:arkus)
+    [gold] = Cards.with_id(:gold)
+
+    p1 = %{
+      Player.empty()
+      | hp: 4,
+        deck: [arkus],
+        hand: [dagger],
+        fight_zone: [gem, tithe_priest],
+        discard: [gold]
+    }
+
     p2 = %{Player.empty() | combat: 12}
     p3 = %{Player.empty() | hp: 6}
 
@@ -419,7 +433,18 @@ defmodule Heros.GameTest do
     assert {:ok, game} = Game.attack(game, "p2", "p3", :player)
     assert {:victory, "p2", game} = Game.attack(game, "p2", "p1", :player)
 
-    assert [{_, %{hp: 0}}, _, {_, %{hp: 0}}] = game.players
+    assert [
+             {"p1",
+              %{
+                hp: 0,
+                discard: [^gold, ^dagger, ^gem, ^tithe_priest, ^arkus],
+                deck: [],
+                hand: [],
+                fight_zone: []
+              }},
+             {"p2", %{hp: 50}},
+             {"p3", %{hp: 0}}
+           ] = game.players
   end
 
   test "pending interactions" do
@@ -477,5 +502,53 @@ defmodule Heros.GameTest do
 
     assert Game.interact(game, "p1", {:select_effect, 1}) == :error
     assert Game.interact(game, "p1", {:discard_card, elem(gem, 0)}) == :error
+  end
+
+  test "surrender" do
+    [tithe_priest] = Cards.with_id(:tithe_priest)
+    [dagger] = Cards.with_id(:dagger)
+    [gem] = Cards.with_id(:gem)
+    [arkus] = Cards.with_id(:arkus)
+    [gold] = Cards.with_id(:gold)
+
+    p1 = %{
+      Player.empty()
+      | deck: [tithe_priest],
+        hand: [dagger],
+        fight_zone: [gem, arkus],
+        discard: [gold]
+    }
+
+    p2 = Player.empty()
+    p3 = Player.empty()
+
+    game = Game.empty([{"p1", p1}, {"p2", p2}, {"p3", p3}], "p1")
+
+    assert game.current_player == "p1"
+
+    assert {:ok, game} = Game.surrender(game, "p1")
+
+    assert game.current_player == "p2"
+
+    assert [
+             {"p1",
+              %{
+                hp: 0,
+                discard: [^gold, ^dagger, ^gem, ^arkus, ^tithe_priest],
+                deck: [],
+                hand: [],
+                fight_zone: []
+              }},
+             {"p2", %{hp: 50}},
+             {"p3", %{hp: 50}}
+           ] = game.players
+
+    assert :error = Game.surrender(game, "p1")
+
+    assert {:victory, "p2", game} = Game.surrender(game, "p3")
+
+    assert [{"p1", %{hp: 0}}, {"p2", %{hp: 50}}, {"p3", %{hp: 0}}] = game.players
+
+    assert :error = Game.surrender(game, "p2")
   end
 end

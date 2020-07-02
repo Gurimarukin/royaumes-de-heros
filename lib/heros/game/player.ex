@@ -283,4 +283,16 @@ defmodule Heros.Game.Player do
 
   def incr_combat(player, amount), do: %{player | combat: player.combat + amount}
   def decr_combat(player, amount), do: %{player | combat: player.combat - amount}
+
+  def surrender(player), do: %{player | hp: 0}
+
+  def full_discard(player) do
+    %{
+      player
+      | discard: player.discard ++ player.hand ++ player.fight_zone ++ player.deck,
+        hand: [],
+        fight_zone: [],
+        deck: []
+    }
+  end
 end

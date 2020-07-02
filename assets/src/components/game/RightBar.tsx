@@ -1,18 +1,22 @@
 /** @jsx jsx */
 import { jsx, css } from '@emotion/core'
-import { FunctionComponent } from 'react'
+import { FunctionComponent, ReactNode, useCallback, useContext } from 'react'
 
 import { CardDetail } from './CardDetail'
 import { Chat } from '../Chat'
-import { ButtonUnderline } from '../Buttons'
+import { ButtonUnderline, SecondaryButton } from '../Buttons'
 import { params } from '../../params'
-import { Maybe } from '../../utils/fp'
+import { CallMessage } from '../../models/CallMessage'
+import { ChannelContext } from '../../contexts/ChannelContext'
+import { Maybe, pipe, Future } from '../../utils/fp'
 
 interface Props {
   readonly cardDetail: Maybe<string>
   readonly hideCardDetail: () => void
   readonly isCurrentPlayer: boolean
+  readonly isAlive: boolean
   readonly endTurn: React.MouseEventHandler<HTMLButtonElement>
+  readonly confirm: (message: ReactNode, onConfirm: () => void) => void
   readonly events: [number, string][]
 }
 
@@ -20,29 +24,47 @@ export const RightBar: FunctionComponent<Props> = ({
   cardDetail,
   hideCardDetail,
   isCurrentPlayer,
+  isAlive,
   endTurn,
+  confirm,
   events
-}) => (
-  <div css={styles.container}>
-    <CardDetail card={cardDetail} hideCard={hideCardDetail} css={styles.cardDetail} />
-    <div css={styles.buttons}>
-      <ButtonUnderline
-        disabled={!isCurrentPlayer}
-        onClick={endTurn}
-        css={styles.endTurnBtn}
-        className={isCurrentPlayer ? 'current' : undefined}
-      >
-        Fin du tour
-      </ButtonUnderline>
+}) => {
+  const { call } = useContext(ChannelContext)
+
+  const surrender = useCallback(() => pipe(CallMessage.Surrender, call, Future.runUnsafe), [call])
+  const surrenderWithConfirm = useCallback(
+    () => confirm('Êtes vous sûr de vouloir abandonner ?', surrender),
+    [confirm, surrender]
+  )
+
+  return (
+    <div css={styles.container}>
+      <CardDetail card={cardDetail} hideCard={hideCardDetail} css={styles.cardDetail} />
+      <div css={styles.buttons}>
+        <ButtonUnderline
+          disabled={!isCurrentPlayer}
+          onClick={endTurn}
+          css={styles.endTurnBtn}
+          className={isCurrentPlayer ? 'current' : undefined}
+        >
+          Fin du tour
+        </ButtonUnderline>
+        {isAlive ? (
+          <SecondaryButton onClick={surrenderWithConfirm}>Abandonner</SecondaryButton>
+        ) : (
+          <SecondaryButton>Quitter</SecondaryButton>
+        )}
+      </div>
+      <Chat lines={events} css={styles.chat} />
     </div>
-    <Chat lines={events} css={styles.chat} />
-  </div>
-)
+  )
+}
 
 const styles = {
   container: css({
     position: 'relative',
     width: params.card.widthPlusMargin + params.card.margin,
+    height: '100%',
     backgroundColor: 'black',
     borderLeft: '1px solid darkgoldenrod',
     paddingLeft: '2px',
@@ -60,7 +82,8 @@ const styles = {
 
   buttons: css({
     display: 'flex',
-    padding: '2px 0'
+    justifyContent: 'space-between',
+    padding: '2px 2px 2px 0'
   }),
 
   chat: css({
