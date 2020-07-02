@@ -83,7 +83,7 @@ defmodule Heros.Squad do
           nil ->
             Logger.debug(~s"Squad #{inspect(self())}: #{player_name} joined")
 
-            Lobby.join(lobby, member_id, player_name)
+            Lobby.join(lobby, member_id)
             |> Option.map(fn lobby ->
               members = squad.members ++ [{member_id, Member.init(player_name, socket)}]
               owner = squad.owner || member_id

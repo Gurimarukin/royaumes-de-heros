@@ -6,7 +6,7 @@ defmodule Heros.LobbyTest do
 
   test "encode" do
     assert Jason.encode!(%Lobby{
-             players: [{"p1", %Player{name: "Player 1"}}],
+             players: [{"p1", %Player{}}],
              ready: true
            })
   end
@@ -16,31 +16,31 @@ defmodule Heros.LobbyTest do
 
     assert lobby == %Lobby{players: [], ready: false}
 
-    assert {:ok, lobby} = Lobby.join(lobby, "p1", "Player 1")
+    assert {:ok, lobby} = Lobby.join(lobby, "p1")
 
     assert lobby == %Lobby{
-             players: [{"p1", %Player{name: "Player 1"}}],
+             players: [{"p1", %Player{}}],
              ready: false
            }
 
-    assert :error = Lobby.join(lobby, "p1", "Player1")
+    assert :error = Lobby.join(lobby, "p1")
 
-    assert {:ok, lobby} = Lobby.join(lobby, "p2", "Player 2")
+    assert {:ok, lobby} = Lobby.join(lobby, "p2")
 
     assert lobby == %Lobby{
-             players: [{"p1", %Player{name: "Player 1"}}, {"p2", %Player{name: "Player 2"}}],
+             players: [{"p1", %Player{}}, {"p2", %Player{}}],
              ready: true
            }
 
     assert :error = Lobby.leave(lobby, "p3")
 
-    assert {:ok, lobby} = Lobby.join(lobby, "p3", "Player 3")
+    assert {:ok, lobby} = Lobby.join(lobby, "p3")
 
     assert lobby == %Lobby{
              players: [
-               {"p1", %Player{name: "Player 1"}},
-               {"p2", %Player{name: "Player 2"}},
-               {"p3", %Player{name: "Player 3"}}
+               {"p1", %Player{}},
+               {"p2", %Player{}},
+               {"p3", %Player{}}
              ],
              ready: true
            }
@@ -49,7 +49,7 @@ defmodule Heros.LobbyTest do
     assert {:ok, lobby} = Lobby.leave(lobby, "p1")
 
     assert lobby == %Lobby{
-             players: [{"p2", %Player{name: "Player 2"}}],
+             players: [{"p2", %Player{}}],
              ready: false
            }
 

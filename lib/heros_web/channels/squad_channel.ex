@@ -43,13 +43,14 @@ defmodule HerosWeb.SquadChannel do
   intercept ["update"]
 
   def handle_out("update", %{update: {squad, event}}, socket) do
+    names = squad.members |> KeyList.map(& &1.name)
+
     projection =
       case squad.state do
         {:lobby, lobby} ->
-          {:lobby, Heros.Lobby.Helpers.project(lobby, squad)}
+          {:lobby, Heros.Lobby.Helpers.project(lobby, squad, names)}
 
         {:game, game} ->
-          names = squad.members |> KeyList.map(& &1.name)
           {:game, Heros.Game.Helpers.project(game, socket.assigns.user.id, names)}
       end
 

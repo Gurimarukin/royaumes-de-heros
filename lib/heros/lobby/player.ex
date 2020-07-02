@@ -1,16 +1,10 @@
 defmodule Heros.Lobby.Player do
   alias Heros.Lobby.Player
 
-  @type t :: %__MODULE__{
-          name: String.t()
-        }
-  @enforce_keys [:name]
+  @type t :: %__MODULE__{}
+  @enforce_keys []
   @derive Jason.Encoder
-  defstruct [:name]
+  defstruct []
 
-  def from_name(name) do
-    %Player{
-      name: name
-    }
-  end
+  def empty, do: %Player{}
 end

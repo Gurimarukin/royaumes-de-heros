@@ -19,10 +19,10 @@ defmodule Heros.Lobby do
     %Lobby{players: [], ready: false}
   end
 
-  def join(lobby, player_id, player_name) do
+  def join(lobby, player_id) do
     case KeyList.find(lobby.players, player_id) do
       nil ->
-        %{lobby | players: lobby.players ++ [{player_id, Player.from_name(player_name)}]}
+        %{lobby | players: lobby.players ++ [{player_id, Player.empty()}]}
         |> update_ready()
         |> Option.some()
 

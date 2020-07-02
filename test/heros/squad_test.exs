@@ -64,7 +64,7 @@ defmodule Heros.SquadTest do
       broadcast_update: ^call,
       owner: "p1",
       members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
-      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{}}], ready: false}}
     } = squad
 
     assert sockets == MapSet.new([p1])
@@ -84,7 +84,7 @@ defmodule Heros.SquadTest do
       broadcast_update: ^call,
       owner: "p1",
       members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
-      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{}}], ready: false}}
     } = squad
 
     assert sockets == MapSet.new([p1_1, p1_2])
@@ -106,7 +106,7 @@ defmodule Heros.SquadTest do
       broadcast_update: ^call,
       owner: "p1",
       members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
-      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{}}], ready: false}}
     } = Squad.get(squad_pid)
 
     assert sockets == MapSet.new([])
@@ -133,8 +133,8 @@ defmodule Heros.SquadTest do
         {:lobby,
          %Lobby{
            players: [
-             {"p1", %Lobby.Player{name: "Player 1"}},
-             {"p2", %Lobby.Player{name: "Player 2"}}
+             {"p1", %Lobby.Player{}},
+             {"p2", %Lobby.Player{}}
            ],
            ready: true
          }}
@@ -157,7 +157,7 @@ defmodule Heros.SquadTest do
       broadcast_update: ^call,
       owner: "p2",
       members: [{"p2", %Member{last_seen: _, name: "Player 2", sockets: sockets}}],
-      state: {:lobby, %Lobby{players: [{"p2", %Lobby.Player{name: "Player 2"}}], ready: false}}
+      state: {:lobby, %Lobby{players: [{"p2", %Lobby.Player{}}], ready: false}}
     } = got1
 
     assert sockets == MapSet.new([p2])
@@ -176,7 +176,7 @@ defmodule Heros.SquadTest do
       broadcast_update: ^call,
       owner: "p1",
       members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
-      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{}}], ready: false}}
     } = squad
 
     assert sockets == MapSet.new([p1_1])
@@ -189,7 +189,7 @@ defmodule Heros.SquadTest do
       broadcast_update: ^call,
       owner: "p1",
       members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
-      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{}}], ready: false}}
     } = Squad.get(squad_pid)
 
     assert sockets == MapSet.new([])
@@ -200,7 +200,7 @@ defmodule Heros.SquadTest do
       broadcast_update: ^call,
       owner: "p1",
       members: [{"p1", %Member{last_seen: _, name: "Player 1", sockets: sockets}}],
-      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}}
+      state: {:lobby, %Lobby{players: [{"p1", %Lobby.Player{}}], ready: false}}
     } = squad
 
     assert sockets == MapSet.new([p1_2])
@@ -232,7 +232,7 @@ defmodule Heros.SquadTest do
       broadcast_update: ^call,
       owner: "p2",
       members: [{"p2", %Member{last_seen: _, name: "Player 2", sockets: sockets}}],
-      state: {:lobby, %Lobby{players: [{"p2", %Lobby.Player{name: "Player 2"}}], ready: false}}
+      state: {:lobby, %Lobby{players: [{"p2", %Lobby.Player{}}], ready: false}}
     } = squad
 
     assert sockets == MapSet.new([p2])
@@ -292,7 +292,7 @@ end
 #     assert {:ok, {squad, {"Player 1", :lobby_joined}}} =
 #              Squad.connect(pid, "p1", "Player 1", :p1_1)
 
-#     lobby = %Lobby{players: [{"p1", %Lobby.Player{name: "Player 1"}}], ready: false}
+#     lobby = %Lobby{players: [{"p1", %Lobby.Player{}}], ready: false}
 
 #     assert Squad.get(pid) == squad
 
@@ -327,8 +327,8 @@ end
 
 #     lobby = %Lobby{
 #       players: [
-#         {"p1", %Lobby.Player{name: "Player 1"}},
-#         {"p2", %Lobby.Player{name: "Player 2"}}
+#         {"p1", %Lobby.Player{}},
+#         {"p2", %Lobby.Player{}}
 #       ],
 #       ready: true
 #     }
@@ -348,9 +348,9 @@ end
 
 #     lobby = %Lobby{
 #       players: [
-#         {"p1", %Lobby.Player{name: "Player 1"}},
-#         {"p2", %Lobby.Player{name: "Player 2"}},
-#         {"p3", %Lobby.Player{name: "Player 3"}}
+#         {"p1", %Lobby.Player{}},
+#         {"p2", %Lobby.Player{}},
+#         {"p3", %Lobby.Player{}}
 #       ],
 #       ready: true
 #     }
@@ -384,8 +384,8 @@ end
 
 #     lobby = %Lobby{
 #       players: [
-#         {"p2", %Lobby.Player{name: "Player 2"}},
-#         {"p3", %Lobby.Player{name: "Player 3"}}
+#         {"p2", %Lobby.Player{}},
+#         {"p3", %Lobby.Player{}}
 #       ],
 #       ready: true
 #     }
