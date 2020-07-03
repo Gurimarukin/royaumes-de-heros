@@ -60,12 +60,12 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, "surrender"}, _from, game, names) do
     Game.surrender(game, player_id)
-    |> Option.map(&{&1, {KeyList.find(names, player_id), :surrendered}})
+    |> map_update(&{&1, {KeyList.find(names, player_id), :surrendered}})
   end
 
   def handle_call({player_id, ["play_card", card_id]}, _from, game, names) do
     Game.play_card(game, player_id, card_id)
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:play_card, with_card(game, player_id, fn p -> p.hand end, card_id)}}}
@@ -74,7 +74,7 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, ["use_expend_ability", card_id]}, _from, game, names) do
     Game.use_expend_ability(game, player_id, card_id)
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:use_expend_ability, with_card(game, player_id, fn p -> p.fight_zone end, card_id)}}}
@@ -83,7 +83,7 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, ["use_ally_ability", card_id]}, _from, game, names) do
     Game.use_ally_ability(game, player_id, card_id)
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:use_ally_ability, with_card(game, player_id, fn p -> p.fight_zone end, card_id)}}}
@@ -92,7 +92,7 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, ["use_sacrifice_ability", card_id]}, _from, game, names) do
     Game.use_sacrifice_ability(game, player_id, card_id)
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:use_sacrifice_ability, with_card(game, player_id, fn p -> p.fight_zone end, card_id)}}}
@@ -101,7 +101,7 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, ["buy_card", card_id]}, _from, game, names) do
     Game.buy_card(game, player_id, card_id)
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:buy_card,
@@ -114,7 +114,7 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({attacker_id, ["attack", defender_id, "__player"]}, _from, game, names) do
     Game.attack(game, attacker_id, defender_id, :player)
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, attacker_id), {:attack, KeyList.find(names, defender_id), :player}}}
     )
@@ -122,7 +122,7 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({attacker_id, ["attack", defender_id, card_id]}, _from, game, names) do
     Game.attack(game, attacker_id, defender_id, card_id)
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, attacker_id),
         {:attack, KeyList.find(names, defender_id),
@@ -134,7 +134,7 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, ["interact", ["discard_card", card_id]]}, _from, game, names) do
     Game.interact(game, player_id, {:discard_card, card_id})
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:interact, {:discard_card, with_card(game, player_id, fn p -> p.hand end, card_id)}}}}
@@ -143,14 +143,14 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, ["interact", ["draw_then_discard", discard]]}, _from, game, names) do
     Game.interact(game, player_id, {:draw_then_discard, discard})
-    |> Option.map(
+    |> map_update(
       &{&1, {KeyList.find(names, player_id), {:interact, {:draw_then_discard, discard}}}}
     )
   end
 
   def handle_call({player_id, ["interact", ["prepare_champion", card_id]]}, _from, game, names) do
     Game.interact(game, player_id, {:prepare_champion, card_id})
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:interact,
@@ -165,7 +165,7 @@ defmodule Heros.Game.Helpers do
         names
       ) do
     Game.interact(game, player_id, {:put_card_from_discard_to_deck, card_id})
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:interact,
@@ -181,7 +181,7 @@ defmodule Heros.Game.Helpers do
         names
       ) do
     Game.interact(game, player_id, {:put_champion_from_discard_to_deck, card_id})
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:interact,
@@ -197,7 +197,7 @@ defmodule Heros.Game.Helpers do
         names
       ) do
     Game.interact(game, attacker_id, {:stun_champion, defender_id, card_id})
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, attacker_id),
         {:interact,
@@ -213,7 +213,7 @@ defmodule Heros.Game.Helpers do
         names
       ) do
     Game.interact(game, player_id, {:target_opponent_to_discard, who})
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:interact, {:target_opponent_to_discard, KeyList.find(names, who)}}}}
@@ -227,7 +227,7 @@ defmodule Heros.Game.Helpers do
         names
       ) do
     Game.interact(game, player_id, {:sacrifice_from_hand_or_discard, card_ids})
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:interact,
@@ -241,7 +241,7 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, ["interact", ["select_effect", index]]}, _from, game, names) do
     Game.interact(game, player_id, {:select_effect, index})
-    |> Option.map(
+    |> map_update(
       &{&1,
        {KeyList.find(names, player_id),
         {:interact, {:select_effect, with_effect(game, player_id, index)}}}}
@@ -252,12 +252,12 @@ defmodule Heros.Game.Helpers do
 
   def handle_call({player_id, "discard_phase"}, _from, game, names) do
     Game.discard_phase(game, player_id)
-    |> Option.map(&{&1, {KeyList.find(names, player_id), :discard_phase}})
+    |> map_update(&{&1, {KeyList.find(names, player_id), :discard_phase}})
   end
 
   def handle_call({player_id, "draw_phase"}, _from, game, names) do
     Game.draw_phase(game, player_id)
-    |> Option.map(&{&1, {KeyList.find(names, &1.current_player), :new_turn}})
+    |> map_update(&{&1, {KeyList.find(names, &1.current_player), :new_turn}})
   end
 
   def handle_call(_message, _from, _lobby, _names), do: Option.none()
@@ -282,4 +282,8 @@ defmodule Heros.Game.Helpers do
       _ -> nil
     end
   end
+
+  @spec map_update(update :: Game.update(), f :: (Game.t() -> Game.t())) :: Game.update()
+  defp map_update({:victory, winner_id, game}, f), do: {:victory, winner_id, f.(game)}
+  defp map_update(option, f), do: Option.map(option, f)
 end

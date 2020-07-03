@@ -135,8 +135,19 @@ defmodule Heros.Squad do
         {:game, game} ->
           names = squad.members |> KeyList.map(& &1.name)
 
-          Game.Helpers.handle_call(message, from, game, names)
-          |> Option.map(fn {game, event} -> {%{squad | state: {:game, game}}, event} end)
+          case Game.Helpers.handle_call(message, from, game, names) do
+            {:victory, winner_id, {game, event}} ->
+              ProcessUtils.send_self_after(
+                100,
+                {:broadcast, {KeyList.find(names, winner_id), :won}}
+              )
+
+              Option.some({%{squad | state: {:game, game}}, event})
+
+            option ->
+              option
+              |> Option.map(fn {game, event} -> {%{squad | state: {:game, game}}, event} end)
+          end
       end
 
     if res == :error do
@@ -145,6 +156,11 @@ defmodule Heros.Squad do
 
     res
     |> to_reply(squad)
+  end
+
+  def handle_info({:broadcast, message}, squad) do
+    squad.broadcast_update.({squad, message})
+    {:noreply, squad}
   end
 
   def handle_info({:check_reconnected, member_id}, squad) do
