@@ -12,3 +12,5 @@
 * animate entering cards
 * random card rotation for discard and deck
 * dispatch combat as will
+* discard: show card number
+* attacking player when no combat provoques error
