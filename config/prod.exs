@@ -1,5 +1,13 @@
 use Mix.Config
 
+
+host =
+  System.get_env("HOST") ||
+    raise """
+    environment variable HOST is missing.
+    For example: example.com
+    """
+
 # For production, don't forget to configure the url host
 # to something meaningful, Phoenix uses this information
 # when generating URLs.
@@ -10,8 +18,9 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :heros, HerosWeb.Endpoint,
-  url: [host: "example.com", port: 80],
-  cache_static_manifest: "priv/static/cache_manifest.json"
+  url: [host: host, port: 80]
+  # check_origin: ["https://dev.myapp.me", "https://myapp.me"]
+  # cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Do not print debug messages in production
 config :logger, level: :info
