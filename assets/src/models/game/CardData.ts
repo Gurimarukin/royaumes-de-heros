@@ -1,8 +1,8 @@
-import * as D from 'io-ts/lib/Decoder'
+import * as D from 'io-ts/Decoder'
 
+import { Dict, Maybe, pipe } from '../../utils/fp'
 import { Card } from './Card'
 import { CardId } from './CardId'
-import { Dict, Maybe, pipe } from '../../utils/fp'
 
 export namespace CardType {
   export const codec = D.union(

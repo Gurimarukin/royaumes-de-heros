@@ -1,20 +1,20 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
-import { ord, ordString } from 'fp-ts/lib/Ord'
+import { ord, ordString } from 'fp-ts/Ord'
 import { FunctionComponent, useMemo } from 'react'
 
-import { Card, HiddenCard, Zone } from './Card'
-import { params } from '../../params'
-import { PlayerId } from '../../models/PlayerId'
 import { Card as TCard } from '../../models/game/Card'
 import { CardId } from '../../models/game/CardId'
 import { Game } from '../../models/game/Game'
-import { OtherPlayer } from '../../models/game/OtherPlayer'
-import { Referentials } from '../../models/game/Referentials'
 import { Coord } from '../../models/game/geometry/Coord'
 import { Rectangle } from '../../models/game/geometry/Rectangle'
 import { Referential } from '../../models/game/geometry/Referential'
-import { pipe, List } from '../../utils/fp'
+import { OtherPlayer } from '../../models/game/OtherPlayer'
+import { Referentials } from '../../models/game/Referentials'
+import { PlayerId } from '../../models/PlayerId'
+import { params } from '../../params'
+import { List, pipe } from '../../utils/fp'
+import { Card, HiddenCard, Zone } from './Card'
 
 interface Props {
   readonly showDiscard: (playerId: PlayerId) => void

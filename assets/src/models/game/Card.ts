@@ -1,4 +1,4 @@
-import * as D from 'io-ts/lib/Decoder'
+import * as D from 'io-ts/Decoder'
 
 export namespace Card {
   export const codec = D.type({

@@ -1,24 +1,22 @@
-import * as _Array from 'fp-ts/lib/Array'
-import * as _NonEmptyArray from 'fp-ts/lib/NonEmptyArray'
-import * as _Record from 'fp-ts/lib/Record'
-import * as _Option from 'fp-ts/lib/Option'
-import * as _Either from 'fp-ts/lib/Either'
-import * as _Task from 'fp-ts/lib/Task'
-import * as _TaskEither from 'fp-ts/lib/TaskEither'
-import * as _IO from 'fp-ts/lib/IO'
-import * as _IOEither from 'fp-ts/lib/IOEither'
-import {
-  identity as _identity,
-  flow as _flow,
-  not as _not,
-  Predicate,
-  Lazy
-} from 'fp-ts/lib/function'
-import { pipe as _pipe } from 'fp-ts/lib/pipeable'
-
-import * as D from 'io-ts/lib/Decoder'
-
 import { Do as _Do } from 'fp-ts-contrib/lib/Do'
+import * as _Array from 'fp-ts/Array'
+import * as _Either from 'fp-ts/Either'
+import {
+  Lazy,
+  Predicate,
+  flow as _flow,
+  identity as _identity,
+  not as _not
+} from 'fp-ts/function'
+import * as _IO from 'fp-ts/IO'
+import * as _IOEither from 'fp-ts/IOEither'
+import * as _NonEmptyArray from 'fp-ts/NonEmptyArray'
+import * as _Option from 'fp-ts/Option'
+import { pipe as _pipe } from 'fp-ts/pipeable'
+import * as _Record from 'fp-ts/Record'
+import * as _Task from 'fp-ts/Task'
+import * as _TaskEither from 'fp-ts/TaskEither'
+import * as D from 'io-ts/Decoder'
 
 export const unknownToError = (e: unknown): Error =>
   e instanceof Error ? e : new Error('unknown error')
@@ -88,7 +86,7 @@ export const Maybe = {
       )
     ),
 
-  codec: <A>(d: D.Decoder<A>): D.Decoder<_Option.Option<A>> => ({
+  codec: <A>(d: D.Decoder<unknown, A>): D.Decoder<unknown, _Option.Option<A>> => ({
     decode: (u: unknown) =>
       u === null ? _Either.right(_Option.none) : _pipe(d.decode(u), _Either.map(_Option.some))
   })

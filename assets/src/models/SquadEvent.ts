@@ -1,8 +1,8 @@
-import * as D from 'io-ts/lib/Decoder'
+import * as D from 'io-ts/Decoder'
 
+import { Dict, Maybe, pipe } from '../utils/fp'
 import { CardData } from './game/CardData'
 import { Effect } from './game/Effect'
-import { Dict, Maybe, pipe } from '../utils/fp'
 
 export namespace SquadEvent {
   const interaction = D.union(

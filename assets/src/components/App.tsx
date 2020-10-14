@@ -1,17 +1,16 @@
 /** @jsx jsx */
-import * as D from 'io-ts/lib/Decoder'
 import { jsx } from '@emotion/core'
-import { draw } from 'io-ts/lib/Tree'
-import { FunctionComponent, useState, useContext, useEffect } from 'react'
+import * as D from 'io-ts/Decoder'
+import { FunctionComponent, useContext, useEffect, useState } from 'react'
 
-import { Router } from './Router'
 import { CardDatasContext } from '../contexts/CardDatasContext'
 import { CsrfTokenContext } from '../contexts/CsrfTokenContext'
 import { HistoryContext } from '../contexts/HistoryContext'
 import { UserContext } from '../contexts/UserContext'
-import { PartialCardData, CardData } from '../models/game/CardData'
+import { CardData, PartialCardData } from '../models/game/CardData'
 import { User } from '../models/User'
-import { pipe, Either } from '../utils/fp'
+import { Either, pipe } from '../utils/fp'
+import { Router } from './Router'
 
 interface Props {
   readonly user: unknown
@@ -44,13 +43,13 @@ export const App: FunctionComponent<Props> = props => {
   )
 }
 
-function decode<A>(codec: D.Decoder<A>, name: string): (u: unknown) => A {
+function decode<A>(codec: D.Decoder<unknown, A>, name: string): (u: unknown) => A {
   return u =>
     pipe(
       u,
       codec.decode,
       Either.getOrElse<D.DecodeError, A>(e => {
-        throw Error(`couldn't decode ${name}:\n${draw(e)}`)
+        throw Error(`couldn't decode ${name}:\n${D.draw(e)}`)
       })
     )
 }

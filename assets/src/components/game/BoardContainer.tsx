@@ -1,19 +1,19 @@
 /** @jsx jsx */
-import { jsx, css, SerializedStyles } from '@emotion/core'
-import { Lazy } from 'fp-ts/lib/function'
-import { FunctionComponent, useRef, useMemo, useCallback } from 'react'
-import { useSpring, animated as a } from 'react-spring'
+import { SerializedStyles, css, jsx } from '@emotion/core'
+import { Lazy } from 'fp-ts/function'
+import { FunctionComponent, useCallback, useMemo, useRef } from 'react'
+import { animated as a, useSpring } from 'react-spring'
 
-import { Board } from './Board'
-import { BoardContainerStyled } from './BoardContainerStyled'
-import { params } from '../../params'
-import { PlayerId } from '../../models/PlayerId'
+import { useWindowEvent } from '../../hooks/useWindowEvent'
 import { Game } from '../../models/game/Game'
+import { Referential } from '../../models/game/geometry/Referential'
 import { OtherPlayer } from '../../models/game/OtherPlayer'
 import { Referentials } from '../../models/game/Referentials'
-import { Referential } from '../../models/game/geometry/Referential'
-import { useWindowEvent } from '../../hooks/useWindowEvent'
-import { Maybe, pipe, flow, List } from '../../utils/fp'
+import { PlayerId } from '../../models/PlayerId'
+import { params } from '../../params'
+import { List, Maybe, flow, pipe } from '../../utils/fp'
+import { Board } from './Board'
+import { BoardContainerStyled } from './BoardContainerStyled'
 
 interface Props {
   readonly game: Game

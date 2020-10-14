@@ -1,10 +1,9 @@
-import * as D from 'io-ts/lib/Decoder'
-import { Lazy } from 'fp-ts/lib/function'
-import { draw } from 'io-ts/lib/Tree'
+import { Lazy } from 'fp-ts/function'
+import * as D from 'io-ts/Decoder'
 import { Push } from 'phoenix'
 
-import { Future, Either, pipe, flow } from './fp'
 import { Unknown } from '../models/Unknown'
+import { Either, Future, flow, pipe } from './fp'
 
 export namespace PhoenixUtils {
   export function pushToFuture(push: Lazy<Push>): Future<Either<unknown, unknown>> {
@@ -26,7 +25,7 @@ export namespace PhoenixUtils {
       pipe(
         resp,
         decode,
-        Either.fold(e => console.error("couldn't decode response:", draw(e)), onRight)
+        Either.fold(e => console.error("couldn't decode response:", D.draw(e)), onRight)
       )
     }
   }

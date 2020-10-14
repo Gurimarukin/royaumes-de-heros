@@ -1,27 +1,27 @@
 /** @jsx jsx */
-import * as D from 'io-ts/lib/Decoder'
-import { jsx, css } from '@emotion/core'
-import { useContext, FunctionComponent, useState, useCallback, Fragment } from 'react'
+import { css, jsx } from '@emotion/core'
+import * as D from 'io-ts/Decoder'
+import { Fragment, FunctionComponent, useCallback, useContext, useState } from 'react'
 
-import { ButtonUnderline } from './Buttons'
-import { ClickOutside } from './ClickOutside'
-import { Error } from './Error'
-import { Check, Pencil } from './icons'
-import { Loading } from './Loading'
-import { Router } from './Router'
-import { Squads } from './home/Squads'
 import { CsrfTokenContext } from '../contexts/CsrfTokenContext'
 import { HistoryContext } from '../contexts/HistoryContext'
 import { UserContext } from '../contexts/UserContext'
 import { useChannel } from '../hooks/useChannel'
 import { AsyncState } from '../models/AsyncState'
 import { ChannelError } from '../models/ChannelError'
-import { SquadsEvent } from '../models/SquadsEvent'
 import { SquadId } from '../models/SquadId'
+import { SquadsEvent } from '../models/SquadsEvent'
 import { SquadShort } from '../models/SquadShort'
-import { pipe, Future, flow, Either, Maybe, IO } from '../utils/fp'
+import { Either, Future, IO, Maybe, flow, pipe } from '../utils/fp'
 import { HttpUtils } from '../utils/HttpUtils'
 import { PhoenixUtils } from '../utils/PhoenixUtils'
+import { ButtonUnderline } from './Buttons'
+import { ClickOutside } from './ClickOutside'
+import { Error } from './Error'
+import { Squads } from './home/Squads'
+import { Check, Pencil } from './icons'
+import { Loading } from './Loading'
+import { Router } from './Router'
 
 export const Home: FunctionComponent = () => {
   const { user } = useContext(UserContext)
@@ -58,7 +58,7 @@ export const Home: FunctionComponent = () => {
 }
 
 const idCodec = D.type({
-  id: SquadId.codec as D.Decoder<SquadId>
+  id: SquadId.codec
 })
 
 interface Props {

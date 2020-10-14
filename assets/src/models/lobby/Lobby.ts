@@ -1,7 +1,7 @@
-import * as D from 'io-ts/lib/Decoder'
+import * as D from 'io-ts/Decoder'
 
-import { LobbyPlayer } from './LobbyPlayer'
 import { PlayerId } from '../PlayerId'
+import { LobbyPlayer } from './LobbyPlayer'
 
 export namespace Lobby {
   export const codec = D.type({

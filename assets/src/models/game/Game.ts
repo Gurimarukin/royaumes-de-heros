@@ -1,12 +1,12 @@
-import * as D from 'io-ts/lib/Decoder'
+import * as D from 'io-ts/Decoder'
 
+import { List, Maybe } from '../../utils/fp'
+import { PlayerId } from '../PlayerId'
 import { Card } from './Card'
 import { CardId } from './CardId'
 import { OtherPlayer } from './OtherPlayer'
 import { PendingInteraction } from './PendingInteraction'
 import { Player } from './Player'
-import { PlayerId } from '../PlayerId'
-import { Maybe, List } from '../../utils/fp'
 
 export namespace Game {
   export const codec = D.type({

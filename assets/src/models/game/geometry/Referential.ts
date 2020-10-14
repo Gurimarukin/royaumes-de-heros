@@ -1,9 +1,9 @@
-import { lookup } from 'fp-ts/lib/Record'
+import { lookup } from 'fp-ts/Record'
 
+import { params } from '../../../params'
+import { List, Maybe, pipe } from '../../../utils/fp'
 import { Coord } from './Coord'
 import { Rectangle } from './Rectangle'
-import { params } from '../../../params'
-import { pipe, Maybe, List } from '../../../utils/fp'
 
 export interface Referential {
   readonly position: Coord

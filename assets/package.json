@@ -3,6 +3,7 @@
   "description": "Hero Realms Online with Phoenix.",
   "license": "MIT",
   "scripts": {
+    "preinstall": "node -e \"!process.env.npm_config_user_agent.startsWith('pnpm/') && !console.log('Use \\`npx pnpm install\\` to install dependencies in this repository\\n') && process.exit(1)\"",
     "compile": "tsc --noEmit",
     "~compile": "tsc --noEmit -w",
     "deploy": "webpack --mode production",
@@ -32,7 +33,6 @@
     "fp-ts-routing": "^0.5.4",
     "history": "^4.10.1",
     "io-ts": "^2.2.4",
-    "io-ts-types": "^0.5.7",
     "mini-css-extract-plugin": "^0.4.5",
     "monocle-ts": "^2.2.0",
     "newtype-ts": "^0.3.4",

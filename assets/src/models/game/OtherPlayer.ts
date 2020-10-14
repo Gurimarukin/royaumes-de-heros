@@ -1,8 +1,8 @@
-import * as D from 'io-ts/lib/Decoder'
+import * as D from 'io-ts/Decoder'
 
+import { Unknown } from '../Unknown'
 import { Card } from './Card'
 import { CardId } from './CardId'
-import { Unknown } from '../Unknown'
 
 export namespace OtherPlayer {
   export const codec = D.type({
