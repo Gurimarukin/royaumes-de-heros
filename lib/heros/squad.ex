@@ -13,7 +13,7 @@ defmodule Heros.Squad do
           broadcast_update: (any -> any),
           owner: nil | Player.id(),
           members: list({Player.id(), Member.t()}),
-          state: {:lobby, Lobby.t()} | {:game, Game.t()}
+          state: {:lobby, Lobby.t()} | {:game, Game.t()} | {:won, Game.t()}
         }
   @enforce_keys [:broadcast_update, :owner, :members, :state]
   defstruct [:broadcast_update, :owner, :members, :state]
@@ -72,6 +72,9 @@ defmodule Heros.Squad do
 
       {:game, _game} ->
         Option.none()
+
+      {:won, _game} ->
+        Option.none()
     end
     |> to_reply(squad)
   end
@@ -91,7 +94,7 @@ defmodule Heros.Squad do
             end)
             |> Option.map(&{&1, {KeyList.find(names(&1), member_id), :lobby_joined}})
 
-          _member ->
+          _member_before ->
             squad
             |> update_member(member_id, &Member.put_socket(&1, socket))
             |> Option.some()
@@ -99,18 +102,19 @@ defmodule Heros.Squad do
         end
 
       {:game, _game} ->
-        with_member(squad.members, member_id, fn member_before ->
+        with_member(squad.members, member_id, fn _member_before ->
           squad
           |> update_member(member_id, &Member.put_socket(&1, socket))
           |> Option.some()
-          |> Option.map(
-            &{&1,
-             if MapSet.size(member_before.sockets) == 0 do
-               {KeyList.find(names(&1), member_id), :game_reconnected}
-             else
-               nil
-             end}
-          )
+          |> Option.map(&{&1, nil})
+        end)
+
+      {:won, _game} ->
+        with_member(squad.members, member_id, fn _member_before ->
+          squad
+          |> update_member(member_id, &Member.put_socket(&1, socket))
+          |> Option.some()
+          |> Option.map(&{&1, nil})
         end)
     end
     |> Option.map(fn res ->
@@ -133,21 +137,13 @@ defmodule Heros.Squad do
           |> Option.map(fn {lobby, event} -> {%{squad | state: {:lobby, lobby}}, event} end)
 
         {:game, game} ->
-          names = squad.members |> KeyList.map(& &1.name)
+          n = names(squad)
 
-          case Game.Helpers.handle_call(message, from, game, names) do
-            {:victory, winner_id, {game, event}} ->
-              ProcessUtils.send_self_after(
-                100,
-                {:broadcast, {KeyList.find(names, winner_id), :won}}
-              )
+          Game.Helpers.handle_call(message, from, game, n)
+          |> check_victory(n, squad)
 
-              Option.some({%{squad | state: {:game, game}}, event})
-
-            option ->
-              option
-              |> Option.map(fn {game, event} -> {%{squad | state: {:game, game}}, event} end)
-          end
+        {:won, _game} ->
+          Option.some({squad, nil})
       end
 
     if res == :error do
@@ -232,9 +228,27 @@ defmodule Heros.Squad do
             {squad, {member.name, :lobby_left}}
           end)
 
-        {:game, _game} ->
-          {squad, {member.name, :game_disconnected}}
-          |> Option.some()
+        {:game, game} ->
+          n = names(squad)
+
+          Game.Helpers.handle_call({member_id, "surrender"}, nil, game, n)
+          |> check_victory(n, squad)
+          |> Option.map(fn {squad, _} ->
+            squad =
+              squad
+              |> delete_member(member_id)
+              |> update_owner(member_id)
+
+            {squad, {member.name, :game_left}}
+          end)
+
+        {:won, _game} ->
+          squad =
+            squad
+            |> delete_member(member_id)
+            |> update_owner(member_id)
+
+          Option.some({squad, {member.name, :game_left}})
       end
     end)
   end
@@ -253,6 +267,17 @@ defmodule Heros.Squad do
     lobby.players
     |> Enum.map(fn {id, _} -> id end)
     |> Game.init_from_players()
+  end
+
+  defp check_victory(update, names, squad) do
+    case update do
+      {:victory, winner_id, {game, event}} ->
+        Option.some({%{squad | state: {:won, game}}, event})
+
+      option ->
+        option
+        |> Option.map(fn {game, event} -> {%{squad | state: {:game, game}}, event} end)
+    end
   end
 
   defp delete_member(squad, member_id) do

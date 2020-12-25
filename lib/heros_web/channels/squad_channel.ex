@@ -52,6 +52,9 @@ defmodule HerosWeb.SquadChannel do
 
         {:game, game} ->
           {:game, Heros.Game.Helpers.project(game, socket.assigns.user.id, names)}
+
+        {:won, game} ->
+          {:won, Heros.Game.Helpers.project(game, socket.assigns.user.id, names)}
       end
 
     push(socket, "update", %{body: {projection, event}})
