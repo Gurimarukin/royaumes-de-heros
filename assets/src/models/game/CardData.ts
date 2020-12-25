@@ -8,7 +8,7 @@ export namespace CardType {
   export const codec = D.union(
     D.literal('item'),
     D.literal('action'),
-    D.tuple(D.union(D.literal('not_guard'), D.literal('guard')), D.number)
+    D.tuple(D.union(D.literal('not_guard'), D.literal('guard')), D.number),
   )
 
   export function isChampion(type: CardType): type is ['not_guard' | 'guard', number] {
@@ -27,7 +27,7 @@ export namespace Faction {
     D.literal('guild'),
     D.literal('imperial'),
     D.literal('necros'),
-    D.literal('wild')
+    D.literal('wild'),
   )
 }
 
@@ -40,7 +40,7 @@ export namespace PartialCardData {
     faction: Maybe.codec(Faction.codec),
     expend: D.boolean,
     ally: D.boolean,
-    sacrifice: D.boolean
+    sacrifice: D.boolean,
   })
 }
 
@@ -59,32 +59,36 @@ export namespace CardData {
       rec,
       Dict.filterMapWithIndex((key, partial) =>
         pipe(
-          Dict.lookup(key, namesAndImages),
+          nameAndImage(key),
           Maybe.fold(
             () => {
               console.warn(`NameAndImage not found for card: "${key}"`)
               return Maybe.none
             },
-            _ => Maybe.some({ ...partial, ..._ })
-          )
-        )
-      )
+            _ => Maybe.some({ ...partial, ..._ }),
+          ),
+        ),
+      ),
     )
   }
 
   export const hidden = '/images/cards/hidden.jpg'
 
+  export function nameAndImage(key: string): Maybe<NameAndImage> {
+    return Dict.lookup(key, namesAndImages)
+  }
+
   export function countFaction(
     cardDatas: Dict<CardData>,
     cards: [CardId, Card][],
-    faction: Faction
+    faction: Faction,
   ): number {
     return cards.filter(([, c]) =>
       pipe(
         Dict.lookup(c.key, cardDatas),
         Maybe.chain(_ => _.faction),
-        Maybe.exists(_ => _ === faction)
-      )
+        Maybe.exists(_ => _ === faction),
+      ),
     ).length
   }
 
@@ -92,8 +96,8 @@ export namespace CardData {
     return cards.filter(([, c]) =>
       pipe(
         Dict.lookup(c.key, cardDatas),
-        Maybe.exists(_ => CardType.isGuard(_.type))
-      )
+        Maybe.exists(_ => CardType.isGuard(_.type)),
+      ),
     ).length
   }
 }
@@ -174,6 +178,6 @@ const namesAndImages: Dict<NameAndImage> = {
   torgen: d('Torgen Brise-Pierre', '/images/cards/torgen.jpg'),
   spark: d('Étincelle', '/images/cards/spark.jpg'),
   wolf_form: d('Forme de Loup', '/images/cards/wolf_form.jpg'),
-  wolf_shaman: d('Shamane des Loups', '/images/cards/wolf_shaman.jpg')
+  wolf_shaman: d('Shamane des Loups', '/images/cards/wolf_shaman.jpg'),
   /* eslint-enable @typescript-eslint/camelcase */
 }

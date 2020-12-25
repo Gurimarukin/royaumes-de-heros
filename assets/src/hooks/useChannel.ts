@@ -1,5 +1,5 @@
-import { Socket, Channel } from 'phoenix'
-import { useMemo, useEffect } from 'react'
+import { Channel, Socket } from 'phoenix'
+import { useEffect, useMemo } from 'react'
 
 interface Listeners {
   readonly onJoinSuccess: (resp: unknown) => void
@@ -10,7 +10,7 @@ interface Listeners {
 export function useChannel(
   userToken: string,
   topic: string,
-  { onJoinSuccess, onJoinError, onUpdate }: Partial<Listeners>
+  { onJoinSuccess, onJoinError, onUpdate }: Partial<Listeners>,
 ): [Socket, Channel] {
   const [socket, channel] = useMemo<[Socket, Channel]>(() => {
     const socket = new Socket('/socket', { params: { token: userToken } })

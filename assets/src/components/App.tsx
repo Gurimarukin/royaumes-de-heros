@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 import * as D from 'io-ts/Decoder'
-import { FunctionComponent, useContext, useEffect, useState } from 'react'
+import { FunctionComponent, useContext, useEffect, useMemo, useState } from 'react'
 
 import { CardDatasContext } from '../contexts/CardDatasContext'
 import { CsrfTokenContext } from '../contexts/CsrfTokenContext'
@@ -22,9 +22,14 @@ const cardDatasCodec = D.record(PartialCardData.codec)
 export const App: FunctionComponent<Props> = props => {
   const [user, setUser] = useState(decode(User.codec, 'user')(props.user))
 
-  const cardDatas = pipe(props.card_data, decode(cardDatasCodec, 'cardDatas'), CardData.fromPartial)
+  const cardDatas = useMemo(
+    () => pipe(props.card_data, decode(cardDatasCodec, 'cardDatas'), CardData.fromPartial),
+    [props.card_data],
+  )
 
-  const csrfToken = decode(D.string, 'csrfToken')(props.csrf_token)
+  const csrfToken = useMemo(() => decode(D.string, 'csrfToken')(props.csrf_token), [
+    props.csrf_token,
+  ])
 
   const history = useContext(HistoryContext)
   const [path, setPath] = useState(history.location.pathname)
@@ -50,6 +55,6 @@ function decode<A>(codec: D.Decoder<unknown, A>, name: string): (u: unknown) => 
       codec.decode,
       Either.getOrElse<D.DecodeError, A>(e => {
         throw Error(`couldn't decode ${name}:\n${D.draw(e)}`)
-      })
+      }),
     )
 }

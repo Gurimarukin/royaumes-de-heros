@@ -1,8 +1,5 @@
-<%= ReactPhoenix.ClientSide.react_component(
-  "MyComponents.App",
-  %{
-    user: assigns[:user],
-    card_data: assigns[:card_data],
-    csrf_token: assigns[:csrf_token]
-  }
-) %>
+<div id="root"></div>
+
+<script defer>
+  window.startApp(<%= raw @json_user %>, <%= raw @card_data %>, <%= raw @csrf_token %>)
+</script>

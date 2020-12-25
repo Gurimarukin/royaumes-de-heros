@@ -40,10 +40,10 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
     (event: SquadEvent) => {
       pipe(
         SquadEvent.pretty(cardDatas)(event),
-        Maybe.map(e => setEvents(flow(List.takeRight(99), _ => List.snoc(_, [Date.now(), e]))))
+        Maybe.map(e => setEvents(flow(List.takeRight(99), _ => List.snoc(_, [Date.now(), e])))),
       )
     },
-    [cardDatas]
+    [cardDatas],
   )
 
   const onJoinError = useCallback(
@@ -51,7 +51,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
       if (error.status === 403 || error.status === 404) channel.leave()
       pipe(error, AsyncState.Error, setState)
     }),
-    []
+    [],
   )
 
   const onUpdate = useCallback(
@@ -59,14 +59,14 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
       ([state, event]) => {
         setState(AsyncState.Success(state))
         appendEvent(event)
-      }
+      },
     ),
-    []
+    [],
   )
 
   const [, channel] = useChannel(user.token, `squad:${id}`, {
     onJoinError,
-    onUpdate
+    onUpdate,
   })
 
   const pushToFuture = useCallback(
@@ -78,21 +78,21 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
           Either.mapLeft(_ => {
             appendEvent('error')
             return _
-          })
-        )
+          }),
+        ),
       ),
-    [appendEvent]
+    [appendEvent],
   )
 
   const call = useCallback(
     (msg: CallMessage): Future<Either<unknown, unknown>> =>
       pushToFuture(() => channel.push('call', (msg as unknown) as object)),
-    [channel, pushToFuture]
+    [channel, pushToFuture],
   )
 
   const leave = useCallback(
     (): Future<Either<unknown, unknown>> => pushToFuture(() => channel.push('leave', {})),
-    [channel, pushToFuture]
+    [channel, pushToFuture],
   )
 
   const onLoading = useCallback((): JSX.Element => <Loading />, [])
@@ -103,12 +103,12 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
         error={error}
         messages={{
           403: 'Impossible de rejoindre cette partie',
-          404: 'Impossible de trouver cette partie'
+          404: 'Impossible de trouver cette partie',
         }}
         link={[Router.routes.home, 'retour']}
       />
     ),
-    []
+    [],
   )
 
   const onSuccess = useCallback(
@@ -120,7 +120,7 @@ export const Squad: FunctionComponent<Props> = ({ id }) => {
           return <Game game={state[1]} events={events} />
       }
     },
-    [events]
+    [events],
   )
 
   return (

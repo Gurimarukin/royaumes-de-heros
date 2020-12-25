@@ -52,11 +52,11 @@ module.exports = {
     'comma-dangle': [
       'warn',
       {
-        arrays: 'never',
-        objects: 'never',
-        imports: 'never',
-        exports: 'never',
-        functions: 'never'
+        arrays: 'always-multiline',
+        objects: 'always-multiline',
+        imports: 'always-multiline',
+        exports: 'always-multiline',
+        functions: 'always-multiline'
       }
     ],
     'max-len': [

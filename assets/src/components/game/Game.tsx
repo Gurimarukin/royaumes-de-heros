@@ -1,25 +1,34 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
-import { FunctionComponent, useState, useCallback, useMemo, useContext, ReactNode } from 'react'
+import {
+  FunctionComponent,
+  Profiler,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react'
 
+import { ChannelContext } from '../../contexts/ChannelContext'
+import { ShowCardDetailContext } from '../../contexts/ShowCardDetailContext'
+import { CallMessage } from '../../models/CallMessage'
+import { Card } from '../../models/game/Card'
+import { CardId } from '../../models/game/CardId'
+import { Game as TGame } from '../../models/game/Game'
+import { Referential } from '../../models/game/geometry/Referential'
+import { OtherPlayer } from '../../models/game/OtherPlayer'
+import { Player } from '../../models/game/Player'
+import { PlayerId } from '../../models/PlayerId'
+import { Either, Future, List, Maybe, Task, pipe } from '../../utils/fp'
 import { BoardContainer } from './BoardContainer'
+import { BoardThreeJs } from './BoardThreeJs'
 import { CardsViewer } from './CardsViewer'
 import { Confirm, ConfirmProps } from './Confirm'
 import { Dialog } from './Dialog'
 import { DialogProps } from './DialogStyled'
 import { GameStyled } from './GameStyled'
 import { RightBar } from './RightBar'
-import { ChannelContext } from '../../contexts/ChannelContext'
-import { ShowCardDetailContext } from '../../contexts/ShowCardDetailContext'
-import { CallMessage } from '../../models/CallMessage'
-import { Card } from '../../models/game/Card'
-import { CardId } from '../../models/game/CardId'
-import { PlayerId } from '../../models/PlayerId'
-import { Game as TGame } from '../../models/game/Game'
-import { OtherPlayer } from '../../models/game/OtherPlayer'
-import { Player } from '../../models/game/Player'
-import { Referential } from '../../models/game/geometry/Referential'
-import { pipe, List, Maybe, Future, Either, Task } from '../../utils/fp'
 
 interface Props {
   readonly game: TGame
@@ -31,11 +40,14 @@ export const Game: FunctionComponent<Props> = ({ game, events }) => {
     () => ({
       market: Referential.market,
       player: Referential.playerZone([0, 1]),
-      others: Referential.otherPlayers(game.other_players.length)
+      others: Referential.otherPlayers(game.other_players.length),
     }),
-    [game.other_players.length]
+    [game.other_players.length],
   )
-  const zippedOtherPlayers = List.zip(referentials.others, game.other_players)
+  const zippedOtherPlayers = useMemo(() => List.zip(referentials.others, game.other_players), [
+    game.other_players,
+    referentials.others,
+  ])
 
   // end turn
   const { call } = useContext(ChannelContext)
@@ -51,11 +63,11 @@ export const Game: FunctionComponent<Props> = ({ game, events }) => {
               CallMessage.DrawPhase,
               call,
               Task.delay(1000),
-              Future.map(_ => {})
-            )
-        )
+              Future.map(_ => {}),
+            ),
+        ),
       ),
-      Future.runUnsafe
+      Future.runUnsafe,
     )
   }, [call])
 
@@ -68,7 +80,7 @@ export const Game: FunctionComponent<Props> = ({ game, events }) => {
   const [dialogProps, setDialogProps] = useState<DialogProps>({ shown: false })
   const showDiscard = useCallback(
     (id: PlayerId) => setDialogProps(discardDialogProps(game.player, game.other_players, id)),
-    [game.other_players, game.player]
+    [game.other_players, game.player],
   )
   const closeDialog = useCallback(() => setDialogProps(_ => ({ ..._, shown: false })), [])
 
@@ -77,19 +89,20 @@ export const Game: FunctionComponent<Props> = ({ game, events }) => {
   const confirm = useCallback(
     (message: ReactNode, onConfirm: () => void) =>
       setConfirmProps({ hidden: false, message, onConfirm }),
-    []
+    [],
   )
   const hideConfirm = useCallback(() => setConfirmProps(_ => ({ ..._, hidden: true })), [])
 
   return (
     <ShowCardDetailContext.Provider value={showCardDetail}>
       <GameStyled>
-        <BoardContainer
+        {/* <BoardContainer
           game={game}
           referentials={referentials}
           zippedOtherPlayers={zippedOtherPlayers}
           showDiscard={showDiscard}
-        />
+        /> */}
+        <BoardThreeJs />
         <RightBar
           cardDetail={cardDetail}
           hideCardDetail={hideCardDetail}
@@ -114,14 +127,14 @@ interface PartialPlayer {
 function discardDialogProps(
   player: [PlayerId, Player],
   others: [PlayerId, OtherPlayer][],
-  id: PlayerId
+  id: PlayerId,
 ): DialogProps {
   return pipe(
     player[0] === id
       ? {
           shown: true,
           title: 'Votre défausse',
-          children: <CardsViewer cards={player[1].discard} />
+          children: <CardsViewer cards={player[1].discard} />,
         }
       : pipe(
           others,
@@ -131,9 +144,9 @@ function discardDialogProps(
             p => ({
               shown: true,
               title: `Défausse de ${p.name}`,
-              children: <CardsViewer cards={p.discard} />
-            })
-          )
-        )
+              children: <CardsViewer cards={p.discard} />,
+            }),
+          ),
+        ),
   )
 }

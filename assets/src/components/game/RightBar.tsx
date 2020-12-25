@@ -1,14 +1,14 @@
 /** @jsx jsx */
-import { jsx, css } from '@emotion/core'
+import { css, jsx } from '@emotion/core'
 import { FunctionComponent, ReactNode, useCallback, useContext } from 'react'
 
-import { CardDetail } from './CardDetail'
-import { Chat } from '../Chat'
-import { ButtonUnderline, SecondaryButton } from '../Buttons'
-import { params } from '../../params'
-import { CallMessage } from '../../models/CallMessage'
 import { ChannelContext } from '../../contexts/ChannelContext'
-import { Maybe, pipe, Future } from '../../utils/fp'
+import { CallMessage } from '../../models/CallMessage'
+import { params } from '../../params'
+import { Future, Maybe, pipe } from '../../utils/fp'
+import { ButtonUnderline, SecondaryButton } from '../Buttons'
+import { Chat } from '../Chat'
+import { CardDetail } from './CardDetail'
 
 interface Props {
   readonly cardDetail: Maybe<string>
@@ -27,14 +27,14 @@ export const RightBar: FunctionComponent<Props> = ({
   isAlive,
   endTurn,
   confirm,
-  events
+  events,
 }) => {
   const { call } = useContext(ChannelContext)
 
   const surrender = useCallback(() => pipe(CallMessage.Surrender, call, Future.runUnsafe), [call])
   const surrenderWithConfirm = useCallback(
     () => confirm('Êtes vous sûr de vouloir abandonner ?', surrender),
-    [confirm, surrender]
+    [confirm, surrender],
   )
 
   return (
@@ -62,6 +62,7 @@ export const RightBar: FunctionComponent<Props> = ({
 
 const styles = {
   container: css({
+    flexShrink: 0,
     position: 'relative',
     width: params.card.widthPlusMargin + params.card.margin,
     height: '100%',
@@ -70,33 +71,33 @@ const styles = {
     paddingLeft: '2px',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   }),
 
   cardDetail: css({
     flex: '1 0 0',
     border: '1px solid darkgoldenrod',
     borderWidth: '0 0 1px 1px',
-    overflow: 'hidden'
+    overflow: 'hidden',
   }),
 
   buttons: css({
     display: 'flex',
     justifyContent: 'space-between',
-    padding: '2px 2px 2px 0'
+    padding: '2px 2px 2px 0',
   }),
 
   chat: css({
     flex: '1 0 0',
     border: '1px solid darkgoldenrod',
-    borderWidth: '1px 0 0 1px'
+    borderWidth: '1px 0 0 1px',
   }),
 
   endTurnBtn: css({
     transition: 'opacity 0.2s',
 
     '&:not(.current)': {
-      opacity: 0
-    }
-  })
+      opacity: 0,
+    },
+  }),
 }

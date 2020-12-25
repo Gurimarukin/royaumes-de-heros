@@ -3,7 +3,7 @@ import { jsx } from '@emotion/core'
 import { Formatter, Match, Parser, Route, end, format, lit, parse, zero } from 'fp-ts-routing'
 import { tuple } from 'fp-ts/function'
 import * as C from 'io-ts/Codec'
-import { ReactElement, useEffect } from 'react'
+import { ReactElement, useEffect, useMemo } from 'react'
 
 import { SquadId } from '../models/SquadId'
 import { Dict, Maybe } from '../utils/fp'
@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function Router({ path }: Props): ReactElement {
-  const [subTitle, node] = route(path)
+  const [subTitle, node] = useMemo(() => route(path), [path])
   const title = ['Royaume de Héros', ...Maybe.toArray(subTitle)].join('|')
 
   useEffect(() => {
@@ -44,13 +44,13 @@ function route(s: string): TitleWithElt {
 export namespace Router {
   export const routes = {
     home: format(homeMatch.formatter, {}),
-    squad: (id: SquadId): string => format(squadMatch.formatter, { id })
+    squad: (id: SquadId): string => format(squadMatch.formatter, { id }),
   }
 }
 
 function codec<K extends string, A>(
   k: K,
-  codec: C.Codec<unknown, string, A>
+  codec: C.Codec<unknown, string, A>,
 ): Match<{ readonly [_ in K]: A }> {
   return new Match(
     new Parser(r =>
@@ -60,10 +60,10 @@ function codec<K extends string, A>(
             const head = r.parts[0]
             const tail = r.parts.slice(1)
             return Maybe.option.map(Maybe.fromEither(codec.decode(head)), a =>
-              tuple(Dict.singleton(k, a), new Route(tail, r.query))
+              tuple(Dict.singleton(k, a), new Route(tail, r.query)),
             )
-          })()
+          })(),
     ),
-    new Formatter((r, o) => new Route(r.parts.concat(codec.encode(o[k])), r.query))
+    new Formatter((r, o) => new Route(r.parts.concat(codec.encode(o[k])), r.query)),
   )
 }

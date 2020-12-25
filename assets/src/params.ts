@@ -9,7 +9,7 @@ const card = {
   widthPlusMargin: cardWidth + cardMargin,
   heightPlusMargin: cardHeight + cardMargin,
   margin: cardMargin,
-  borderRadius: 24
+  borderRadius: 24,
 }
 
 const fightZoneColumns = 10
@@ -22,17 +22,17 @@ const fightZone = {
   innerWidth: fightZoneInnerWidth,
   innerHeight: fightZoneInnerHeight,
   columns: fightZoneColumns,
-  borderWidth: fightZoneBorderWidth
+  borderWidth: fightZoneBorderWidth,
 }
 
 const bottomZone = {
   width: fightZoneInnerWidth,
-  height: card.height
+  height: card.height,
 }
 
 const playerZone = {
   width: fightZone.width,
-  height: fightZone.height + bottomZone.height + 2 * card.margin
+  height: fightZone.height + bottomZone.height + 2 * card.margin,
 }
 
 const marketInnerWidth = 2 * card.widthPlusMargin - card.margin
@@ -43,7 +43,7 @@ const market = {
   height: marketInnerHeight + 2 * (marketBorderWidth + card.margin),
   innerWidth: marketInnerWidth,
   innerHeight: marketInnerHeight,
-  borderWidth: marketBorderWidth
+  borderWidth: marketBorderWidth,
 }
 
 export const params = {
@@ -52,11 +52,11 @@ export const params = {
       market.width +
       Math.ceil((referentials.others.length + 1) / 2) * (playerZone.width + card.margin) +
       2 * card.margin,
-    height: 2 * playerZone.height + card.margin
+    height: 2 * playerZone.height + card.margin,
   },
   card,
   playerZone,
   fightZone,
   bottomZone,
-  market
+  market,
 }
